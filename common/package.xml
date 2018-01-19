@@ -1,17 +1,16 @@
 <package>
-  <name>mie443_contest1</name>
+  <name>common_resources</name>
   <version>0.0.0</version>
-  <description>Tutorial for image_transport. This is useful for the tutorials at http://wiki.ros.org/image_transport/Tutorials/</description>
-  <author>Vincent Rabaud</author>
-  <maintainer email="vincent.rabaud@gmail.com">Vincent Rabaud</maintainer>
-  <license>Apache 2.0</license>
+  <description>Contains common resources files for team Goofy's implementation</description>
+  <author>Team Goofy</author>
+  <maintainer email="team.goofy@gmail.com">Team Goofy</maintainer>
 
   <build_depend>cv_bridge</build_depend>
   <build_depend>image_transport</build_depend>
   <build_depend>message_generation</build_depend>
   <build_depend>sensor_msgs</build_depend>
-	<build_depend>common_resources</build_depend>
-
+	<license>None</license>
+	
   <run_depend>cv_bridge</run_depend>
   <run_depend>image_transport</run_depend>
   <run_depend>message_runtime</run_depend>
