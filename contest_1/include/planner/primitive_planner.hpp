@@ -6,6 +6,8 @@
 namespace goofy{
 namespace planner{
 
+const double DENSITY = 0.3;
+
 class PrimitivePlanner{
 public:
 	PrimitivePlanner(PrimitiveRepresentation primitives):

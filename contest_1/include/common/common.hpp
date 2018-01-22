@@ -7,6 +7,7 @@
 #include<geometry_msgs/Quaternion.h>
 
 #include<tf/LinearMath/Quaternion.h>
+#include<tf/LinearMath/Matrix3x3.h>
 
 namespace goofy{
 namespace common{
@@ -43,6 +44,9 @@ private:
 	double _right_rad;
 	double _wheelbase;
 };
+
+geometry_msgs::Quaternion yaw2quat(double yaw);
+double quat2yaw(geometry_msgs::Quaternion quaternion);
 
 }
 }

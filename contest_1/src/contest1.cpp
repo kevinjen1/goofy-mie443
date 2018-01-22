@@ -7,6 +7,7 @@
 
 #include <stdio.h>
 #include <cmath>
+#include"mapper/mapper.hpp"
 
 using namespace std;
 
