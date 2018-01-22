@@ -1,9 +1,27 @@
 #pragma once
 
+#include<math.h>
+
 #include<nav_msgs/Path.h>
+#include<geometry_msgs/PoseStamped.h>
+#include<geometry_msgs/Quaternion.h>
+
+#include<tf/LinearMath/Quaternion.h>
 
 namespace goofy{
-	namespace common{
+namespace common{
+
+const std::string BASE = "base_link";
+const std::string ODOM = "odom";
+const std::string WORLD = "world";
+
+typedef std::vector<geometry_msgs::PoseStamped> PoseArray;
+
+struct BasicMotion{
+	double linear_velocity;
+	double angular_velocity;
+	double time;
+};
 
 class RobotModel{
 public:
@@ -12,6 +30,12 @@ public:
 		_right_rad(right_rad),
 		_wheelbase(wheelbase){}
 
+	/**
+	 * Linear Velocity in m/s
+	 * Angular Velocity in rad/s
+	 * Time in s
+	 * Density in m
+	 */
 	nav_msgs::Path simulatePath(double lin_vel, double ang_vel, double time, double density);
 
 private:

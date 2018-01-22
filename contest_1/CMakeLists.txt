@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(mie443_contest1)
 
+set(CMAKE_CXX_STANDARD 11)
+
 #set(OpenCV_DIR "/usr/share/OpenCV")
 
 find_package(OpenCV 3 REQUIRED)
@@ -21,3 +23,8 @@ include_directories(include ${OpenCV_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 # add the publisher example
 add_executable(contest1 src/contest1.cpp)
 target_link_libraries(contest1 ${catkin_LIBRARIES} ${OpenCV_LIB})
+
+add_library(primitive_planner
+	src/planner/primitive_planner.cpp
+	src/primitives/generator.cpp)
+target_link_libraries(primitive_planner ${catkin_LIBRARIES})
