@@ -28,3 +28,6 @@ add_library(primitive_planner
 	src/planner/primitive_planner.cpp
 	src/primitives/generator.cpp)
 target_link_libraries(primitive_planner ${catkin_LIBRARIES})
+
+add_library(mapper src/mapper/mapper.cpp)
+target_link_libraries(mapper ${catkin_LIBRARIES} ${OpenCV_LIB})
