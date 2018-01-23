@@ -32,12 +32,12 @@ public:
 
 	bool getVelocity(geometry_msgs::Twist& vel);
 
+	static bool checkObstacle(const sensor_msgs::LaserScan::ConstPtr& msg, float x_pos, float y_pos);
+
 protected:
 	bool checkPath(nav_msgs::Path path){
 		return true;
 	}
-
-	bool checkObstacle(const sensor_msgs::LaserScan::ConstPtr& msg, float x_pos, float y_pos);
 
 	common::Visualizer _vis;
 	MotionList _plan;
