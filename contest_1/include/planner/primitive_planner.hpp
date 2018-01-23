@@ -37,7 +37,10 @@ public:
 	double laserRange = 10;
 	int laserSize = 0, laserOffset = 0, desiredAngle = 5;
 
+	static bool checkObstacle(const sensor_msgs::LaserScan::ConstPtr& msg, float x_pos, float y_pos);
+
 protected:
+
 	bool checkPath(nav_msgs::Path path);
 	bool checkObstacle(const sensor_msgs::LaserScan::ConstPtr& msg, float x_pos, float y_pos);
 
