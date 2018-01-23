@@ -17,7 +17,7 @@ public:
 	void runIteration();
 
 private:
-	bool checkObstacle();
+	bool checkObstacle(const sensor_msgs::LaserScan::ConstPtr& msg, float x_pos, float y_pos);
 
 	MotionList _plan;
 	PrimitiveRepresentation _primitives;
