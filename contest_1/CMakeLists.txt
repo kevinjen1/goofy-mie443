@@ -20,10 +20,6 @@ catkin_package()
 
 include_directories(include ${OpenCV_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
-# add the publisher example
-add_executable(contest1 src/contest1.cpp)
-target_link_libraries(contest1 ${catkin_LIBRARIES} ${OpenCV_LIB})
-
 add_library(goofy_common src/common/common.cpp src/common/visualizer.cpp)
 target_link_libraries(goofy_common ${catkin_LIBRARIES})
 
@@ -35,4 +31,8 @@ target_link_libraries(mapper ${catkin_LIBRARIES} ${OpenCV_LIB})
 
 catkin_add_gtest(test_planner test/test_planner.cpp)
 target_link_libraries(test_planner primitive_planner goofy_common)
+
+# add the publisher example
+add_executable(contest1 src/contest1.cpp)
+target_link_libraries(contest1 ${catkin_LIBRARIES} ${OpenCV_LIB} goofy_common primitive_planner)
 

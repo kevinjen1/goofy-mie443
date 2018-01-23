@@ -41,6 +41,10 @@ nav_msgs::Path RobotModel::simulatePath(double lin_vel, double ang_vel, double t
 	return retval;
 }
 
+nav_msgs::Path RobotModel::simulatePath(BasicMotion motion, double density){
+	return simulatePath(motion.linear_velocity, motion.angular_velocity, motion.time/1000, density);
+}
+
 geometry_msgs::Quaternion yaw2quat(double yaw){
 	tf::Quaternion quaternion;
 	geometry_msgs::Quaternion retval;

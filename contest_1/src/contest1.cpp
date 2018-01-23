@@ -8,8 +8,11 @@
 #include <stdio.h>
 #include <cmath>
 #include"mapper/mapper.hpp"
+#include"planner/primitive_planner.hpp"
+#include"common/common.hpp"
 
 using namespace std;
+using namespace goofy;
 
 void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg){
 	//fill with your code
@@ -30,9 +33,29 @@ int main(int argc, char **argv)
 
 	ros::Publisher vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel_mux/input/teleop", 1);
 
+	//Setup Robot
+	common::RobotModel robot(0.5,0.5,0.5);
+
+	//Setup Primitives
+	common::BasicMotion straight{1, 0, 6000};
+	common::BasicMotion turn_left{1,0.3, 6000};
+	common::BasicMotion turn_right{1.,-0.3, 6000};
+
+	planner::MotionList motions;
+	motions.push_back(straight);
+	motions.push_back(turn_left);
+	motions.push_back(turn_right);
+
+	//Setup Planner
+	planner::PrimitiveRepresentation primitives(robot, motions);
+	planner::RandomPlanner random_planner(primitives);
+	common::Visualizer vis;
+
 	double angular = 0.0;
 	double linear = 0.0;
 	geometry_msgs::Twist vel;
+
+	random_planner.runIteration();
 
 	while(ros::ok()){
 		ros::spinOnce();
@@ -41,11 +64,14 @@ int main(int argc, char **argv)
 		//...................................
 
 		//fill with your code
+		nav_msgs::Path path = random_planner.getPath();
+		vis.publishPath(path, std::chrono::milliseconds(10));
+		if (!random_planner.getVelocity(vel)){
+			random_planner.runIteration();
+			std::cout << "Getting new plan!" << std::endl;
+		}
 
-  		vel.angular.z = angular;
-  		vel.linear.x = linear;
-
-  		vel_pub.publish(vel);
+ 		vel_pub.publish(vel);
 	}
 
 	return 0;

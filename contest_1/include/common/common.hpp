@@ -19,9 +19,9 @@ const std::string WORLD = "world";
 typedef std::vector<geometry_msgs::PoseStamped> PoseArray;
 
 struct BasicMotion{
-	double linear_velocity;
-	double angular_velocity;
-	double time;
+	double linear_velocity; //in meters per second
+	double angular_velocity; //in meters per second
+	int time; //in milliseconds
 };
 
 class RobotModel{
@@ -38,6 +38,7 @@ public:
 	 * Density in m
 	 */
 	nav_msgs::Path simulatePath(double lin_vel, double ang_vel, double time, double density);
+	nav_msgs::Path simulatePath(BasicMotion motion, double density);
 
 private:
 	double _left_rad;
