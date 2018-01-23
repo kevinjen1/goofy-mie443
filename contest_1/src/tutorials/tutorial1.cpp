@@ -47,7 +47,7 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 	laserOffset = desiredAngle*pi/(180*msg->angle_increment);
 	laserRange = 11;
 	
-	if laser_mode == 2
+	if (laser_mode == 2)
 	{
 		if (desiredAngle*pi/180 < msg->angle_max && -desiredAngle*pi/180 > msg->angle_min){
 			for (int i = laserSize/2 - laserOffset; i < laserSize/2 + laserOffset; i++){
@@ -63,23 +63,23 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 		}
 
 		if (laserRange == 11)
-			laserRange = msg->ranges[i];
+			laserRange = 0;
 	}
-	else if laser_mode == 1
+	else if (laser_mode == 1)
 		ROS_INFO("Size of laser scan array: %i and size of offset: %i", laserSize, laserOffset);
 }
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr& msg){
 	posX = msg->pose.pose.position.x;
 	posY = msg->pose.pose.position.y;
-	yaw = f::getYaw(msg->pose.pose.orientation);
+	yaw = tf::getYaw(msg->pose.pose.orientation);
 
-	if !laser_mode
+	if (!laser_mode)
 		ROS_INFO("Postion: (%f, %f) Orientation: %f rad or %f degrees.", posX, posY, yaw, yaw*180/pi);
 }
 
 void occupancyCallback(const nav_msgs::OccupancyGrid& msg){
-	ROS_INFO("Width: %i, Height: %i, Resolution: %f, Origin: (%f, %f), Random Map: %d", msg.info.width, msg.info.height, msg.info.resolution, msg.info.origin.position.x, msg.info.origin.position.y, msg.data[msg.info.width*msg.info.height-1])
+	ROS_INFO("Width: %i, Height: %i, Resolution: %f, Origin: (%f, %f), Random Map: %d", msg.info.width, msg.info.height, msg.info.resolution, msg.info.origin.position.x, msg.info.origin.position.y, msg.data[msg.info.width*msg.info.height-1]);
 }
 
 int main(int argc, char **argv)
@@ -110,40 +110,33 @@ int main(int argc, char **argv)
 		eStop.block();
 		//...................................
 
-		if !laser_mode
+		if (!laser_mode)
 			laserRange = 0.8;	// If we aren't using the lasers, this ignore lasers in if conditions below
 
 		ROS_INFO("Postion: (%f, %f) Orientation: %f degrees Range: %f", posX, posY, yaw*180/pi, laserRange);
-		if (posX < 0.5 && yaw < pi/2 && !bumperLeft && !bumperCenter && !bumperRight && laserRange > 0.7)
-		{
+		if (posX < 0.5 && yaw < pi/2 && !bumperLeft && !bumperCenter && !bumperRight && laserRange > 0.7){
 			angular = 0.0;
 			linear = 0.2;
 		}
-		else if (posX > 0.5 && yaw < pi/2 && !bumperLeft && !bumperCenter && !bumperRight && laserRange > 0.5)
-		{
+		else if (posX > 0.5 && yaw < pi/2 && !bumperLeft && !bumperCenter && !bumperRight && laserRange > 0.5){
 			angular = pi/6;
 			linear = 0.0;
 		}
-		else if (laserRange > 1.0 && !bumperLeft && !bumperCenter && !bumperRight)
-		{
-			if (yaw < 17*pi/36 || posX > 0.6)
-			{
+		else if (laserRange > 1.0 && !bumperLeft && !bumperCenter && !bumperRight){
+			if (yaw < 17*pi/36 || posX > 0.6){
 				angular = pi/12;
 				linear = 0.1;
 			}
-			else if (yaw < 19*pi/36 || posX > 0.4)
-			{
+			else if (yaw < 19*pi/36 || posX > 0.4){
 				angular = -pi/12;
 				linear = 0.1;
 			}
-			else
-			{
+			else{
 				angular = 0.0;
 				linear = 0.0;
 			}
 		}
-		else 
-		{
+		else{
 			angular = 0.0;
 			linear = 0.0;
 		}
