@@ -19,7 +19,7 @@ int laser_mode = 0;
 // Mode for testing lasers:
 //	0 = no laser used, for the odometry and bumper test
 //	1 = laser used in laserCallBack function part 1 (slide 41)
-//	2 = laser used in laserCallBack function part 2 (slide 41)
+//	2 = laser used in laserCallBack function part 2 (slide 44)
 
 double angular;
 double linear;
@@ -33,11 +33,11 @@ double laserRange = 10;
 int laserSize = 0, laserOffset = 0, desiredAngle = 5;
 
 void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg){
-	if(msg.bumper == 0)
+	if(msg->bumper == 0)
 		bumperLeft = !bumperLeft;
-	else if(msg.bumper == 1)
+	else if(msg->bumper == 1)
 		bumperCenter = !bumperCenter;
-	else if(msg.bumper == 2)
+	else if(msg->bumper == 2)
 		bumperRight = !bumperRight;
 }
 
