@@ -83,6 +83,12 @@ bool PrimitivePlanner::checkObstacle(const sensor_msgs::LaserScan::ConstPtr& msg
 	}
 }
 
+bool PrimitivePlanner::checkPath(nav_msgs::Path path){
+	// Needs implementation
+		
+	return true;
+}
+
 }
 }
 

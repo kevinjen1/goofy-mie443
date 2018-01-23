@@ -8,6 +8,8 @@
 #include"common/visualizer.hpp"
 #include"common/common.hpp"
 
+#define Pi 3.14159265
+
 namespace goofy{
 namespace planner{
 
@@ -31,12 +33,12 @@ public:
 	virtual void runIteration() = 0;
 
 	bool getVelocity(geometry_msgs::Twist& vel);
+	bool bumperLeft = 0, bumperCenter = 0, bumperRight = 0;
+	double laserRange = 10;
+	int laserSize = 0, laserOffset = 0, desiredAngle = 5;
 
 protected:
-	bool checkPath(nav_msgs::Path path){
-		return true;
-	}
-
+	bool checkPath(nav_msgs::Path path);
 	bool checkObstacle(const sensor_msgs::LaserScan::ConstPtr& msg, float x_pos, float y_pos);
 
 	common::Visualizer _vis;
