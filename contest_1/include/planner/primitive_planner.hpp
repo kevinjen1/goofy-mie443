@@ -1,5 +1,5 @@
 #pragma once
-
+#include <sensor_msgs/LaserScan.h>
 #include"primitives/generator.hpp"
 #include"common/common.hpp"
 
