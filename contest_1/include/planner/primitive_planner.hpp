@@ -3,6 +3,7 @@
 #include<ros/ros.h>
 #include<geometry_msgs/Twist.h>
 
+#include <sensor_msgs/LaserScan.h>
 #include"primitives/generator.hpp"
 #include"common/visualizer.hpp"
 #include"common/common.hpp"
@@ -35,6 +36,8 @@ protected:
 	bool checkPath(nav_msgs::Path path){
 		return true;
 	}
+
+	bool checkObstacle(const sensor_msgs::LaserScan::ConstPtr& msg, float x_pos, float y_pos);
 
 	common::Visualizer _vis;
 	MotionList _plan;
