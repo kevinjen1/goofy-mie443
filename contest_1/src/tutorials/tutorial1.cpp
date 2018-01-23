@@ -37,7 +37,7 @@ void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg){
 		bumperLeft = !bumperLeft;
 	else if(msg.bumper == 1)
 		bumperCenter = !bumperCenter;
-	else if(msg.bumper == 1)
+	else if(msg.bumper == 2)
 		bumperRight = !bumperRight;
 }
 
