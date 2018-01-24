@@ -66,18 +66,18 @@ bool PrimitivePlanner::checkObstacle(const sensor_msgs::LaserScan::ConstPtr& msg
 	
 	// Step 2 - Check if the position is in your view.
 	if(msg->angle_max < angle || msg->angle_min > angle){
-		return 0;
+		return false;
 	}
 	else if(msg->range_min > tangent || msg->range_max < tangent){
-		return 0;
+		return false;
 	}
 	// Step 3 - Check position for obstacle.
 	int index = (angle - (msg->angle_min))/(msg->angle_increment);
 	if(tangent > msg->ranges[index]){
-		return 1;	
+		return true;	
 	}
 	else {
-		return 0;
+		return false;
 	}
 }
 
