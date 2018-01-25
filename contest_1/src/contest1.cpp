@@ -29,6 +29,9 @@ void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg){
 
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 
+	// Print statement to test checkObstacle() - remove later
+	// std::cout << "Check Obstacle:" << goofy::planner::PrimitivePlanner::checkObstacle(msg, 1, 0.25) << endl;
+	
 	lSize = (msg->angle_max -msg->angle_min)/msg->angle_increment;
 	lOffset = dAngle*Pi/(180*msg->angle_increment);
 	lRange = 11;
@@ -94,7 +97,7 @@ int main(int argc, char **argv)
 		//fill with your code
 
 		// Update bumper values in random_planner
-		random_planner.bumperLeft = bumperL;
+		/*random_planner.bumperLeft = bumperL;
 		random_planner.bumperCenter = !bumperC;
 		random_planner.bumperRight = !bumperR;
 
@@ -112,7 +115,7 @@ int main(int argc, char **argv)
 			std::cout << "Getting new plan!" << std::endl;
 		}
 
- 		vel_pub.publish(vel);
+ 		vel_pub.publish(vel);*/
 	}
 
 	return 0;

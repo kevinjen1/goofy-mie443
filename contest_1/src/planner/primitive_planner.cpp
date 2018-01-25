@@ -1,6 +1,8 @@
 #include "planner/primitive_planner.hpp"
 #include <sensor_msgs/LaserScan.h>
 #include <math.h>
+#include <stdio.h>
+using namespace std;
 
 namespace goofy{
 namespace planner{
@@ -60,24 +62,57 @@ void RandomPlanner::runIteration(){
 
 bool PrimitivePlanner::checkObstacle(const sensor_msgs::LaserScan::ConstPtr& msg, float x_pos, float y_pos)
 {
-	// Step 1 - take the (x_pos,y_pos) and calculate the angle and tangent
+	// Step 1 - take the (x_pos,y_pos) and calculate the angle and tangent.
 	float angle = atan2(y_pos,x_pos);
 	float tangent = sqrt((y_pos)*(y_pos) + (x_pos)*(x_pos));
+	bool obstacle = false;
+	
+	// Print statements just for debugging - remove later
+	// std::cout << "angle:" << angle << endl;
+	// std::cout << "tangent:" << tangent << endl;
 	
 	// Step 2 - Check if the position is in your view.
+	
+	// Print statements just for debugging - remove later
+	// std::cout << "Min angle:" << msg->angle_min << endl;
+	// std::cout << "Max angle:" << msg->angle_max << endl;
+	// std::cout << "Min range:" << msg->range_min << endl;
+	// std::cout << "Max range:" << msg->range_max << endl;
+
 	if(msg->angle_max < angle || msg->angle_min > angle){
-		return false;
+		// std::cout << "condition 1" << endl;		
+		return obstacle;
 	}
 	else if(msg->range_min > tangent || msg->range_max < tangent){
-		return false;
-	}
-	// Step 3 - Check position for obstacle.
-	int index = (angle - (msg->angle_min))/(msg->angle_increment);
-	if(tangent > msg->ranges[index]){
-		return true;	
+		// std::cout << "condition 2" << endl;		
+		return obstacle;
 	}
 	else {
-		return false;
+		// Step 3 - Check position for obstacle.
+		
+		// Print statements just for debugging - remove later		
+		// std::cout << "condition 3" << endl;	
+	
+		int index = (angle - (msg->angle_min))/(msg->angle_increment);
+		int laserSize = (msg->angle_max -msg->angle_min)/msg->angle_increment;
+
+		// Print statements just for debugging - remove later
+		// std::cout << "Index:" << index << endl;	
+		// std::cout << "laserSize:" << laserSize << endl;
+	
+		for(int i = index-2; i <= index+2; i++){
+			//0.50 degree on both sides of the index
+
+			// Print statements just for debugging - remove later
+			// std::cout << "i:" << i << "  r[i]:" << msg->ranges[i] << endl;	
+	
+			if(0 <= i <= laserSize){
+				if(tangent > msg->ranges[i]){
+					obstacle = true;	
+				}
+			}
+		}
+		return obstacle;
 	}
 }
 
