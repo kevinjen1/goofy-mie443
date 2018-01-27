@@ -4,6 +4,7 @@
 #include<geometry_msgs/PoseStamped.h>
 #include<sensor_msgs/LaserScan.h>
 #include<geometry_msgs/Point.h>
+#include<nav_msgs/OccupancyGrid.h>
 
 namespace goofy{
 namespace mapper{

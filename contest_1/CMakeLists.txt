@@ -12,7 +12,8 @@ find_package(catkin REQUIRED COMPONENTS
 	genmsg 
 	image_transport 
 	sensor_msgs 
-	kobuki_msgs)
+	kobuki_msgs
+	nav_msgs)
 
 generate_messages(DEPENDENCIES sensor_msgs kobuki_msgs)
 
@@ -35,4 +36,3 @@ target_link_libraries(test_planner primitive_planner goofy_common)
 # add the publisher example
 add_executable(contest1 src/contest1.cpp)
 target_link_libraries(contest1 ${catkin_LIBRARIES} ${OpenCV_LIB} goofy_common primitive_planner)
-
