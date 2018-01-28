@@ -33,6 +33,12 @@ target_link_libraries(mapper ${catkin_LIBRARIES} ${OpenCV_LIB})
 catkin_add_gtest(test_planner test/test_planner.cpp)
 target_link_libraries(test_planner primitive_planner goofy_common)
 
+# catkin_add_gtest(test_mapper test/test_mapper.cpp)
+# target_link_libraries(test_mapper mapper)
+
 # add the publisher example
 add_executable(contest1 src/contest1.cpp)
 target_link_libraries(contest1 ${catkin_LIBRARIES} ${OpenCV_LIB} goofy_common primitive_planner)
+
+add_executable(goofNavigator src/mapper/navigator.cpp)
+target_link_libraries(goofNavigator ${catkin_LIBRARIES} goofy_common)

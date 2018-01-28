@@ -1,7 +1,13 @@
+#pragma once
 #include "mapper/mapper.hpp"
 
 namespace goofy {
 namespace mapper {
+
+/**
+ * this should subscribe to the gmap to get OccupancyGrid
+ * and publish to a topic, to pass it to navigator
+ */
 
 mapper::LocalMap GMap::processRawMap(const nav_msgs::OccupancyGrid grid) {
 	int width = grid.info.width;

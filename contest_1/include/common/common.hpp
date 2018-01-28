@@ -47,7 +47,7 @@ private:
 };
 
 geometry_msgs::Quaternion yaw2quat(double yaw);
-double quat2yaw(geometry_msgs::Quaternion quaternion);
+double quat2yaw(geometry_msgs::Quaternion quat);
 
 }
 }
