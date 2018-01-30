@@ -40,10 +40,12 @@ public:
 	bool bumperLeft = 0, bumperCenter = 0, bumperRight = 0;
 	double laserRange = 10;
 	int laserSize = 0, laserOffset = 0, desiredAngle = 5;
+	float robotRadius = 0.2;	// in m
 
 protected:
 	bool checkObstacle(float x_pos, float y_pos);
 	bool checkPath(nav_msgs::Path path);
+	double RandomPlanner::shortenPathTimeTo(nav_msgs::Path path);
 
 	common::Visualizer _vis;
 	MotionList _plan;

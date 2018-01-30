@@ -50,7 +50,16 @@ void RandomPlanner::runIteration(){
 	while (success == false){
 		success = checkPath(_primitives.getPath(plan_index, common::BASE));
 	}
-	//add the primitive motion to the plan
+	
+	/*  Using the extra bin width so this isn't needed, 
+		but if we decide to do the shorten path method, this is what we would use:
+
+		//see how much to shorten paths to avoid collisions
+		double shortTime = shortenPathTimeTo(_primitives.getPath(plan_index, common::BASE));
+		_primitives.getPlan().time = int (shortTime);
+	*/
+
+	// add the primitive motion to the plan
 	_plan.push_back(_primitives.getMotion(plan_index));
 
 	//add the associated path to the path
@@ -58,6 +67,22 @@ void RandomPlanner::runIteration(){
 	_path.poses.insert(_path.poses.end(), cur_path.poses.begin(), cur_path.poses.end());
 
 	_new_plan = true;
+}
+
+float RandomPlanner::shortenPathTimeTo(nav_msgs::Path path){
+	/* Calculate the time to shorten the path so that it will end the path outside of the area of the robot
+	*/
+	int i = 0;
+	double end_position = (path.poses.end().pose.position.x, path.poses.end().pose.position.y);
+	int pose_points = path.poses.size();
+	for (i = path.poses.size()-1; i >=0; i--){
+		double curr_position = (path.poses[i].pose.position.x, path.poses[i].pose.position.y);
+		double dist = sqrt(pow(curr_position[0],2) + pow(curr_position[1],2));
+		if (dist > robotRadius){
+			break;
+		}
+	}
+	return _primitives.getPlan().time*(path.poses.size() - i)/path.poses.size();
 }
 
 bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos)
