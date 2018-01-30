@@ -1,10 +1,11 @@
 #pragma once
 
-#include<math.h>
+#include<cmath>
 
 #include<nav_msgs/Path.h>
 #include<geometry_msgs/PoseStamped.h>
 #include<geometry_msgs/Quaternion.h>
+#include<sensor_msgs/LaserScan.h>
 
 #include<tf/LinearMath/Quaternion.h>
 #include<tf/LinearMath/Matrix3x3.h>
@@ -48,7 +49,7 @@ private:
 
 geometry_msgs::Quaternion yaw2quat(double yaw);
 double quat2yaw(geometry_msgs::Quaternion quaternion);
+void filterLaserScan(sensor_msgs::LaserScan& scan, int window);
 
 }
 }
-
