@@ -7,9 +7,7 @@
 namespace goofy{
 namespace mapper{
 
-geometry_msgs::Pose2D getCoordinate(goofy::mapper::LocalMap grid);
-void lookForCoordinates(const LocalMap grid);
-ros::Publisher coord_pub;
+geometry_msgs::Pose2D getCoordinate(nav_msgs::OccupancyGrid grid);
 
 }}
 

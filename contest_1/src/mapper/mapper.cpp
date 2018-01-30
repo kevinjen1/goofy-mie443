@@ -4,6 +4,7 @@
 #include "std_msgs/String.h"
 #include "nav_msgs/OccupancyGrid.h"
 #include "nav_msgs/MapMetaData.h"
+#include "common/common.hpp"
 
 namespace goofy {
 namespace mapper {
@@ -57,9 +58,10 @@ public:
 		}
 
 		geometry_msgs::Pose pose = grid.info.origin;
-		// THIS IS NOT CORRECT. NEED TO CONSIDER ORIENTATION AS WELL
-		pose.position.x += minWidth * grid.info.resolution;
-		pose.position.y += minHeight * grid.info.resolution;
+		double rad = goofy::common::quat2yaw(grid.info.origin.orientation);
+		// THE ORIENTATION CALCULATION IS PROBABLY NOT CORRECT
+		pose.position.x += (minWidth*sin(rad) + minHeight*cos(rad)) * grid.info.resolution;
+		pose.position.y += (minWidth*cos(rad) + minHeight*sin(rad)) * grid.info.resolution;
 
 		localMap.info.height = localHeight;
 		localMap.info.width = localWidth;
@@ -138,10 +140,10 @@ int getMaxWidth(int width, int height, vector<int8_t> data) {
 
 int main(int argc, char **argv) {
 	ros::init(argc, argv, "goofMapper");
-	goofy::mapper::MapProcessing subAndP;
+	goofy::mapper::MapProcessing subAndPub;
 
+	ROS_INFO("goofMapper is running");
 	ros::spin();
-
 	return 0;
 }
 
