@@ -67,8 +67,7 @@ void RandomPlanner::runIteration(){
 	_new_plan = true;
 }
 
-bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos)
-{
+bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle){
 	// Step 1 - take the (x_pos,y_pos) and calculate the angle and tangent.
 	float angle = atan2(y_pos,x_pos);
 	float tangent = sqrt((y_pos)*(y_pos) + (x_pos)*(x_pos));
@@ -102,12 +101,13 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos)
 	
 		int index = (angle - (_scan->angle_min))/(_scan->angle_increment);
 		int laserSize = (_scan->angle_max -_scan->angle_min)/_scan->angle_increment;
+		int scan_width = (scan_angle)/_scan->angle_increment;
 
 		// Print statements just for debugging - remove later
 		// std::cout << "Index:" << index << endl;	
 		// std::cout << "laserSize:" << laserSize << endl;
 	
-		for(int i = index-2; i <= index+2; i++){
+		for(int i = index-scan_width; i <= index+scan_width; i++){
 			//0.50 degree on both sides of the index
 
 			// Print statements just for debugging - remove later
@@ -132,7 +132,7 @@ bool PrimitivePlanner::checkPath(nav_msgs::Path path){
 	int hit_points = 0;
 	int pose_points = path.poses.size();
 	for (int i = 0; i < pose_points; i++){
-		hit_points += checkObstacle(path.poses[i].pose.position.x, path.poses[i].pose.position.y);
+		hit_points += checkObstacle(path.poses[i].pose.position.x, path.poses[i].pose.position.y, 2);
 	}
 
 	return (hit_points == 0);

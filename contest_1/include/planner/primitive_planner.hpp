@@ -42,7 +42,7 @@ public:
 	int laserSize = 0, laserOffset = 0, desiredAngle = 5;
 
 protected:
-	bool checkObstacle(float x_pos, float y_pos);
+	bool checkObstacle(float x_pos, float y_pos, float scan_angle);
 	bool checkPath(nav_msgs::Path path);
 
 	common::Visualizer _vis;
