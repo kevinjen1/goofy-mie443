@@ -36,9 +36,6 @@ target_link_libraries(primitive_planner goofy_common ${catkin_LIBRARIES})
 add_library(mapper src/mapper/mapper.cpp)
 target_link_libraries(mapper ${catkin_LIBRARIES} ${OpenCV_LIB})
 
-catkin_add_gtest(test_planner test/test_planner.cpp)
-target_link_libraries(test_planner primitive_planner goofy_common)
-
 # catkin_add_gtest(test_mapper test/test_mapper.cpp)
 # target_link_libraries(test_mapper mapper)
 

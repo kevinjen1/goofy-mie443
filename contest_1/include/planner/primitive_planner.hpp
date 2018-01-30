@@ -32,15 +32,17 @@ public:
 
 	virtual void runIteration() = 0;
 
+	void updateLaserScan(sensor_msgs::LaserScan::ConstPtr msg){
+		_scan = msg;
+	}
+
 	bool getVelocity(geometry_msgs::Twist& vel);
 	bool bumperLeft = 0, bumperCenter = 0, bumperRight = 0;
 	double laserRange = 10;
 	int laserSize = 0, laserOffset = 0, desiredAngle = 5;
 
-	static bool checkObstacle(const sensor_msgs::LaserScan::ConstPtr& msg, float x_pos, float y_pos);
-
 protected:
-
+	bool checkObstacle(float x_pos, float y_pos);
 	bool checkPath(nav_msgs::Path path);
 
 	common::Visualizer _vis;
@@ -48,6 +50,7 @@ protected:
 	nav_msgs::Path _path;
 	PrimitiveRepresentation _primitives;
 	bool _new_plan;
+	sensor_msgs::LaserScan::ConstPtr _scan;
 
 private:
 	geometry_msgs::Twist _vel;

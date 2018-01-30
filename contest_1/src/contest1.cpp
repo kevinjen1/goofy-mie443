@@ -17,6 +17,7 @@ using namespace goofy;
 bool bumperL = 0, bumperC = 0, bumperR = 0;
 double lRange = 10;
 int lSize = 0, lOffset = 0, dAngle = 5;
+sensor_msgs::LaserScan::ConstPtr curr_scan;
 
 void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg){
 	if(msg->bumper == 0)
@@ -49,8 +50,12 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 		}
 	}
 
-	if (lRange == 11)
+	if (lRange == 11){
 		lRange = 0;
+	}
+
+	curr_scan = msg;
+	return;
 }
 
 int main(int argc, char **argv)
@@ -97,15 +102,12 @@ int main(int argc, char **argv)
 		//fill with your code
 
 		// Update bumper values in random_planner
-		/*random_planner.bumperLeft = bumperL;
+		random_planner.bumperLeft = bumperL;
 		random_planner.bumperCenter = !bumperC;
 		random_planner.bumperRight = !bumperR;
 
 		// Update laser values in random_planner
-		random_planner.laserRange = lRange;
-		random_planner.laserSize = lSize;
-		random_planner.laserOffset = lOffset;
-		random_planner.desiredAngle = dAngle;
+		random_planner.updateLaserScan(curr_scan);
 
 		// Continuously get random paths
 		nav_msgs::Path path = random_planner.getPath();
@@ -115,7 +117,7 @@ int main(int argc, char **argv)
 			std::cout << "Getting new plan!" << std::endl;
 		}
 
- 		vel_pub.publish(vel);*/
+ 		vel_pub.publish(vel);
 	}
 
 	return 0;
