@@ -60,8 +60,8 @@ public:
 		geometry_msgs::Pose pose = grid.info.origin;
 		double rad = goofy::common::quat2yaw(grid.info.origin.orientation);
 		// THE ORIENTATION CALCULATION IS PROBABLY NOT CORRECT
-		pose.position.x += (minWidth*sin(rad) + minHeight*cos(rad)) * grid.info.resolution;
-		pose.position.y += (minWidth*cos(rad) + minHeight*sin(rad)) * grid.info.resolution;
+		pose.position.x += (minWidth*cos(rad) + minHeight*sin(rad)) * grid.info.resolution;
+		pose.position.y += (-minWidth*sin(rad) + minHeight*cos(rad)) * grid.info.resolution;
 
 		localMap.info.height = localHeight;
 		localMap.info.width = localWidth;

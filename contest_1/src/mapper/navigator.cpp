@@ -19,9 +19,15 @@ class FindCoord {
 public:
 	FindCoord() {
 		pub = n.advertise<geometry_msgs::Pose2D>("goofCoord",1);
-		sub = n.subscribe("goofMap", 1, &FindCoord::callback, this);
+		subMap = n.subscribe("goofMap", 1, &FindCoord::callbackMap, this);
+		subOdom = n.subscribe("odom", 1, &FindCoord::callbackOdom, this);
+
+		// Set robot's initial pose
+		robotPos.x = 0.0f;
+		robotPos.y = 0.0f;
+		robotPos.theta = 0.0f;
 	}
-	void callback(const nav_msgs::OccupancyGrid grid) {
+	void callbackMap(const nav_msgs::OccupancyGrid grid) {
 		// need a position
 		// have an A* search, without going the way we came
 		// need to have a list of past places
@@ -30,21 +36,8 @@ public:
 		double currentX, currentY;
 
 		// need to get odom. probably from a service
-		nav_msgs::Odometry odom;
+		//nav_msgs::Odometry odom;
 		geometry_msgs::Pose2D origin;
-		geometry_msgs::Pose2D robotPos;
-
-		robotPos.x = odom.pose.pose.position.x;
-		robotPos.y = odom.pose.pose.position.y;
-		tf::Quaternion q (odom.pose.pose.orientation.x,
-				odom.pose.pose.orientation.y,
-				odom.pose.pose.orientation.z,
-				odom.pose.pose.orientation.w
-				);
-		tf::Matrix3x3 m(q);
-		double roll, pitch, yaw;
-		m.getRPY(roll, pitch, yaw);
-		robotPos.theta = goofy::common::quat2yaw(odom.pose.pose.orientation);
 
 		origin.x = grid.info.origin.position.x;
 		origin.y = grid.info.origin.position.y;
@@ -62,10 +55,23 @@ public:
 		//publish coordinate
 		pub.publish(coord);
 	}
+	void callbackOdom(const nav_msgs::Odometry odom)
+	{
+		// Find robot 2D pose from odometry
+		// Position (x,y)
+		robotPos.x = odom.pose.pose.position.x;
+		robotPos.y = odom.pose.pose.position.y;
+
+		robotPos.theta = goofy::common::quat2yaw(odom.pose.pose.orientation);
+	}
+
 private:
 	ros::NodeHandle n;
 	ros::Publisher pub;
-	ros::Subscriber sub;
+	ros::Subscriber subMap;
+	ros::Subscriber subOdom;
+
+	geometry_msgs::Pose2D robotPos;
 };
 
 
