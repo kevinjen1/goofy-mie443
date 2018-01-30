@@ -83,12 +83,22 @@ float RandomPlanner::shortenPathTimeTo(nav_msgs::Path path){
 	int pose_points = path.poses.size();
 	for (i = path.poses.size()-1; i >=0; i--){
 		double curr_position = (path.poses[i].pose.position.x, path.poses[i].pose.position.y);
-		double dist = sqrt(pow(curr_position[0],2) + pow(curr_position[1],2));
+		double dist = sqrt(pow(curr_position[0]-end_position[0],2) + pow(curr_position[1]-end_position[1],2));
 		if (dist > robotRadius){
 			break;
 		}
 	}
 	return _primitives.getPlan().time*(path.poses.size() - i)/path.poses.size();
+}
+
+float RandomPlanner::scanWidthAngle(nav_msgs::Path path, float x, float y){
+	/*  This is a helper function for checkPath, to be passed to checkObstacle
+		The idea is to find the angle between the robot's current position, and the edges of the robot at the point being checked
+		This is to account for the non-point-mass nature of the robot, for collision avoidance
+	*/	
+	float curr_position = (path.poses[i].pose.position.x, path.poses[i].pose.position.y);
+	float dist = sqrt(pow(curr_position[0]-x,2) + pow(curr_position[1]-y,2));
+	return atan2(dist, robotRadius);
 }
 
 bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle){
@@ -156,7 +166,11 @@ bool PrimitivePlanner::checkPath(nav_msgs::Path path){
 	int hit_points = 0;
 	int pose_points = path.poses.size();
 	for (int i = 0; i < pose_points; i++){
-		hit_points += checkObstacle(path.poses[i].pose.position.x, path.poses[i].pose.position.y, 2);
+		float x = path.poses[i].pose.position.x;
+		float y = path.poses[i].pose.position.y;
+		float scan_angle = scanWidthAngle(path, x, y);
+		//float scan_angle = 2;
+		hit_points += checkObstacle(x, y, scan_angle);
 	}
 
 	return (hit_points == 0);
