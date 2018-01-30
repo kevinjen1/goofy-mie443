@@ -59,10 +59,15 @@ void RandomPlanner::runIteration(){
 	
 	/*  Using the extra bin width so this isn't needed, 
 		but if we decide to do the shorten path method, this is what we would use:
-
+	
 		//see how much to shorten paths to avoid collisions
 		double shortTime = shortenPathTimeTo(_primitives.getPath(plan_index, common::BASE));
-		_primitives.getPlan().time = int (shortTime);
+		common::BasicMotion shortened = _primitives.getMotion(plan_index);
+		double temp = shortened.time*shortTime;
+		shortened.time = int(temp);
+
+		// add the primitive motion to the plan
+		_plan.push_back(shortened);
 	*/
 
 	// add the primitive motion to the plan
@@ -75,29 +80,29 @@ void RandomPlanner::runIteration(){
 	_new_plan = true;
 }
 
-float RandomPlanner::shortenPathTimeTo(nav_msgs::Path path){
-	/* Calculate the time to shorten the path so that it will end the path outside of the area of the robot
+double PrimitivePlanner::shortenPathTimeTo(nav_msgs::Path path){
+	/* Calculate the time ratio to shorten the path so that it will end the path outside of the area of the robot
 	*/
 	int i = 0;
-	double end_position = (path.poses.end().pose.position.x, path.poses.end().pose.position.y);
 	int pose_points = path.poses.size();
+	double end_position[2] = {path.poses[pose_points-1].pose.position.x, path.poses[pose_points-1].pose.position.y};
 	for (i = path.poses.size()-1; i >=0; i--){
-		double curr_position = (path.poses[i].pose.position.x, path.poses[i].pose.position.y);
+		double curr_position[2] = {path.poses[i].pose.position.x, path.poses[i].pose.position.y};
 		double dist = sqrt(pow(curr_position[0]-end_position[0],2) + pow(curr_position[1]-end_position[1],2));
 		if (dist > robotRadius){
 			break;
 		}
 	}
-	return _primitives.getPlan().time*(path.poses.size() - i)/path.poses.size();
+	return (path.poses.size() - i)/path.poses.size();
 }
 
-float RandomPlanner::scanWidthAngle(nav_msgs::Path path, float x, float y){
+float PrimitivePlanner::scanWidthAngle(nav_msgs::Path path, float x, float y){
 	/*  This is a helper function for checkPath, to be passed to checkObstacle
 		The idea is to find the angle between the robot's current position, and the edges of the robot at the point being checked
 		This is to account for the non-point-mass nature of the robot, for collision avoidance
 	*/	
-	float curr_position = (path.poses[i].pose.position.x, path.poses[i].pose.position.y);
-	float dist = sqrt(pow(curr_position[0]-x,2) + pow(curr_position[1]-y,2));
+	double curr_position[2] = {path.poses[0].pose.position.x, path.poses[0].pose.position.y};
+	double dist = sqrt(pow(curr_position[0]-x,2) + pow(curr_position[1]-y,2));
 	return atan2(dist, robotRadius);
 }
 

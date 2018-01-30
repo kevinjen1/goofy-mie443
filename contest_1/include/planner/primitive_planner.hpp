@@ -45,8 +45,8 @@ public:
 protected:
 	bool checkObstacle(float x_pos, float y_pos, float scan_angle);
 	bool checkPath(nav_msgs::Path path);
-	double RandomPlanner::shortenPathTimeTo(nav_msgs::Path path);
-	float RandomPlanner::scanWidthAngle(nav_msgs::Path path);
+	double shortenPathTimeTo(nav_msgs::Path path);
+	float scanWidthAngle(nav_msgs::Path path, float x, float y);
 
 	common::Visualizer _vis;
 	MotionList _plan;
