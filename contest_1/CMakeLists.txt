@@ -51,6 +51,5 @@ target_link_libraries(test_common goofy_common)
 
 add_executable(goofMapper src/mapper/mapper.cpp)
 target_link_libraries(goofMapper ${catkin_LIBRARIES} goofy_common)
-#add_executable(goofNavigator src/mapper/navigator.cpp)
-#target_link_libraries(goofNavigator ${catkin_LIBRARIES} goofy_common)
-
+add_executable(goofNavigator src/mapper/navigator.cpp)
+target_link_libraries(goofNavigator ${catkin_LIBRARIES} goofy_common)
