@@ -11,10 +11,12 @@
  * and should publish to a topic
  */
 
-ros::Publisher coord_pub;
+
+namespace goofy{
+namespace mapper{
 
 //void lookForCoordinates(const nav_msgs::OccupancyGrid grid) {
-void lookForCoordinates(const goofy::mapper::LocalMap grid) {
+void lookForCoordinates(const LocalMap grid) {
 	// need a position
 	// have an A* search, without going the way we came
 	// need to have a list of past places
@@ -52,7 +54,7 @@ void lookForCoordinates(const goofy::mapper::LocalMap grid) {
 	geometry_msgs::Pose2D coord = getCoordinate(grid);
 
 	//publish coordinate
-//	coord_pub.publish();
+	coord_pub.publish(coord);
 
 }
 
@@ -63,7 +65,7 @@ geometry_msgs::Pose2D getCoordinate(goofy::mapper::LocalMap grid) {
 	geometry_msgs::Pose2D coord;// = new geometry_msgs::Pose2D;
 	return coord;
 }
-
+}}
 
 
 int main(int argc, char **argv) {
@@ -72,9 +74,9 @@ int main(int argc, char **argv) {
 
 	ROS_INFO("Here is goof navigator");
 	goofy::mapper::LocalMap hello;
-//
-//	ros::Subscriber mapper_sub =  n.subscribe("goofMap", 1000, &lookForCoordinates);
-//	coord_pub = n.advertise<geometry_msgs::Pose2D>("chatter", 1000);
+
+	ros::Subscriber mapper_sub =  n.subscribe("goofMap", 1000, &goofy::mapper::lookForCoordinates);
+	goofy::mapper::coord_pub = n.advertise<geometry_msgs::Pose2D>("goofCoord", 1000);
 //
 ////	ros::Rate loop_rate(10);
 //	ros::spin();

@@ -26,27 +26,53 @@ private:
 	ros::Subscriber _laser_sub;
 };
 
-struct LocalMap {
-	// map
-	vector<vector<int> > matrix;
-	double resolution;
-	int boundingHeight;
-	int boundingWidth;
-	geometry_msgs::Pose origin;
-	ros::Time time;
-};
+//struct LocalMap {
+//	// map
+//	vector<vector<int> > matrix;
+//	double resolution;
+//	int boundingHeight;
+//	int boundingWidth;
+//	geometry_msgs::Pose origin;
+//	ros::Time time;
+//};
 
-class GMap{
-public:
-	GMap(){}
-	LocalMap processRawMap(const nav_msgs::OccupancyGrid grid);
-private:
-	int getMinHeight(int width, int height, std::vector<int8_t> data);
-	int getMaxHeight(int width, int height, std::vector<int8_t> data);
-	int getMinWidth(int width, int height, std::vector<int8_t> data);
-	int getMaxWidth(int width, int height, std::vector<int8_t> data);
-};
 
+//class GMap{
+//public:
+//	GMap(){}
+//	LocalMap processRawMap(const nav_msgs::OccupancyGrid grid);
+//private:
+//	int getMinHeight(int width, int height, std::vector<int8_t> data);
+//	int getMaxHeight(int width, int height, std::vector<int8_t> data);
+//	int getMinWidth(int width, int height, std::vector<int8_t> data);
+//	int getMaxWidth(int width, int height, std::vector<int8_t> data);
+//};
+
+void processRawMap(const nav_msgs::OccupancyGrid grid);
+int getMinHeight(int width, int height, std::vector<int8_t> data);
+int getMaxHeight(int width, int height, std::vector<int8_t> data);
+int getMinWidth(int width, int height, std::vector<int8_t> data);
+int getMaxWidth(int width, int height, std::vector<int8_t> data);
+
+//ros::Publisher local_pub;
+
+//class SubsribeAndPublish {
+//public:
+//
+//	SubsribeAndPublish() {
+//		pub = n.advertise<LocalMap>("goofMap", 1);
+//		sub = n.subscribe("map", 1, &SubsribeAndPublish::callback, this);
+//	}
+//
+////	void callback(const nav_msgs::OccupancyGrid& grid) {
+////	}
+//	void callback(const nav_msgs::OccupancyGrid& grid);
+//
+//private:
+//	ros::NodeHandle n;
+//	ros::Publisher pub;
+//	ros::Subscriber sub;
+//};
 }
 }
 
