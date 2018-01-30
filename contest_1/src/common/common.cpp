@@ -87,6 +87,26 @@ double quat2yaw(geometry_msgs::Quaternion quat) {
 	return yaw;
 }
 
+/*geometry_msgs::PoseStamped poseUpdate(geometry_msgs::PoseStamped& curr_pose, float yaw, float x, float y) {
+	// Given a rotation matrix, and a PoseStamped, update the PoseStamped.
+	
+	
+	// Current x and y positions
+	curr_x = curr_pose.pose.position.x;
+	curr_y = curr_pose.pose.position.y;	
+	
+	// Update position coordinates
+	curr_pose.pose.position.x = curr_x*cos(yaw) - curr_y*sin(yaw) + x;
+	curr_pose.pose.position.y = curr_x*sin(yaw) + curr_y*cos(yaw) + y;
+	
+	// Now update the heading
+	quat = yaw2quat(double rotation);	
+	curr_pose.pose.quaternion.x = quat.x;
+	curr_pose.pose.quaternion.y = quat.y;
+	curr_pose.pose.quaternion.z = quat.z;
+	curr_pose.pose.quaternion.w = quat.w;
+	} */
+
 }
 }
 
