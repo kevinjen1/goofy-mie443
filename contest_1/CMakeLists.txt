@@ -12,11 +12,18 @@ find_package(catkin REQUIRED COMPONENTS
 	genmsg 
 	image_transport 
 	sensor_msgs 
-	kobuki_msgs)
+	kobuki_msgs
+	nav_msgs
+	message_generation)
+
+add_message_files (
+	FILES
+	customMsg.msg
+)
 
 generate_messages(DEPENDENCIES sensor_msgs kobuki_msgs)
 
-catkin_package()
+catkin_package(CATKIN_DEPENDS message_runtime)
 
 include_directories(include ${OpenCV_INCLUDE_DIRS} ${catkin_INCLUDE_DIRS})
 
@@ -29,6 +36,12 @@ target_link_libraries(primitive_planner goofy_common ${catkin_LIBRARIES})
 add_library(mapper src/mapper/mapper.cpp)
 target_link_libraries(mapper ${catkin_LIBRARIES} ${OpenCV_LIB})
 
+catkin_add_gtest(test_planner test/test_planner.cpp)
+target_link_libraries(test_planner primitive_planner goofy_common)
+
+# catkin_add_gtest(test_mapper test/test_mapper.cpp)
+# target_link_libraries(test_mapper mapper)
+
 # add the publisher example
 add_executable(contest1 src/contest1.cpp)
 target_link_libraries(contest1 ${catkin_LIBRARIES} ${OpenCV_LIB} goofy_common primitive_planner)
@@ -38,4 +51,9 @@ target_link_libraries(test_planner primitive_planner goofy_common)
 
 catkin_add_gtest(test_common test/test_common.cpp)
 target_link_libraries(test_common goofy_common)
+
+add_executable(goofMapper src/mapper/mapper.cpp)
+target_link_libraries(goofMapper ${catkin_LIBRARIES} goofy_common)
+#add_executable(goofNavigator src/mapper/navigator.cpp)
+#target_link_libraries(goofNavigator ${catkin_LIBRARIES} goofy_common)
 

@@ -14,12 +14,43 @@
 using namespace std;
 using namespace goofy;
 
+bool bumperL = 0, bumperC = 0, bumperR = 0;
+double lRange = 10;
+int lSize = 0, lOffset = 0, dAngle = 5;
+
 void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg){
-	//fill with your code
+	if(msg->bumper == 0)
+		bumperL = !bumperL;
+	else if(msg->bumper == 1)
+		bumperC = !bumperC;
+	else if(msg->bumper == 2)
+		bumperR = !bumperR;
 }
 
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
-	//fill with your code
+
+	// Print statement to test checkObstacle() - remove later
+	// std::cout << "Check Obstacle:" << goofy::planner::PrimitivePlanner::checkObstacle(msg, 1, 0.25) << endl;
+	
+	lSize = (msg->angle_max -msg->angle_min)/msg->angle_increment;
+	lOffset = dAngle*Pi/(180*msg->angle_increment);
+	lRange = 11;
+	
+	if (dAngle*Pi/180 < msg->angle_max && -dAngle*Pi/180 > msg->angle_min){
+		for (int i = lSize/2 - lOffset; i < lSize/2 + lOffset; i++){
+			if (lRange > msg->ranges[i])
+				lRange = msg->ranges[i];
+		}
+	}
+	else{
+		for (int i = 0; i < lSize; i++){
+			if (lRange > msg->ranges[i])
+				lRange = msg->ranges[i];
+		}
+	}
+
+	if (lRange == 11)
+		lRange = 0;
 }
 
 int main(int argc, char **argv)
@@ -64,6 +95,19 @@ int main(int argc, char **argv)
 		//...................................
 
 		//fill with your code
+
+		// Update bumper values in random_planner
+		/*random_planner.bumperLeft = bumperL;
+		random_planner.bumperCenter = !bumperC;
+		random_planner.bumperRight = !bumperR;
+
+		// Update laser values in random_planner
+		random_planner.laserRange = lRange;
+		random_planner.laserSize = lSize;
+		random_planner.laserOffset = lOffset;
+		random_planner.desiredAngle = dAngle;
+
+		// Continuously get random paths
 		nav_msgs::Path path = random_planner.getPath();
 		vis.publishPath(path, std::chrono::milliseconds(10));
 		if (!random_planner.getVelocity(vel)){
@@ -71,7 +115,7 @@ int main(int argc, char **argv)
 			std::cout << "Getting new plan!" << std::endl;
 		}
 
- 		vel_pub.publish(vel);
+ 		vel_pub.publish(vel);*/
 	}
 
 	return 0;

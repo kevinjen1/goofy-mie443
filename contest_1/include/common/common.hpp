@@ -48,8 +48,9 @@ private:
 };
 
 geometry_msgs::Quaternion yaw2quat(double yaw);
-double quat2yaw(geometry_msgs::Quaternion quaternion);
+
 void filterLaserScan(sensor_msgs::LaserScan& scan, int window);
+double quat2yaw(geometry_msgs::Quaternion quat);
 
 }
 }

@@ -1,8 +1,8 @@
 #include "planner/primitive_planner.hpp"
 #include <sensor_msgs/LaserScan.h>
 #include <math.h>
-
-#define Pi 3.14159265
+#include <stdio.h>
+using namespace std;
 
 namespace goofy{
 namespace planner{
@@ -62,25 +62,75 @@ void RandomPlanner::runIteration(){
 
 bool PrimitivePlanner::checkObstacle(const sensor_msgs::LaserScan::ConstPtr& msg, float x_pos, float y_pos)
 {
-	// Step 1 - take the (x_pos,y_pos) and calculate the angle and tangent
+	// Step 1 - take the (x_pos,y_pos) and calculate the angle and tangent.
 	float angle = atan2(y_pos,x_pos);
 	float tangent = sqrt((y_pos)*(y_pos) + (x_pos)*(x_pos));
+	bool obstacle = false;
+	
+	// Print statements just for debugging - remove later
+	// std::cout << "angle:" << angle << endl;
+	// std::cout << "tangent:" << tangent << endl;
 	
 	// Step 2 - Check if the position is in your view.
+	
+	// Print statements just for debugging - remove later
+	// std::cout << "Min angle:" << msg->angle_min << endl;
+	// std::cout << "Max angle:" << msg->angle_max << endl;
+	// std::cout << "Min range:" << msg->range_min << endl;
+	// std::cout << "Max range:" << msg->range_max << endl;
+
 	if(msg->angle_max < angle || msg->angle_min > angle){
-		return 0;
+		// std::cout << "condition 1" << endl;		
+		return obstacle;
 	}
 	else if(msg->range_min > tangent || msg->range_max < tangent){
-		return 0;
-	}
-	// Step 3 - Check position for obstacle.
-	int index = (angle - (msg->angle_min))/(msg->angle_increment);
-	if(tangent > msg->ranges[index]){
-		return 1;	
+		// std::cout << "condition 2" << endl;		
+		return obstacle;
 	}
 	else {
-		return 0;
+		// Step 3 - Check position for obstacle.
+		
+		// Print statements just for debugging - remove later		
+		// std::cout << "condition 3" << endl;	
+	
+		int index = (angle - (msg->angle_min))/(msg->angle_increment);
+		int laserSize = (msg->angle_max -msg->angle_min)/msg->angle_increment;
+
+		// Print statements just for debugging - remove later
+		// std::cout << "Index:" << index << endl;	
+		// std::cout << "laserSize:" << laserSize << endl;
+	
+		for(int i = index-2; i <= index+2; i++){
+			//0.50 degree on both sides of the index
+
+			// Print statements just for debugging - remove later
+			// std::cout << "i:" << i << "  r[i]:" << msg->ranges[i] << endl;	
+	
+			if(0 <= i <= laserSize){
+				if(tangent > msg->ranges[i]){
+					obstacle = true;	
+				}
+			}
+		}
+		return obstacle;
 	}
+}
+
+bool PrimitivePlanner::checkPath(nav_msgs::Path path){
+	/*  Goes through each of the points in a path
+	Uses checkObstacle to see if there is an obstacle along the path 
+	Outputs bool indicating if an object lies along the path
+	*/
+
+	sensor_msgs::LaserScan::ConstPtr msg;
+
+	int hit_points = 0;
+	int pose_points = path.poses.size();
+	for (int i = 0; i < pose_points; i++){
+		hit_points += checkObstacle(msg, path.poses[i].pose.position.x, path.poses[i].pose.position.y);
+	}
+
+	return (hit_points > 0);
 }
 
 }
