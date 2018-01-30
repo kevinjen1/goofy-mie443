@@ -10,7 +10,7 @@
 namespace goofy{
 namespace planner{
 
-const double DENSITY = 0.05;
+const double DENSITY = 0.01;
 
 typedef std::vector<common::BasicMotion> MotionList;
 typedef std::vector<nav_msgs::Path> PathList;

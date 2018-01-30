@@ -18,7 +18,7 @@ public:
 	PrimitivePlanner(PrimitiveRepresentation primitives):
 		_primitives(primitives),
 		_new_plan(false){
-		_path.header.frame_id = common::BASE;
+		_path.header.frame_id = "camera_depth_frame";
 	}
 	virtual ~PrimitivePlanner() = default;
 
@@ -43,7 +43,7 @@ public:
 	float robotRadius = 0.2;	// in m
 
 protected:
-	bool checkObstacle(float x_pos, float y_pos);
+	bool checkObstacle(float x_pos, float y_pos, float scan_angle);
 	bool checkPath(nav_msgs::Path path);
 	double RandomPlanner::shortenPathTimeTo(nav_msgs::Path path);
 
