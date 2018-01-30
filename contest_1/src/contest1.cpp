@@ -76,11 +76,13 @@ int main(int argc, char **argv)
 	common::BasicMotion straight{1, 0, 6000};
 	common::BasicMotion turn_left{1,0.3, 6000};
 	common::BasicMotion turn_right{1.,-0.3, 6000};
+	common::BasicMotion on_spot{0, 0.3, 6000};
 
 	planner::MotionList motions;
 	motions.push_back(straight);
 	motions.push_back(turn_left);
 	motions.push_back(turn_right);
+	motions.push_back(on_spot);
 
 	//Setup Planner
 	planner::PrimitiveRepresentation primitives(robot, motions);
@@ -90,8 +92,15 @@ int main(int argc, char **argv)
 	double angular = 0.0;
 	double linear = 0.0;
 	geometry_msgs::Twist vel;
+	
+	while (!curr_scan){
+		ros::spinOnce();
+	}
 
-	random_planner.runIteration();
+	if(curr_scan){
+		random_planner.updateLaserScan(curr_scan);		
+		random_planner.runIteration();
+	}
 
 	while(ros::ok()){
 		ros::spinOnce();
@@ -99,20 +108,22 @@ int main(int argc, char **argv)
 		eStop.block();
 		//...................................
 
-		//fill with your code
 
 		// Update bumper values in random_planner
 		random_planner.bumperLeft = bumperL;
-		random_planner.bumperCenter = !bumperC;
-		random_planner.bumperRight = !bumperR;
+		random_planner.bumperCenter = bumperC;
+		random_planner.bumperRight = bumperR;
 
 		// Update laser values in random_planner
-		random_planner.updateLaserScan(curr_scan);
+		if(curr_scan) {
+			random_planner.updateLaserScan(curr_scan);
+		}
 
 		// Continuously get random paths
 		nav_msgs::Path path = random_planner.getPath();
 		vis.publishPath(path, std::chrono::milliseconds(10));
-		if (!random_planner.getVelocity(vel)){
+		if (!random_planner.getVelocity(vel) && curr_scan){
+			random_planner.updateLaserScan(curr_scan);			
 			random_planner.runIteration();
 			std::cout << "Getting new plan!" << std::endl;
 		}

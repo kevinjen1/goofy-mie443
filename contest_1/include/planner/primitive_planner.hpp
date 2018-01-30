@@ -18,7 +18,7 @@ public:
 	PrimitivePlanner(PrimitiveRepresentation primitives):
 		_primitives(primitives),
 		_new_plan(false){
-		_path.header.frame_id = common::BASE;
+		_path.header.frame_id = "camera_depth_frame";
 	}
 	virtual ~PrimitivePlanner() = default;
 
