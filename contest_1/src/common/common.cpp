@@ -60,6 +60,25 @@ geometry_msgs::Quaternion yaw2quat(double yaw) {
 	return retval;
 }
 
+void filterLaserScan(sensor_msgs::LaserScan& scan, int window){
+	double begin_val;
+	bool first_scan = false;
+	for (std::vector<float>::iterator i = scan.ranges.begin(); i < (scan.ranges.end() - window) ; i++){
+		float cur_val = *i;
+		if (!std::isnan(cur_val)){ //see our first number
+			begin_val = cur_val;
+			first_scan = true;
+		} else if (first_scan == true){ //is currently nan, check up to the window
+			for (std::vector<float>::iterator j = i; j < i + window; j++){
+				float cur_check = *j;
+				if (!std::isnan(cur_check)){
+					*i = (begin_val + cur_check)/2; //set to the average value between the two
+				}
+			}
+		}
+	}
+}
+
 double quat2yaw(geometry_msgs::Quaternion quat) {
 	tf::Quaternion q(quat.x, quat.y, quat.z, quat.w);
 	tf::Matrix3x3 m(q);
