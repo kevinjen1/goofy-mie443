@@ -117,9 +117,20 @@ bool PrimitivePlanner::checkObstacle(const sensor_msgs::LaserScan::ConstPtr& msg
 }
 
 bool PrimitivePlanner::checkPath(nav_msgs::Path path){
-	// Needs implementation
-		
-	return true;
+	/*  Goes through each of the points in a path
+	Uses checkObstacle to see if there is an obstacle along the path 
+	Outputs bool indicating if an object lies along the path
+	*/
+
+	sensor_msgs::LaserScan::ConstPtr msg;
+
+	int hit_points = 0;
+	int pose_points = path.poses.size();
+	for (int i = 0; i < pose_points; i++){
+		hit_points += checkObstacle(msg, path.poses[i].pose.position.x, path.poses[i].pose.position.y);
+	}
+
+	return (hit_points > 0);
 }
 
 }
