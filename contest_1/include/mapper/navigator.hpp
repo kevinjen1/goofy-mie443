@@ -3,11 +3,19 @@
 
 #include "geometry_msgs/Pose2D.h"
 #include "mapper/mapper.hpp"
-
+#define PI	3.14159265358979323846
 namespace goofy{
 namespace mapper{
 
-geometry_msgs::Pose2D getCoordinate(nav_msgs::OccupancyGrid grid);
+struct Slope {
+	double rise;
+	double run;
+};
+
+geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol);
+vector<vector<int>> getMatrixFromGrid(nav_msgs::OccupancyGrid grid);
+Slope getClosestAxisToHeading(double theta);
+int getAngle(int* angleChange);
 
 }}
 
