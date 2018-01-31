@@ -80,6 +80,40 @@ void RandomPlanner::runIteration(){
 	_new_plan = true;
 }
 
+
+void WeightedPlanner::runIteration(){
+	/* Need implementing */
+
+	bool success = false;
+	int plan_index = -1;
+	while (success == false){
+		plan_index++;
+		success = checkPath(_primitives.getPath(plan_index, common::BASE));		
+	}
+	
+	/*  Using the extra bin width so this isn't needed, 
+		but if we decide to do the shorten path method, this is what we would use:
+	
+		//see how much to shorten paths to avoid collisions
+		double shortTime = shortenPathTimeTo(_primitives.getPath(plan_index, common::BASE));
+		common::BasicMotion shortened = _primitives.getMotion(plan_index);
+		double temp = shortened.time*shortTime;
+		shortened.time = int(temp);
+
+		// add the primitive motion to the plan
+		_plan.push_back(shortened);
+	*/
+
+	// add the primitive motion to the plan
+	_plan.push_back(_primitives.getMotion(plan_index));
+
+	//add the associated path to the path
+	nav_msgs::Path cur_path = _primitives.getPath(plan_index, common::BASE);
+	_path.poses.insert(_path.poses.end(), cur_path.poses.begin(), cur_path.poses.end());
+
+	_new_plan = true;
+}
+
 double PrimitivePlanner::shortenPathTimeTo(nav_msgs::Path path){
 	/* Calculate the time ratio to shorten the path so that it will end the path outside of the area of the robot
 	*/
@@ -157,6 +191,18 @@ bool PrimitivePlanner::checkPath(nav_msgs::Path path){
 	}
 
 	return (hit_points == 0);
+}
+
+float WeightedPlanner::checkObstacle(float x_pos, float y_pos, float scan_angle){
+	/*  Needs implementing */
+
+	return 0.0;
+}
+
+float WeightedPlanner::checkPath(nav_msgs::Path path){
+	/*  Needs implementing */
+
+	return 0.0;
 }
 
 }

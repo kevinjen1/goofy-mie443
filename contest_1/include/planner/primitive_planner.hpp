@@ -70,5 +70,17 @@ public:
 	virtual void runIteration() override;
 };
 
+class WeightedPlanner: public PrimitivePlanner{
+public:
+	WeightedPlanner(PrimitiveRepresentation primitives):
+		PrimitivePlanner(primitives){}
+
+	virtual void runIteration() override;
+
+protected:
+	float checkObstacle(float x_pos, float y_pos, float scan_angle);
+	float checkPath(nav_msgs::Path path);
+};
+
 }
 }
