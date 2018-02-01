@@ -153,7 +153,7 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 	double tenDegrees = 0.1745;
 	int angleChange = 0;
 	int cellState = 0;
-	int angle = 0;
+	double angle = 0;
 
 	while (angle < PI) {
 		int step = 1;
@@ -177,6 +177,7 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 		}
 
 		angle = getAngle(&angleChange);
+		ROS_INFO_STREAM("trying angle: " << angle << " - " << convertToDegree(angle));
 
 		// rotate the heading by 10 degrees
 		if (isZero(slope.run)) {
@@ -188,7 +189,6 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 			run = cos(angle) * slope.run;
 			rise = sin(angle);
 		}
-		ROS_INFO_STREAM("trying angle " << convertToDegree(angle));
 	}
 
 	geometry_msgs::Pose2D coord;
@@ -218,8 +218,9 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 /**
  * Get the new angle given the stage of incremental change
  */
-int getAngle(int* angleChange) {
+double getAngle(int* angleChange) {
 	double tenDegrees = 0.1745;
+	ROS_INFO_STREAM("Angle change is " << (*angleChange));
 
 	if (*angleChange == 0) {
 		*angleChange = 1;
@@ -228,6 +229,7 @@ int getAngle(int* angleChange) {
 	} else {
 		*angleChange = -*angleChange + 1;
 	}
+	ROS_INFO_STREAM("changed to: " << (*angleChange));
 	return tenDegrees*(*angleChange);
 }
 
