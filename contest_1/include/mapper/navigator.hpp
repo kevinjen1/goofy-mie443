@@ -16,6 +16,8 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 vector<vector<int>> getMatrixFromGrid(nav_msgs::OccupancyGrid grid);
 Slope getClosestAxisToHeading(double theta);
 int getAngle(int* angleChange);
+bool isZero(double value);
+int convertToDegree(double rad);
 
 }}
 
