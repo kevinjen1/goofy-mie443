@@ -179,19 +179,22 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 		angle = getAngle(&angleChange);
 
 		// rotate the heading by 10 degrees
-		if (slope.run == 0) {
+		if (isZero(slope.run)) {
+			ROS_INFO_STREAM("run is zero");
 			rise = cos(angle) * slope.rise;
 			run = sin(angle);
-		} else if (slope.rise == 0) {
+		} else if (isZero(slope.rise)) {
+			ROS_INFO_STREAM("rise is zero");
 			run = cos(angle) * slope.run;
 			rise = sin(angle);
 		}
+		ROS_INFO_STREAM("trying angle " << convertToDegree(angle));
 	}
 
 	geometry_msgs::Pose2D coord;
 
-	int degreeAngle = angle * 180/PI;
-	ROS_INFO_STREAM("angle: " << degreeAngle);
+
+	ROS_INFO_STREAM("angle: " << convertToDegree(angle));
 	ROS_INFO_STREAM("originalRunRise: " << slope.run << "/" << slope.rise);
 	ROS_INFO_STREAM("finalRunRise: " << run << "/" << rise);
 	ROS_INFO_STREAM("finalRunRise: " << run << "/" << rise);
@@ -226,6 +229,15 @@ int getAngle(int* angleChange) {
 		*angleChange = -*angleChange + 1;
 	}
 	return tenDegrees*(*angleChange);
+}
+
+bool isZero(double value) {
+	double sigma = 1e-3;
+	return abs(value) - 0 < sigma;
+}
+
+int convertToDegree(double rad) {
+	return rad * 180/PI;
 }
 
 }}
