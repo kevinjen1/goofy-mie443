@@ -77,9 +77,9 @@ public:
 
 	virtual void runIteration() override;
 
-protected:
-	float checkObstacle(float x_pos, float y_pos, float scan_angle);
-	float checkPath(nav_msgs::Path path);
+    float checkPath(nav_msgs::Path path);
+    float scanWidthAngle(float curr_x, float curr_y, float x, float y);
+    float getDistance(float max_angle, float min_angle);
 };
 
 }

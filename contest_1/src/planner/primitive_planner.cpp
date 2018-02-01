@@ -82,14 +82,28 @@ void RandomPlanner::runIteration(){
 
 
 void WeightedPlanner::runIteration(){
-	/* Need implementing */
+	/* Need implementing 
+        Does all the same path overhead as RandomPlanner::runIteration above
+        Uses PrimitivePlanner::checkPath to see if each path has an obstacle
+        Split up the obstacle-free paths into their max/min POV angle bounds
+        For each one, find bins, and sum up laser distance readings
+        Note: Need to handle too close/far. Ignore if NaN, use initial default - what do if all NaN?
+        Pick the path with the max value (furthest from an obstacle)
+    */
 
-	bool success = false;
-	int plan_index = -1;
-	while (success == false){
-		plan_index++;
-		success = checkPath(_primitives.getPath(plan_index, common::BASE));		
-	}
+    int max_path = -1;
+    float max_outcome = 0;
+	for (int i = 0; i <= _primitives.getLength(); i++) {
+		float outcome = checkPath(_primitives.getPath(i, common::BASE));       
+        if (outcome == -2) {
+            // do something.. right now nothing in mind
+        }
+        else if (outcome >= max_outcome){
+            max_path = i;
+        }	
+    }
+
+    // Need some handle for if no paths are good
 	
 	/*  Using the extra bin width so this isn't needed, 
 		but if we decide to do the shorten path method, this is what we would use:
@@ -105,10 +119,10 @@ void WeightedPlanner::runIteration(){
 	*/
 
 	// add the primitive motion to the plan
-	_plan.push_back(_primitives.getMotion(plan_index));
+	_plan.push_back(_primitives.getMotion(max_path));
 
 	//add the associated path to the path
-	nav_msgs::Path cur_path = _primitives.getPath(plan_index, common::BASE);
+	nav_msgs::Path cur_path = _primitives.getPath(max_path, common::BASE);
 	_path.poses.insert(_path.poses.end(), cur_path.poses.begin(), cur_path.poses.end());
 
 	_new_plan = true;
@@ -193,16 +207,69 @@ bool PrimitivePlanner::checkPath(nav_msgs::Path path){
 	return (hit_points == 0);
 }
 
-float WeightedPlanner::checkObstacle(float x_pos, float y_pos, float scan_angle){
-	/*  Needs implementing */
+float WeightedPlanner::scanWidthAngle(float curr_x, float curr_y, float x, float y){
+	/*  This is a helper function for checkPath, to be passed to checkObstacle
+		The idea is to find the angle between the robot's current position, and the point being checked
+		This is to help tally up the min/max angle bounds for diving paths into laser bin ranges
+	*/	
+	double curr_position[2] = {curr_x, curr_y};
+	return atan2(curr_position[1]-y, curr_position[0]-x);
+}
 
-	return 0.0;
+float WeightedPlanner::getDistance(float max_angle, float min_angle){
+	/* 
+        Returns:
+            -1 if out of FOV
+            -2 if all values are NaN
+            Otherwise returns sum of all buckets in range
+	*/	
+	
+	// Step 2 - Check if the position is in your view.
+	if (_scan->angle_max < max_angle || _scan->angle_min > min_angle){		
+		return -1;
+	}
+
+    int numBins = (_scan->angle_max -_scan->angle_min)/_scan->angle_increment;
+    int min_bucket = ((_scan->angle_max -_scan->angle_min)/2 - min_angle)/_scan->angle_increment;
+    int max_bucket = (max_angle - (_scan->angle_max -_scan->angle_min)/2)/_scan->angle_increment;
+    float bucket_sum = -2;
+    //int scan_width = (scan_angle)/_scan->angle_increment;
+    for(int i = min_bucket; i <= max_bucket; i++){
+    	if(!isnan(_scan->ranges[i])){
+			bucket_sum += _scan->ranges[i];
+		}
+	}
+	return bucket_sum;
 }
 
 float WeightedPlanner::checkPath(nav_msgs::Path path){
-	/*  Needs implementing */
+	/*  Needs implementing 
+        Returns:
+            -1 if invalid path (out of FOV or obstacles hit)
+            -2 if all readings are NaN
+            Otherwise returns sum of all buckets in range
+    */
 
-	return 0.0;
+    float min_angle = 0;
+    float max_angle = 50;
+    int pose_points = path.poses.size();
+
+	for (int i = 1; i < pose_points; i++){
+		float x = path.poses[i].pose.position.x;
+		float y = path.poses[i].pose.position.y;
+		float scan_angle = scanWidthAngle(path.poses[0].pose.position.x, path.poses[0].pose.position.y, x, y);
+
+        // Check for obstacle collisions / out of scan range, return invalid path
+        if (checkObstacle(x, y, scan_angle)){
+            return -1;
+        }
+
+        // Get the mix/max angles of points along the path
+        if (scan_angle > max_angle) {max_angle = scan_angle;}
+        if (scan_angle < min_angle) {min_angle = scan_angle;}
+	}
+
+	return getDistance(max_angle, min_angle);
 }
 
 }
