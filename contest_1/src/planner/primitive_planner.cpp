@@ -91,19 +91,27 @@ void WeightedPlanner::runIteration(){
         Pick the path with the max value (furthest from an obstacle)
     */
 
+	int backupPathIndex;
     int max_path = -1;
     float max_outcome = 0;
-	for (int i = 0; i <= _primitives.getLength(); i++) {
+	for (int i = 0; i < _primitives.getLength()-1; i++) {
+		// Hacked way to see if it is on_spot		
+		//if (_primitives.getPath(i, common::BASE).linear_velocity == 0){
+//		nav_msgs::Path tempPath = _primitives.getPath(i, common::BASE);
+//		if (tempPath.poses[0].pose.position == tempPath.poses[tempPath.poses.size()-1].pose.position){
+//			backupPathIndex = i;
+//			continue;
+//		}
 		float outcome = checkPath(_primitives.getPath(i, common::BASE));       
-        if (outcome == -2) {
-            // do something.. right now nothing in mind
-        }
-        else if (outcome >= max_outcome){
+        if (outcome >= max_outcome){
             max_path = i;
         }	
     }
 
-    // Need some handle for if no paths are good
+    // If no paths are good, select spin on the spot
+	if (max_path < 0){
+		max_path = _primitives.getLength()-1;
+	}
 	
 	/*  Using the extra bin width so this isn't needed, 
 		but if we decide to do the shorten path method, this is what we would use:
@@ -237,8 +245,7 @@ float WeightedPlanner::scanWidthAngle(float curr_x, float curr_y, float x, float
 float WeightedPlanner::getDistance(float max_angle, float min_angle){
 	/* 
         Returns:
-            -1 if out of FOV
-            -2 if all values are NaN
+            -1 if invalid path (out of FOV or obstacles hit)
             Otherwise returns sum of all buckets in range
 	*/	
 	
@@ -248,14 +255,15 @@ float WeightedPlanner::getDistance(float max_angle, float min_angle){
 	}
 
     int numBins = (_scan->angle_max -_scan->angle_min)/_scan->angle_increment;
-    int min_bucket = ((_scan->angle_max -_scan->angle_min)/2 - min_angle)/_scan->angle_increment;
-    int max_bucket = (max_angle - (_scan->angle_max -_scan->angle_min)/2)/_scan->angle_increment;
-    float bucket_sum = -2;
+    int min_bucket = ((_scan->angle_max -_scan->angle_min)/2 + min_angle)/_scan->angle_increment;
+    int max_bucket = ((_scan->angle_max -_scan->angle_min)/2 + max_angle)/_scan->angle_increment;
+    float bucket_sum = -1;
     //int scan_width = (scan_angle)/_scan->angle_increment;
     for(int i = min_bucket; i <= max_bucket; i++){
-    	if(!isnan(_scan->ranges[i])){
-			bucket_sum += _scan->ranges[i];
+    	if(isnan(_scan->ranges[i])){
+			return -1;
 		}
+		bucket_sum += _scan->ranges[i];
 	}
 	return bucket_sum;
 }
@@ -264,7 +272,6 @@ float WeightedPlanner::checkPath(nav_msgs::Path path){
 	/*  Needs implementing 
         Returns:
             -1 if invalid path (out of FOV or obstacles hit)
-            -2 if all readings are NaN
             Otherwise returns sum of all buckets in range
     */
 

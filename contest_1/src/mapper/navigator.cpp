@@ -36,7 +36,6 @@ public:
 		double currentX, currentY;
 
 		// need to get odom. probably from a service
-		//nav_msgs::Odometry odom;
 		geometry_msgs::Pose2D origin;
 
 		origin.x = grid.info.origin.position.x;
@@ -52,7 +51,7 @@ public:
 		int row = diffY/grid.info.resolution;
 		int col = diffX/grid.info.resolution;
 
-		geometry_msgs::Pose2D coord = getCoordinateRayCasting(grid, slope, row, col);
+		geometry_msgs::Pose2D coord = getCoordinateRayCasting(grid, slope, row, col, robotPos);
 
 		// couldn't retrieve an unknown location
 		if (coord.x == 0 && coord.y == 0) {
@@ -137,7 +136,7 @@ Slope getClosestAxisToHeading(double theta)
 /**
  * Get an unknown coordinate of the map to explore
  */
-geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol) {
+geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol, geometry_msgs::Pose2D robotPos) {
 
 	vector<vector<int>> matrix = getMatrixFromGrid(grid);
 
@@ -180,24 +179,38 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 		angle = getAngle(&angleChange);
 
 		// rotate the heading by 10 degrees
-		if (slope.run == 0) {
+		if (isZero(slope.run)) {
+			ROS_INFO_STREAM("run is zero");
 			rise = cos(angle) * slope.rise;
 			run = sin(angle);
-		} else if (slope.rise == 0) {
+		} else if (isZero(slope.rise)) {
+			ROS_INFO_STREAM("rise is zero");
 			run = cos(angle) * slope.run;
 			rise = sin(angle);
 		}
+		ROS_INFO_STREAM("trying angle " << convertToDegree(angle));
 	}
 
 	geometry_msgs::Pose2D coord;
 
+
+	ROS_INFO_STREAM("angle: " << convertToDegree(angle));
+	ROS_INFO_STREAM("originalRunRise: " << slope.run << "/" << slope.rise);
+	ROS_INFO_STREAM("finalRunRise: " << run << "/" << rise);
+	ROS_INFO_STREAM("finalRunRise: " << run << "/" << rise);
+	ROS_INFO_STREAM("RobotPos: " << robotPos.x << "," << robotPos.y);
+
+
 	// didn't find a cell to discover
 	if (cellState >= 0) {
+		ROS_INFO_STREAM("COULD NOT FIND COORD");
 		return coord;
 	}
 
 	coord.x = grid.info.origin.position.x + (col * grid.info.resolution);
 	coord.y = grid.info.origin.position.y + (row * grid.info.resolution);
+
+	ROS_INFO_STREAM("PickedPos: " << coord.x << "," << coord.y);
 
 	return coord;
 }
@@ -216,6 +229,15 @@ int getAngle(int* angleChange) {
 		*angleChange = -*angleChange + 1;
 	}
 	return tenDegrees*(*angleChange);
+}
+
+bool isZero(double value) {
+	double sigma = 1e-3;
+	return abs(value) - 0 < sigma;
+}
+
+int convertToDegree(double rad) {
+	return rad * 180/PI;
 }
 
 }}
