@@ -16,7 +16,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 	else {
 		if (_new_plan == true){
 			_motion_index = _plan.begin();
-			_end_motion_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(int((*_motion_index).time * 0.8));
+			_end_motion_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(int((*_motion_index).time * 0.7));
 			_vel.linear.x = (*_motion_index).linear_velocity;
 			_vel.angular.z = (*_motion_index).angular_velocity;
 			_new_plan = false;
@@ -40,6 +40,10 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 		} else {
 			_motion_index++;
 			if (_motion_index == _plan.end()){
+
+				_vel.linear.x = 0;
+				_vel.linear.y = 0;
+
 				std::chrono::milliseconds left = std::chrono::duration_cast<std::chrono::milliseconds>(_end_motion_time - std::chrono::steady_clock::now());
 				std::cout << "Plan has ended" << std::endl;
 
@@ -116,6 +120,7 @@ void WeightedPlanner::runIteration(){
 //			continue;
 //		}
 		float outcome = checkPath(_primitives.getPath(i, common::BASE));       
+		_vis.publishPath(_primitives.getPath(i, common::BASE), std::chrono::milliseconds(1000));
         if (outcome >= max_outcome){
             max_path = i;
         }	
@@ -278,8 +283,8 @@ float WeightedPlanner::getDistance(float max_angle, float min_angle){
 	}
 
     int numBins = (_scan->angle_max -_scan->angle_min)/_scan->angle_increment;
-    int min_bucket = ((_scan->angle_max -_scan->angle_min)/2 + min_angle)/_scan->angle_increment;
-    int max_bucket = ((_scan->angle_max -_scan->angle_min)/2 + max_angle)/_scan->angle_increment;
+    int min_bucket = (_scan->angle_min - min_angle)/_scan->angle_increment;
+    int max_bucket = (_scan->angle_max - min_angle)/_scan->angle_increment;
     float bucket_sum = -1;
     //int scan_width = (scan_angle)/_scan->angle_increment;
     for(int i = min_bucket; i <= max_bucket; i++){

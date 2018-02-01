@@ -86,7 +86,7 @@ int main(int argc, char **argv)
 
 	//Setup Planner
 	planner::PrimitiveRepresentation primitives(robot, motions);
-	planner::RandomPlanner random_planner(primitives);
+	planner::WeightedPlanner random_planner(primitives);
 	common::Visualizer vis;
 
 	double angular = 0.0;
