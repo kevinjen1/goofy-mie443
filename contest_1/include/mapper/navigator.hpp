@@ -12,7 +12,7 @@ struct Slope {
 	double run;
 };
 
-geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol);
+geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol, geometry_msgs::Pose2D robotPos);
 vector<vector<int>> getMatrixFromGrid(nav_msgs::OccupancyGrid grid);
 Slope getClosestAxisToHeading(double theta);
 int getAngle(int* angleChange);
