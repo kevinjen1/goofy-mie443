@@ -1,4 +1,5 @@
 #include "planner/primitive_planner.hpp"
+#include <thread>
 #include <sensor_msgs/LaserScan.h>
 #include <math.h>
 #include <stdio.h>
@@ -15,14 +16,24 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 	else {
 		if (_new_plan == true){
 			_motion_index = _plan.begin();
-			_end_motion_time = std::chrono::steady_clock::now() + std::chrono::milliseconds((*_motion_index).time);
+			_end_motion_time = std::chrono::steady_clock::now() + std::chrono::milliseconds(int((*_motion_index).time * 0.8));
 			_vel.linear.x = (*_motion_index).linear_velocity;
 			_vel.angular.z = (*_motion_index).angular_velocity;
 			_new_plan = false;
 			std::cout << "Getting velocity with " << (*_motion_index).time << " milliseconds" << std::endl;
 		}
 
-		if (std::chrono::steady_clock::now() < _end_motion_time && !ifObstacle()){
+		if (std::chrono::steady_clock::now() < _end_motion_time){
+			if (ifObstacle()) {
+				_vel.linear.x = 0;
+				_vel.linear.y = 0;
+
+				std::cout << "Issue with the current path!" << std::endl;
+
+				_plan.clear();
+				_path.poses.clear();
+				return false;
+			}			
 			vel = _vel;
 			std::chrono::milliseconds left = std::chrono::duration_cast<std::chrono::milliseconds>(_end_motion_time - std::chrono::steady_clock::now());
 			// std::cout << "Plan OK -- " << left.count() << " milliseconds left" << std::endl;
@@ -51,10 +62,12 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 
 void RandomPlanner::runIteration(){
 	bool success = false;
-	int plan_index = rand() % _primitives.getLength();
+	int plan_index = -1;
 	while (success == false){
-		plan_index = rand() % _primitives.getLength();
-		success = checkPath(_primitives.getPath(plan_index, common::BASE));		
+		plan_index++;
+		success = checkPath(_primitives.getPath(plan_index, common::BASE));
+		std::cout << "Checked path number: " << plan_index << std::endl;
+		_vis.publishPath(_primitives.getPath(plan_index, common::BASE), std::chrono::milliseconds(500));		
 	}
 	
 	/*  Using the extra bin width so this isn't needed, 
@@ -158,8 +171,8 @@ float PrimitivePlanner::scanWidthAngle(nav_msgs::Path path, float x, float y){
 		This is to account for the non-point-mass nature of the robot, for collision avoidance
 	*/	
 	double curr_position[2] = {path.poses[0].pose.position.x, path.poses[0].pose.position.y};
-	double dist = sqrt(pow(curr_position[0]-x,2) + pow(curr_position[1]-y,2));
-	return atan2(dist, robotRadius);
+	double dist = sqrt(pow(curr_position[0]-x,2) + pow(curr_position[1]-y,2)) + 0.1;
+	return atan2(robotRadius, dist);
 }
 
 bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle){
@@ -174,11 +187,12 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 	
 	if (_scan->angle_max < angle || _scan->angle_min > angle){		
 		// outside of the viewing angle is an obstacle		
-		obstacle = true; 
+		obstacle = true;
+		std::cout<<"Outside of angle"<<std::endl;
 	}
 	else if (_scan->range_min > tangent || _scan->range_max < tangent){	
 		// anything outside of the range (aka nan) is an obstacle		
-		obstacle = true;
+		obstacle = false;
 	}
 	else {
 		// Check (x_pos,y_pos) position for obstacle.
@@ -189,7 +203,13 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 		for(int i = index-scan_width; i <= index+scan_width; i++){
 			if(0 <= i <= laserSize){
 				if(tangent > _scan->ranges[i]){
-					obstacle = true;	
+					obstacle = true;
+					std::cout<<"LaserSize: "<< laserSize <<std::endl;
+					std::cout<<"obstacle in the way at:"<< x_pos << " : " << y_pos <<std::endl;
+					std::cout<<"index: " << i << std::endl;
+					std::cout<<"check angle: " << i*_scan->angle_increment+_scan->angle_min << std::endl;
+					std::cout<< "range at scan: " << _scan->ranges[i] << std::endl;
+					return obstacle;	
 				}
 			}
 		}
@@ -228,6 +248,9 @@ bool PrimitivePlanner::checkPath(nav_msgs::Path path){
 		float scan_angle = scanWidthAngle(path, x, y);
 		//float scan_angle = 2;
 		hit_points += checkObstacle(x, y, scan_angle);
+		if (hit_points == 1) {
+			return 0;
+		}
 	}
 
 	return (hit_points == 0);

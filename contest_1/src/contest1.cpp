@@ -73,10 +73,10 @@ int main(int argc, char **argv)
 	common::RobotModel robot(0.5,0.5,0.5);
 
 	//Setup Primitives
-	common::BasicMotion straight{1, 0, 1000};
-	common::BasicMotion turn_left{1,0.3, 1000};
-	common::BasicMotion turn_right{1.,-0.3, 1000};
-	common::BasicMotion on_spot{0, 0.3, 1000};
+	common::BasicMotion straight{0.2, 0, 4000};
+	common::BasicMotion turn_left{0.2,0.15, 4000};
+	common::BasicMotion turn_right{0.2,-0.15, 4000};
+	common::BasicMotion on_spot{0, 0.3, 2000};
 
 	planner::MotionList motions;
 	motions.push_back(straight);
