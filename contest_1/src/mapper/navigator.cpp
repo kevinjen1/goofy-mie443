@@ -54,7 +54,7 @@ public:
 		geometry_msgs::Pose2D coord = getCoordinateRayCasting(grid, slope, row, col, robotPos);
 
 		// couldn't retrieve an unknown location
-		if (coord.x == 0 && coord.y == 0) {
+		if (isZero(coord.x) && isZero(coord.y == 0)) {
 			return;
 		}
 
@@ -93,21 +93,6 @@ vector<vector<int>> getMatrixFromGrid(nav_msgs::OccupancyGrid grid) {
 	}
 	return matrix;
 }
-
-
-//// doesn't work
-//int** get2dArrayFromGrid(nav_msgs::OccupancyGrid grid) {
-//	int width = grid.info.width;
-//	int height = grid.info.height;
-//	int matrix[height][width];
-//	for (int i = 0; i < height; i++) {
-//		for (int j = 0; j < width; j++) {
-//			int index = i * width + j;
-//			matrix[i][j] = grid.data[index];
-//		}
-//	}
-//	return matrix;
-//}
 
 Slope getClosestAxisToHeading(double theta)
 {
@@ -241,6 +226,163 @@ bool isZero(double value) {
 int convertToDegree(double rad) {
 	return rad * 180/PI;
 }
+
+//vector<vector<gridDFSElement>> getMatrixFromGridDFS(
+//		nav_msgs::OccupancyGrid grid, Slope slope) {
+//
+//	int width = grid.info.width;
+//	int height = grid.info.height;
+//	vector<vector<gridDFSElement> > matrix;
+//	matrix.resize(height, vector<gridDFSElement>(width));
+//	for (int i = 0; i < height; i++) {
+//		for (int j = 0; j < width; j++) {
+//			int index = i * width + j;
+//			matrix[i][j].data = grid.data[index];
+//			matrix[i][j].index.row = i;
+//			matrix[i][j].index.col = j;
+//			matrix[i][j].isDiscovered = false;
+//
+//			// Dont care about neighbors for obstacles
+//			if (matrix[i][j].data < 50) {
+//				matrix[i][j].adjList = fillAdjList(matrix, i, j, slope, height,
+//						width);
+//			}
+//		}
+//	}
+//
+//	return matrix;
+//}
+//
+//void fillAdjList(vector<vector<gridDFSElement>> matrix, int i, int j,
+//		Slope slope, int height, int width) {
+//	// Fill Adj List in CCW Direction
+//	// Prioritize rise
+//	if (slope.run == 0) {
+//		// Pos Y Axis
+//		if (slope.rise == 1) {
+//			// Pos Y Direction First
+//			pushBackPosY(i, j, height);
+//
+//			pushBackPosX(i, j, width);
+//			pushBackNegY(i, j);
+//			pushBackNegX(i, j);
+//		}
+//		// Neg Y Axis
+//		else {
+//			// Neg Y Direction First
+//			pushBackNegY(i, j);
+//
+//			pushBackNegX(i, j);
+//			pushBackPosY(i, j, height);
+//			pushBackPosX(i, j, width);
+//		}
+//	}
+//	// Prioritize run
+//	else {
+//		// Pos X Axis
+//		if (slope.run == 1) {
+//			// Pos X Direction First
+//			pushBackPosX(i, j, width);
+//
+//			pushBackNegY(i, j);
+//			pushBackNegX(i, j);
+//			pushBackPosY(i, j, height);
+//		}
+//		// Neg X axis
+//		else {
+//			// Neg X Direction First
+//			pushBackNegX(i, j);
+//
+//			pushBackPosY(i, j, height);
+//			pushBackPosX(i, j, width);
+//			pushBackNegY(i, j);
+//		}
+//	}
+//}
+//
+//void pushBackNegX(vector<gridIndex> &v, int i, int j) {
+//	if (j - 1 >= 0)
+//		v.push_back(gridIndex(i, j - 1));
+//}
+//
+//void pushBackPosX(vector<gridIndex> &v, int i, int j, int width) {
+//	if (j + 1 < width)
+//		v.push_back(gridIndex(i, j + 1));
+//}
+//
+//void pushBackNegY(vector<gridIndex> &v, int i, int j) {
+//	if (i - 1 >= 0)
+//		v.push_back(gridIndex(i - 1, j));
+//}
+//
+//void pushBackPosY(vector<gridIndex> &v, int i, int j, int height) {
+//	if (i + 1 < height)
+//		v.push_back(gridIndex(i + 1, j));
+//}
+//
+///*
+// * Get an unknown coordinate of the map to explore
+// */
+//geometry_msgs::Pose2D getCoordinateDFS(nav_msgs::OccupancyGrid grid,
+//		Slope slope, int robotRow, int robotCol) {
+//	stack<gridDFSElement> stack;
+//
+//	vector<vector<gridDFSElement>> matrix = getMatrixFromGrid(grid, slope);
+//
+//	gridDFSElement v = matrix[robotRow][robotCol];
+//
+//	stack.push(v);
+//
+//	geometry_msgs::Pose2D coord;
+//
+//	while (!stack.empty()) {
+//		v = stack.top();
+//
+//		// Check if found an unknown
+//		if (v.data == -1) {
+//			coord.x = grid.info.origin.position.x
+//					+ (v.col * grid.info.resolution);
+//			coord.y = grid.info.origin.position.y
+//					+ (v.row * grid.info.resolution);
+//			break;
+//		}
+//
+//		stack.pop();
+//
+//		if (v.isDiscovered)
+//			continue;
+//
+//		v.isDiscovered = true;
+//
+//		gridIndex neighborIndex;
+//
+//		for (auto it = v.adjList.begin(); it != v.adjList.end(); ++it) {
+//			int u = *it;
+//			neighborIndex = v.adjList[u];
+//
+//			if (!matrix[neighborIndex.row][neighborIndex.col].isDiscovered
+//					&& matrix[neighborIndex.row][neighborIndex.col].data < 50)
+//				stack.push(matrix[neighborIndex.row][neighborIndex.col]);
+//		}
+//	}
+//
+//	return coord;
+//}
+
+
+//// doesn't work
+//int** get2dArrayFromGrid(nav_msgs::OccupancyGrid grid) {
+//	int width = grid.info.width;
+//	int height = grid.info.height;
+//	int matrix[height][width];
+//	for (int i = 0; i < height; i++) {
+//		for (int j = 0; j < width; j++) {
+//			int index = i * width + j;
+//			matrix[i][j] = grid.data[index];
+//		}
+//	}
+//	return matrix;
+//}
 
 }}
 
