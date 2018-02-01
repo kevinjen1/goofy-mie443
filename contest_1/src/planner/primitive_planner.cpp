@@ -94,12 +94,14 @@ void WeightedPlanner::runIteration(){
 	int backupPathIndex;
     int max_path = -1;
     float max_outcome = 0;
-	for (int i = 0; i <= _primitives.getLength(); i++) {
+	for (int i = 0; i < _primitives.getLength()-1; i++) {
 		// Hacked way to see if it is on_spot		
-		if _primitives.getPath(i, common::BASE).linear_velocity == 0{
-			backupPathIndex = i;
-			continue;
-		}
+		//if (_primitives.getPath(i, common::BASE).linear_velocity == 0){
+//		nav_msgs::Path tempPath = _primitives.getPath(i, common::BASE);
+//		if (tempPath.poses[0].pose.position == tempPath.poses[tempPath.poses.size()-1].pose.position){
+//			backupPathIndex = i;
+//			continue;
+//		}
 		float outcome = checkPath(_primitives.getPath(i, common::BASE));       
         if (outcome >= max_outcome){
             max_path = i;
@@ -108,7 +110,7 @@ void WeightedPlanner::runIteration(){
 
     // If no paths are good, select spin on the spot
 	if (max_path < 0){
-		max_path = backupPathIndex;
+		max_path = _primitives.getLength()-1;
 	}
 	
 	/*  Using the extra bin width so this isn't needed, 
