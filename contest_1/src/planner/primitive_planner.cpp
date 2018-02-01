@@ -22,7 +22,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 			std::cout << "Getting velocity with " << (*_motion_index).time << " milliseconds" << std::endl;
 		}
 
-		if (std::chrono::steady_clock::now() < _end_motion_time){
+		if (std::chrono::steady_clock::now() < _end_motion_time && !ifObstacle()){
 			vel = _vel;
 			std::chrono::milliseconds left = std::chrono::duration_cast<std::chrono::milliseconds>(_end_motion_time - std::chrono::steady_clock::now());
 			// std::cout << "Plan OK -- " << left.count() << " milliseconds left" << std::endl;
