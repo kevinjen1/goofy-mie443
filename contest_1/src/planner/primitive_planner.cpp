@@ -342,14 +342,13 @@ float WeightedPlanner::getDistance(float max_angle, float min_angle){
             Otherwise returns sum of all buckets in range
 	*/	
 	
-	// Step 2 - Check if the position is in your view.
+	// Check if the position is in your view.
 	if (_scan->angle_max < max_angle || _scan->angle_min > min_angle){		
 		return -1;
 	}
 
-    int numBins = (_scan->angle_max -_scan->angle_min)/_scan->angle_increment;
-    int min_bucket = (_scan->angle_min - min_angle)/_scan->angle_increment;
-    int max_bucket = (_scan->angle_max - min_angle)/_scan->angle_increment;
+    int min_bucket = (min_angle - _scan->angle_min)/_scan->angle_increment;
+    int max_bucket = (max_angle - _scan->angle_min)/_scan->angle_increment;
     float bucket_sum = -1;
     //int scan_width = (scan_angle)/_scan->angle_increment;
     for(int i = min_bucket; i <= max_bucket; i++){
