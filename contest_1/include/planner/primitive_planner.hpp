@@ -71,6 +71,22 @@ public:
 	virtual void runIteration() override;
 };
 
+class HeuristicPlanner: public PrimitivePlanner{
+public:
+	HeuristicPlanner(PrimitiveRepresentation primitives):
+		PrimitivePlanner(primitives){}
+
+	virtual void runIteration() override;
+
+    struct pathOptions {
+        int index;
+        bool valid;
+        float euclid_dist;
+    };
+
+    static bool boolComparison(pathOptions i, pathOptions j);
+};
+
 class WeightedPlanner: public PrimitivePlanner{
 public:
 	WeightedPlanner(PrimitiveRepresentation primitives):

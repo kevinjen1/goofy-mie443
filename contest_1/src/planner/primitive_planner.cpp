@@ -98,6 +98,70 @@ void RandomPlanner::runIteration(){
 }
 
 
+void HeuristicPlanner::runIteration(){
+    // This implementation is the same as RandomPlanner	(peruses around, avoiding obstacles
+    // Differences being:
+    //      1) Whenever a destination point arrives, at the beginning of next turn rotate to face it
+    //      2) Sort each valid (success==true) path by distance to end point in increasing order
+
+    int planned_path = -1;
+    pathOptions optionsArray[_primitives.getLength()-2];
+    for (int plan_index = 0; plan_index < _primitives.getLength()-1; plan_index++) {
+		bool success = checkPath(_primitives.getPath(plan_index, common::BASE));
+
+        nav_msgs::Path temp_path = _primitives.getPath(plan_index, common::BASE);
+        float x = temp_path.poses[temp_path.poses.size()-1].pose.position.x;
+        float y = temp_path.poses[temp_path.poses.size()-1].pose.position.y;
+
+        // Expecting next_position struct style with .x and .y fields
+        //float euclid_dist = sqrt(pow(next_position.x-x,2) + pow(next_position.y-y,2));
+        float euclid_dist = 0;  // while I wait for input
+
+        optionsArray[plan_index] = {plan_index, success, euclid_dist};		
+	}
+
+    // Sort the potential paths by euclidean distance (increasing order) from the next_position
+    std::vector<pathOptions> optionsVector (optionsArray, optionsArray + _primitives.getLength()-1);
+    std::sort (optionsVector.begin(), optionsVector.end(), boolComparison);
+//    for (std::vector<pathOptions>::iterator it=optionsVector.begin(); it!=optionsVector.end(); ++it){
+//        if (*it.valid){
+//            planned_path = *it.index;
+//            std::cout << "Checked path number: " << planned_path << std::endl;
+//    		_vis.publishPath(_primitives.getPath(planned_path, common::BASE), std::chrono::milliseconds(500));
+//            break;
+//        }
+//    }
+    for (int i = 0; i < _primitives.getLength()-1; i++) {
+        if (optionsVector[i].valid){
+            planned_path = optionsVector[i].index;
+            std::cout << "Checked path number: " << planned_path << std::endl;
+    		_vis.publishPath(_primitives.getPath(planned_path, common::BASE), std::chrono::milliseconds(500));
+            break;
+        }
+    }
+
+    // If none of the paths are valid, spin on the spot
+    // Still want to add some functionality for choosing to turn left or right, or custom amounts
+    if (planned_path < 0){
+        planned_path = _primitives.getLength()-1;
+	}
+
+	// add the primitive motion to the plan
+	_plan.push_back(_primitives.getMotion(planned_path));
+
+	//add the associated path to the path
+	nav_msgs::Path cur_path = _primitives.getPath(planned_path, common::BASE);
+	_path.poses.insert(_path.poses.end(), cur_path.poses.begin(), cur_path.poses.end());
+
+	_new_plan = true;
+}
+
+
+bool HeuristicPlanner::boolComparison(pathOptions i, pathOptions j){
+    return (i.euclid_dist < j.euclid_dist);
+}
+
+
 void WeightedPlanner::runIteration(){
 	/* Need implementing 
         Does all the same path overhead as RandomPlanner::runIteration above
@@ -108,7 +172,7 @@ void WeightedPlanner::runIteration(){
         Pick the path with the max value (furthest from an obstacle)
     */
 
-	int backupPathIndex;
+//	int backupPathIndex;
     int max_path = -1;
     float max_outcome = 0;
 	for (int i = 0; i < _primitives.getLength()-1; i++) {
@@ -119,7 +183,8 @@ void WeightedPlanner::runIteration(){
 //			backupPathIndex = i;
 //			continue;
 //		}
-		float outcome = checkPath(_primitives.getPath(i, common::BASE));       
+		float outcome = checkPath(_primitives.getPath(i, common::BASE));    
+        std::cout << "Checked path number: " << i << std::endl;   
 		_vis.publishPath(_primitives.getPath(i, common::BASE), std::chrono::milliseconds(1000));
         if (outcome >= max_outcome){
             max_path = i;
