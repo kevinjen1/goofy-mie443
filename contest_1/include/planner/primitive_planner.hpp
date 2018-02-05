@@ -2,6 +2,7 @@
 
 #include<ros/ros.h>
 #include<geometry_msgs/Twist.h>
+#include <geometry_msgs/Pose2D.h>
 
 #include <sensor_msgs/LaserScan.h>
 #include"primitives/generator.hpp"
@@ -41,6 +42,7 @@ public:
 	double laserRange = 10;
 	int laserSize = 0, laserOffset = 0, desiredAngle = 5;
 	float robotRadius = 0.2;	// in m
+	geometry_msgs::Pose2D nextPosition;
 
 protected:
 	bool checkObstacle(float x_pos, float y_pos, float scan_angle);

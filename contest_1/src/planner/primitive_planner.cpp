@@ -114,8 +114,8 @@ void HeuristicPlanner::runIteration(){
         float y = temp_path.poses[temp_path.poses.size()-1].pose.position.y;
 
         // Expecting next_position struct style with .x and .y fields
-        //float euclid_dist = sqrt(pow(next_position.x-x,2) + pow(next_position.y-y,2));
-        float euclid_dist = 0;  // while I wait for input
+        float euclid_dist = sqrt(pow(nextPosition.x-x,2) + pow(nextPosition.y-y,2));
+        //float euclid_dist = 0;  // while I wait for input
 
         optionsArray[plan_index] = {plan_index, success, euclid_dist};		
 	}
