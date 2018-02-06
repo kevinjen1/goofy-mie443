@@ -192,14 +192,7 @@ void HeuristicPlanner::runIteration(){
     // Sort the potential paths by euclidean distance (increasing order) from the next_position
     std::vector<pathOptions> optionsVector (optionsArray, optionsArray + _primitives.getLength()-1);
     std::sort (optionsVector.begin(), optionsVector.end(), boolComparison);
-//    for (std::vector<pathOptions>::iterator it=optionsVector.begin(); it!=optionsVector.end(); ++it){
-//        if (*it.valid){
-//            planned_path = *it.index;
-//            std::cout << "Checked path number: " << planned_path << std::endl;
-//    		_vis.publishPath(_primitives.getPath(planned_path, common::BASE), std::chrono::milliseconds(500));
-//            break;
-//        }
-//    }
+
     for (int i = 0; i < _primitives.getLength()-1; i++) {
         if (optionsVector[i].valid){
             planned_path = optionsVector[i].index;
