@@ -5,9 +5,10 @@
 #include <geometry_msgs/Point.h>
 #include <nav_msgs/Odometry.h>
 #include <tf/tf.h>
-#include <tf/transform_listener.h>
+//#include <tf/transform_listener.h>
 #include <visualization_msgs/Marker.h>
 #include "mapper/navigator.hpp"
+#include <stack>
 
 /*
  * This should be a subscriber to mapper,
@@ -32,19 +33,19 @@ public:
 		robotPos.theta = 0.0f;
 	}
 	void callbackMap(const nav_msgs::OccupancyGrid grid) {
-		tf::TransformListener listener;
-		tf::StampedTransform transform;
-		try{
-		  listener.lookupTransform("base_link", "map",
-								   ros::Time(0), transform);
-		  ROS_INFO_STREAM("Got the transform");
-		}
-		catch (tf::TransformException ex){
-		  ROS_ERROR("%s",ex.what());
-		  ros::Duration(1.0).sleep();
-		}
-		ROS_INFO_STREAM("transform pos: "<< transform.getOrigin().x() << ", " << transform.getOrigin().y());
-		ROS_INFO_STREAM("robot pos: "<< robotPos.x << ", "<< robotPos.y);
+//		tf::TransformListener listener;
+//		tf::StampedTransform transform;
+//		try{
+//		  listener.lookupTransform("base_link", "map",
+//								   ros::Time(0), transform);
+//		  ROS_INFO_STREAM("Got the transform");
+//		}
+//		catch (tf::TransformException ex){
+//		  ROS_ERROR("%s",ex.what());
+//		  ros::Duration(1.0).sleep();
+//		}
+//		ROS_INFO_STREAM("transform pos: "<< transform.getOrigin().x() << ", " << transform.getOrigin().y());
+//		ROS_INFO_STREAM("robot pos: "<< robotPos.x << ", "<< robotPos.y);
 
 		// need a position
 		// have an A* search, without going the way we came
@@ -55,29 +56,34 @@ public:
 
 		// need to get odom. probably from a service
 		geometry_msgs::Pose2D origin;
+		geometry_msgs::Pose2D robPos;
+		robPos = robotPos;
 
 		origin.x = grid.info.origin.position.x;
 		origin.y = grid.info.origin.position.y;
 		origin.theta = goofy::common::quat2yaw(grid.info.origin.orientation);
 
 		// ASSUMING THAT MAP DOES NOT ROTATE
-		int diffX = (robotPos.x - origin.x);
-		int diffY = (robotPos.y - origin.y);
+		int diffX = (robPos.x - origin.x);
+		int diffY = (robPos.y - origin.y);
 
-		Slope slope = getClosestAxisToHeading(robotPos.theta);
+		Slope slope = getClosestAxisToHeading(robPos.theta);
 
 		int row = diffY/grid.info.resolution;
 		int col = diffX/grid.info.resolution;
 
-		geometry_msgs::Pose2D coord = getCoordinateRayCasting(grid, slope, row, col, robotPos);
+		geometry_msgs::Pose2D coord = getCoordinateRayCasting(grid, slope, row, col, robPos);
+//		geometry_msgs::Pose2D coord = getCoordinateDFS(grid, slope, row, col, robotPos);
 
 		// couldn't retrieve an unknown location
 		if (isZero(coord.x) && isZero(coord.y)) {
 			return;
 		}
 
+		geometry_msgs::Pose2D localCoord = convertToLocal(coord, robPos);
+
 		//publish coordinate
-		pub.publish(coord);
+		pub.publish(localCoord);
 		publishToRviz(coord);
 	}
 	void callbackOdom(const nav_msgs::Odometry odom)
@@ -88,6 +94,16 @@ public:
 		robotPos.y = odom.pose.pose.position.y;
 
 		robotPos.theta = goofy::common::quat2yaw(odom.pose.pose.orientation);
+	}
+
+	geometry_msgs::Pose2D convertToLocal(geometry_msgs::Pose2D coord, geometry_msgs::Pose2D robPos) {
+		geometry_msgs::Pose2D localCoord;
+		double deltaX = coord.x - robPos.x;
+		double deltaY = coord.y - robPos.y;
+
+		localCoord.x = deltaX*cos(robPos.theta) + deltaY*sin(robPos.theta);
+		localCoord.y = -deltaX*sin(robPos.theta) + deltaY*cos(robPos.theta);
+		return localCoord;
 	}
 
 	void publishToRviz(geometry_msgs::Pose2D coord) {
@@ -280,147 +296,170 @@ int convertToDegree(double rad) {
 	return rad * 180/PI;
 }
 
-//vector<vector<gridDFSElement>> getMatrixFromGridDFS(
-//		nav_msgs::OccupancyGrid grid, Slope slope) {
-//
-//	int width = grid.info.width;
-//	int height = grid.info.height;
-//	vector<vector<gridDFSElement> > matrix;
-//	matrix.resize(height, vector<gridDFSElement>(width));
-//	for (int i = 0; i < height; i++) {
-//		for (int j = 0; j < width; j++) {
-//			int index = i * width + j;
-//			matrix[i][j].data = grid.data[index];
-//			matrix[i][j].index.row = i;
-//			matrix[i][j].index.col = j;
-//			matrix[i][j].isDiscovered = false;
-//
-//			// Dont care about neighbors for obstacles
-//			if (matrix[i][j].data < 50) {
-//				matrix[i][j].adjList = fillAdjList(matrix, i, j, slope, height,
-//						width);
-//			}
-//		}
-//	}
-//
-//	return matrix;
-//}
-//
-//void fillAdjList(vector<vector<gridDFSElement>> matrix, int i, int j,
-//		Slope slope, int height, int width) {
-//	// Fill Adj List in CCW Direction
-//	// Prioritize rise
-//	if (slope.run == 0) {
-//		// Pos Y Axis
-//		if (slope.rise == 1) {
-//			// Pos Y Direction First
-//			pushBackPosY(i, j, height);
-//
-//			pushBackPosX(i, j, width);
-//			pushBackNegY(i, j);
-//			pushBackNegX(i, j);
-//		}
-//		// Neg Y Axis
-//		else {
-//			// Neg Y Direction First
-//			pushBackNegY(i, j);
-//
-//			pushBackNegX(i, j);
-//			pushBackPosY(i, j, height);
-//			pushBackPosX(i, j, width);
-//		}
-//	}
-//	// Prioritize run
-//	else {
-//		// Pos X Axis
-//		if (slope.run == 1) {
-//			// Pos X Direction First
-//			pushBackPosX(i, j, width);
-//
-//			pushBackNegY(i, j);
-//			pushBackNegX(i, j);
-//			pushBackPosY(i, j, height);
-//		}
-//		// Neg X axis
-//		else {
-//			// Neg X Direction First
-//			pushBackNegX(i, j);
-//
-//			pushBackPosY(i, j, height);
-//			pushBackPosX(i, j, width);
-//			pushBackNegY(i, j);
-//		}
-//	}
-//}
-//
-//void pushBackNegX(vector<gridIndex> &v, int i, int j) {
-//	if (j - 1 >= 0)
-//		v.push_back(gridIndex(i, j - 1));
-//}
-//
-//void pushBackPosX(vector<gridIndex> &v, int i, int j, int width) {
-//	if (j + 1 < width)
-//		v.push_back(gridIndex(i, j + 1));
-//}
-//
-//void pushBackNegY(vector<gridIndex> &v, int i, int j) {
-//	if (i - 1 >= 0)
-//		v.push_back(gridIndex(i - 1, j));
-//}
-//
-//void pushBackPosY(vector<gridIndex> &v, int i, int j, int height) {
-//	if (i + 1 < height)
-//		v.push_back(gridIndex(i + 1, j));
-//}
-//
-///*
-// * Get an unknown coordinate of the map to explore
-// */
-//geometry_msgs::Pose2D getCoordinateDFS(nav_msgs::OccupancyGrid grid,
-//		Slope slope, int robotRow, int robotCol) {
-//	stack<gridDFSElement> stack;
-//
-//	vector<vector<gridDFSElement>> matrix = getMatrixFromGrid(grid, slope);
-//
-//	gridDFSElement v = matrix[robotRow][robotCol];
-//
-//	stack.push(v);
-//
-//	geometry_msgs::Pose2D coord;
-//
-//	while (!stack.empty()) {
-//		v = stack.top();
-//
-//		// Check if found an unknown
-//		if (v.data == -1) {
-//			coord.x = grid.info.origin.position.x
-//					+ (v.col * grid.info.resolution);
-//			coord.y = grid.info.origin.position.y
-//					+ (v.row * grid.info.resolution);
-//			break;
-//		}
-//
-//		stack.pop();
-//
-//		if (v.isDiscovered)
-//			continue;
-//
-//		v.isDiscovered = true;
-//
-//		gridIndex neighborIndex;
-//
-//		for (auto it = v.adjList.begin(); it != v.adjList.end(); ++it) {
-//			int u = *it;
-//			neighborIndex = v.adjList[u];
-//
-//			if (!matrix[neighborIndex.row][neighborIndex.col].isDiscovered
-//					&& matrix[neighborIndex.row][neighborIndex.col].data < 50)
-//				stack.push(matrix[neighborIndex.row][neighborIndex.col]);
-//		}
-//	}
-//
-//	return coord;
-//}
+// DFS Functions
+/*
+	Make grid for DFS using OccupancyGrid
+ */
+vector<vector<gridDFSElement>> getMatrixFromGridDFS(nav_msgs::OccupancyGrid grid, Slope slope)
+{
+	int width = grid.info.width;
+	int height = grid.info.height;
+
+	vector<vector<gridDFSElement>> matrix;
+	matrix.resize(height, vector<gridDFSElement>(width));
+	for (int i = 0; i < height; i++) {
+		for (int j = 0; j < width; j++) {
+			int index = i * width + j;
+			matrix[i][j].data = grid.data[index];
+			matrix[i][j].index.row = i;
+			matrix[i][j].index.col = j;
+			matrix[i][j].isDiscovered = false;
+
+			// Dont care about neighbors for obstacles
+			if (matrix[i][j].data < 50)
+			{
+				matrix[i][j].adjList = fillAdjList(matrix, i, j, slope, height, width);
+			}
+		}
+	}
+
+	return matrix;
+}
+
+/*
+	Create an array of neighbors for each element in the grid
+ */
+vector<gridIndex> fillAdjList(vector<vector<gridDFSElement>> matrix, int i, int j, Slope slope, int height, int width)
+{
+	vector<gridIndex> v;
+	// Fill Adj List in CCW Direction
+	// Prioritize rise
+	if (slope.run == 0)
+	{
+		// Pos Y Axis
+		if (slope.rise == 1)
+		{
+			// Pos Y Direction First
+			pushBackPosY(v, i, j, height);
+
+			pushBackPosX(v, i, j, width);
+			pushBackNegY(v, i, j);
+			pushBackNegX(v, i, j);
+		}
+		// Neg Y Axis
+		else
+		{
+			// Neg Y Direction First
+			pushBackNegY(v, i, j);
+
+			pushBackNegX(v, i, j);
+			pushBackPosY(v, i, j, height);
+			pushBackPosX(v, i, j, width);
+		}
+	}
+	// Prioritize run
+	else
+	{
+		// Pos X Axis
+		if (slope.run == 1)
+		{
+			// Pos X Direction First
+			pushBackPosX(v, i, j, width);
+
+			pushBackNegY(v, i, j);
+			pushBackNegX(v, i, j);
+			pushBackPosY(v, i, j, height);
+		}
+		// Neg X axis
+		else
+		{
+			// Neg X Direction First
+			pushBackNegX(v, i, j);
+
+			pushBackPosY(v, i, j, height);
+			pushBackPosX(v, i, j, width);
+			pushBackNegY(v, i, j);
+		}
+	}
+
+	return v;
+}
+
+/*
+	Helper functions for filling adjaceny matrix
+ */
+void pushBackNegX(vector<gridIndex> &v, int i, int j)
+{
+	if (j - 1 >= 0)
+		v.push_back(gridIndex(i, j - 1));
+}
+
+void pushBackPosX(vector<gridIndex> &v, int i, int j, int width)
+{
+	if (j + 1 < width)
+		v.push_back(gridIndex(i, j + 1));
+}
+
+void pushBackNegY(vector<gridIndex> &v, int i, int j)
+{
+	if (i - 1 >= 0)
+		v.push_back(gridIndex(i - 1, j));
+}
+
+void pushBackPosY(vector<gridIndex> &v, int i, int j, int height)
+{
+	if (i + 1 < height)
+		v.push_back(gridIndex(i + 1, j));
+}
+
+/*
+* Get an unknown coordinate of the map to explore
+*/
+geometry_msgs::Pose2D getCoordinateDFS(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol, geometry_msgs::Pose2D t)
+{
+	stack<gridDFSElement> stack;
+
+	vector<vector<gridDFSElement>> matrix = getMatrixFromGridDFS(grid, slope);
+
+	gridDFSElement v = matrix[robotRow][robotCol];
+
+	stack.push(v);
+
+	geometry_msgs::Pose2D coord;
+	// Set coord to 0
+	coord.x = 0.0f;
+	coord.y = 0.0f;
+
+	while (!stack.empty())
+	{
+		v = stack.top();
+
+		// Check if found an unknown
+		if (v.data == -1)
+		{
+			coord.x = grid.info.origin.position.x + (v.index.col * grid.info.resolution);
+			coord.y = grid.info.origin.position.y + (v.index.row * grid.info.resolution);
+			break;
+		}
+
+		stack.pop();
+
+		if (matrix[v.index.row][v.index.col].isDiscovered)
+			continue;
+
+		matrix[v.index.row][v.index.col].isDiscovered = true;
+
+		gridIndex neighborIndex;
+		for (auto it = v.adjList.begin(); it != v.adjList.end(); ++it)
+		{
+			neighborIndex = *it;
+			if (!matrix[neighborIndex.row][neighborIndex.col].isDiscovered && matrix[neighborIndex.row][neighborIndex.col].data < 50)
+				stack.push(matrix[neighborIndex.row][neighborIndex.col]);
+		}
+	}
+
+	return coord;
+}
 
 
 //// doesn't work
