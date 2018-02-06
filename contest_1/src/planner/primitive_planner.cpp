@@ -20,11 +20,12 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 			_vel.linear.x = (*_motion_index).linear_velocity;
 			_vel.angular.z = (*_motion_index).angular_velocity;
 			_new_plan = false;
-			std::cout << "Getting velocity with " << (*_motion_index).time << " milliseconds" << std::endl;
+			//std::cout << "Getting velocity with " << (*_motion_index).time << " milliseconds" << std::endl;
 		}
 
 		if (std::chrono::steady_clock::now() < _end_motion_time){
 			// if the robot is not at the end of the path, but detects an obstacle, stop.
+			// std::cout << "Obstacle index:"<<ifObstacle()<<std::endl;
 			if (ifObstacle() == 0) {
 				// Left Bumper pushed in - turn right
 				_vel.linear.x = 0;
@@ -107,14 +108,14 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 }
 
 void RandomPlanner::runIteration(){
-	//bool success = false;
-	//int plan_index = -1;
+	bool success = false;
 	int plan_index = 0;
+	//int plan_index = -1;
 	//while (success == false){
-		//plan_index++;
-		//success = checkPath(_primitives.getPath(plan_index, common::BASE));
-		//std::cout << "Checked path number: " << plan_index << std::endl;
-		_vis.publishPath(_primitives.getPath(plan_index, common::BASE), std::chrono::milliseconds(500));		
+	//	plan_index++;
+	//	success = checkPath(_primitives.getPath(plan_index, common::BASE));
+	//	std::cout << "Checked path number: " << plan_index << std::endl;
+	//	_vis.publishPath(_primitives.getPath(plan_index, common::BASE), std::chrono::milliseconds(500));		
 	//}
 	
 	/*  Using the extra bin width so this isn't needed, 
@@ -345,20 +346,21 @@ int PrimitivePlanner::ifObstacle(){
 	int laserSize = (_scan->angle_max -_scan->angle_min)/_scan->angle_increment;
 	for (int i = 1; i <= laserSize; i++){
 		if(_scan->ranges[i] < 0.5) { // This can be changed to nan after implementation of IR
+			//std::cout << "Range: " << _scan->ranges[i] << "at index: " <<i<< std::endl;
 			return 3;	
 		}
-		else if(bumperLeft == 1) {
-			return 0;
-		}
-		else if(bumperCenter == 1) {
-			return 1;
-		}
-		else if(bumperRight == 1) {
-			return 2;
-		}
-		else {
-			return 4;
-		}
+	}
+	if(bumperLeft == 1) {
+		return 0;
+	}
+	else if(bumperCenter == 1) {
+		return 1;
+	}
+	else if(bumperRight == 1) {
+		return 2;
+	}
+	else {
+		return 4;
 	}
 }
 
