@@ -41,7 +41,7 @@ void processIR(cv::Mat& ir_image){
   // std::cout << "Blurring image" << std::endl;
 
   cv::Mat blurred_image;
-  cv::GaussianBlur(ir_image, blurred_image, GAUS_KER, 0, 0);
+  cv::GaussianBlur(ir_image.rowRange(0,480), blurred_image, GAUS_KER, 0, 0);
   ir_image = blurred_image;
 
   // imwrite("./blurred_image.jpg", ir_image);
@@ -51,6 +51,9 @@ void processIR(cv::Mat& ir_image){
 
 void processDepth(cv::Mat& depth_image, const cv::Mat& ir_image){
   //std::cout << "Masking images" << std::endl;
+
+  std::cout << "Depth image size: " << depth_image.size() << std::endl;
+  std::cout << "IR image size: " << ir_image.size() << std::endl;
 
   //std::cout << ir_image << std::endl;
 
@@ -63,29 +66,31 @@ void processDepth(cv::Mat& depth_image, const cv::Mat& ir_image){
   //depth mask with the nans only out where 1s are nans, comparing against itself does this
   cv::Mat nan_mask = cv::Mat(depth_image != depth_image);
 
-  // imwrite("./bright_mask.jpg", mask_bright);
-  // imwrite("./dark_mask.jpg", mask_dark);
-  //
-  // imwrite("./orig_depth.jpg", depth_image);
+  imwrite("./bright_mask.jpg", mask_bright);
+  imwrite("./dark_mask.jpg", mask_dark);
+  imwrite("./nan_mask.jpg", nan_mask);
+  imwrite("./orig_depth.jpg", depth_image * 40);
 
   //make copies of it
-  cv::Mat nan_mask_bright = nan_mask;
-  cv::Mat nan_mask_dark = nan_mask;
+  cv::Mat nan_mask_bright;
+  cv::Mat nan_mask_dark;
 
-  nan_mask_bright.mul(mask_bright);
-  nan_mask_dark.mul(mask_dark);
+  nan_mask.copyTo(nan_mask_bright, mask_bright);
+  imwrite("./nan_and_bright.jpg", nan_mask_bright);
+  nan_mask.copyTo(nan_mask_dark, mask_dark);
+  imwrite("./nan_and_dark.jpg", nan_mask_dark);
 
-  // std::cout << "Creating nans" << std::endl;
+  // stf::cout << "Creating nans" << std::endl;
 
-  cv::Mat global_inf(depth_image.size(), CV_32FC1, cv::Scalar(std::numeric_limits<float>::infinity()));
-  cv::Mat global_nan(depth_image.size(), CV_32FC1, cv::Scalar(nanf("")));
+  cv::Mat global_inf(depth_image.size(), CV_32FC1, cv::Scalar(10));
+  cv::Mat global_nan(depth_image.size(), CV_32FC1, cv::Scalar(0.2));
 
   // std::cout << "Copying values" << std::endl;
 
-  global_inf.copyTo(depth_image, nan_mask_bright); // dark pixels and nan depth_registered
-  global_nan.copyTo(depth_image, nan_mask_dark); // bright pixels and nan depth registered
+  global_nan.copyTo(depth_image, nan_mask_bright); // dark pixels and nan depth_registered
+  global_inf.copyTo(depth_image, nan_mask_dark); // bright pixels and nan depth registered
 
-  // imwrite("./new_depth.jpg", depth_image);
+  imwrite("./new_depth.jpg", depth_image * 40);
 
   return;
 }
