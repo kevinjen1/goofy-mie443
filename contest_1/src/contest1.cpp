@@ -87,7 +87,7 @@ int main(int argc, char **argv)
 	common::RobotModel robot(0.5,0.5,0.5);
 
 	//Setup Primitives
-	common::BasicMotion straight{0.2, 0, 10000};
+	common::BasicMotion straight{0.2, 0, 4000};
 	common::BasicMotion turn_left{0.2,0.15, 4000};
 	common::BasicMotion turn_right{0.2,-0.15, 4000};
 	common::BasicMotion on_spot_right{0, -0.3, 8000};
@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 	planner::PrimitiveRepresentation primitives(robot, motions);
 	//planner::WeightedPlanner random_planner(primitives);
 	//planner::HeuristicPlanner random_planner(primitives);
-	planner::RandomPlanner random_planner(primitives);
+	planner::PrimitivePlanner random_planner(primitives);
 	common::Visualizer vis;
 
 	double angular = 0.0;
