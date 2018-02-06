@@ -2,6 +2,7 @@
 
 #include<ros/ros.h>
 #include<geometry_msgs/Twist.h>
+#include <geometry_msgs/Pose2D.h>
 
 #include <sensor_msgs/LaserScan.h>
 #include"primitives/generator.hpp"
@@ -40,10 +41,15 @@ public:
 	bool bumperLeft = 0, bumperCenter = 0, bumperRight = 0;
 	double laserRange = 10;
 	int laserSize = 0, laserOffset = 0, desiredAngle = 5;
+	float robotRadius = 0.2;	// in m
+	geometry_msgs::Pose2D nextPosition;
 
 protected:
-	bool checkObstacle(float x_pos, float y_pos);
+	bool checkObstacle(float x_pos, float y_pos, float scan_angle);
+	bool ifObstacle();
 	bool checkPath(nav_msgs::Path path);
+	double shortenPathTimeTo(nav_msgs::Path path);
+	float scanWidthAngle(nav_msgs::Path path, float x, float y);
 
 	common::Visualizer _vis;
 	MotionList _plan;
@@ -65,6 +71,34 @@ public:
 		PrimitivePlanner(primitives){}
 
 	virtual void runIteration() override;
+};
+
+class HeuristicPlanner: public PrimitivePlanner{
+public:
+	HeuristicPlanner(PrimitiveRepresentation primitives):
+		PrimitivePlanner(primitives){}
+
+	virtual void runIteration() override;
+
+    struct pathOptions {
+        int index;
+        bool valid;
+        float euclid_dist;
+    };
+
+    static bool boolComparison(pathOptions i, pathOptions j);
+};
+
+class WeightedPlanner: public PrimitivePlanner{
+public:
+	WeightedPlanner(PrimitiveRepresentation primitives):
+		PrimitivePlanner(primitives){}
+
+	virtual void runIteration() override;
+
+    float checkPath(nav_msgs::Path path);
+    float scanWidthAngle(float curr_x, float curr_y, float x, float y);
+    float getDistance(float max_angle, float min_angle);
 };
 
 }

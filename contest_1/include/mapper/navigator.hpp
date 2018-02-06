@@ -3,11 +3,43 @@
 
 #include "geometry_msgs/Pose2D.h"
 #include "mapper/mapper.hpp"
-
+#define PI	3.14159265358979323846
 namespace goofy{
 namespace mapper{
 
-geometry_msgs::Pose2D getCoordinate(nav_msgs::OccupancyGrid grid);
+struct Slope {
+	double rise;
+	double run;
+};
+struct gridIndex {
+	int row;
+	int col;
+
+	gridIndex(int _row, int _col) :
+			row(_row), col(_col) {
+	}
+};
+struct gridDFSElement {
+	int data;
+	gridIndex index;
+	bool isDiscovered;
+	vector<gridIndex> adjList;
+};
+
+geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol, geometry_msgs::Pose2D robotPos);
+vector<vector<int>> getMatrixFromGrid(nav_msgs::OccupancyGrid grid);
+Slope getClosestAxisToHeading(double theta);
+double getAngle(int* angleChange);
+bool isZero(double value);
+int convertToDegree(double rad);
+
+// Depth search functions
+vector<vector<gridDFSElement>> getMatrixFromGridDFS(nav_msgs::OccupancyGrid grid, Slope slope);
+void fillAdjList(vector<vector<gridDFSElement>> matrix, int i, int j, Slope slope, int height, int width);
+void pushBackNegX(vector<gridIndex> &v, int i, int j);
+void pushBackPosX(vector<gridIndex> &v, int i, int j, int width);
+void pushBackNegY(vector<gridIndex> &v, int i, int j);
+void pushBackPosY(vector<gridIndex> &v, int i, int j, int height);
 
 }}
 

@@ -1,6 +1,7 @@
 #include <ros/console.h>
 #include "ros/ros.h"
 #include <geometry_msgs/Twist.h>
+#include <geometry_msgs/Pose2D.h>
 #include <kobuki_msgs/BumperEvent.h>
 #include <sensor_msgs/LaserScan.h>
 #include <eStop.h>
@@ -18,6 +19,7 @@ bool bumperL = 0, bumperC = 0, bumperR = 0;
 double lRange = 10;
 int lSize = 0, lOffset = 0, dAngle = 5;
 sensor_msgs::LaserScan::ConstPtr curr_scan;
+geometry_msgs::Pose2D nextPoint;
 
 void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg){
 	if(msg->bumper == 0)
@@ -26,6 +28,10 @@ void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg){
 		bumperC = !bumperC;
 	else if(msg->bumper == 2)
 		bumperR = !bumperR;
+}
+
+void getNextPoint(geometry_msgs::Pose2D nextPose){
+	nextPoint = nextPose;
 }
 
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
@@ -69,14 +75,16 @@ int main(int argc, char **argv)
 
 	ros::Publisher vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel_mux/input/teleop", 1);
 
+	ros::Subscriber next_coord_sub = nh.subscribe("goofCoord", 1, &getNextPoint);
+
 	//Setup Robot
 	common::RobotModel robot(0.5,0.5,0.5);
 
 	//Setup Primitives
-	common::BasicMotion straight{1, 0, 6000};
-	common::BasicMotion turn_left{1,0.3, 6000};
-	common::BasicMotion turn_right{1.,-0.3, 6000};
-	common::BasicMotion on_spot{0, 0.3, 6000};
+	common::BasicMotion straight{0.2, 0, 4000};
+	common::BasicMotion turn_left{0.2,0.15, 4000};
+	common::BasicMotion turn_right{0.2,-0.15, 4000};
+	common::BasicMotion on_spot{0, 0.3, 2000};
 
 	planner::MotionList motions;
 	motions.push_back(straight);
@@ -86,7 +94,8 @@ int main(int argc, char **argv)
 
 	//Setup Planner
 	planner::PrimitiveRepresentation primitives(robot, motions);
-	planner::RandomPlanner random_planner(primitives);
+	//planner::WeightedPlanner random_planner(primitives);
+	planner::HeuristicPlanner random_planner(primitives);
 	common::Visualizer vis;
 
 	double angular = 0.0;
@@ -113,6 +122,7 @@ int main(int argc, char **argv)
 		random_planner.bumperLeft = bumperL;
 		random_planner.bumperCenter = bumperC;
 		random_planner.bumperRight = bumperR;
+		random_planner.nextPosition = nextPoint;
 
 		// Update laser values in random_planner
 		if(curr_scan) {
