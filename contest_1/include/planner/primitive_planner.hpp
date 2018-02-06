@@ -20,6 +20,8 @@ public:
 		_primitives(primitives),
 		_new_plan(false){
 		_path.header.frame_id = "camera_depth_frame";
+		nextPosition.x = 0;
+		nextPosition.y = 0;
 	}
 	virtual ~PrimitivePlanner() = default;
 
@@ -31,7 +33,7 @@ public:
 		return _path;
 	}
 
-	virtual void runIteration() = 0;
+	void runIteration();
 
 	void updateLaserScan(sensor_msgs::LaserScan::ConstPtr msg){
 		_scan = msg;
@@ -65,20 +67,12 @@ private:
 	std::chrono::steady_clock::time_point _end_motion_time;
 };
 
-class RandomPlanner: public PrimitivePlanner{
-public:
-	RandomPlanner(PrimitiveRepresentation primitives):
-		PrimitivePlanner(primitives){}
-
-	virtual void runIteration() override;
-};
-
 class HeuristicPlanner: public PrimitivePlanner{
 public:
 	HeuristicPlanner(PrimitiveRepresentation primitives):
 		PrimitivePlanner(primitives){}
 
-	virtual void runIteration() override;
+	void runIteration();
 
     struct pathOptions {
         int index;
@@ -88,6 +82,8 @@ public:
 
     static bool boolComparison(pathOptions i, pathOptions j);
 	int getNumberOnSpots();
+	
+	geometry_msgs::Pose2D currentTargetPosition;
 };
 
 class WeightedPlanner: public PrimitivePlanner{
@@ -95,7 +91,7 @@ public:
 	WeightedPlanner(PrimitiveRepresentation primitives):
 		PrimitivePlanner(primitives){}
 
-	virtual void runIteration() override;
+	void runIteration();
 
     float checkPath(nav_msgs::Path path);
     float scanWidthAngle(float curr_x, float curr_y, float x, float y);

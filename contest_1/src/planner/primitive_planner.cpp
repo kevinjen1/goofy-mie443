@@ -122,7 +122,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 	}
 }
 
-void RandomPlanner::runIteration(){
+void PrimitivePlanner::runIteration(){
 	bool success = false;
 	int plan_index = -1;
 	while (success == false){
@@ -162,6 +162,30 @@ void HeuristicPlanner::runIteration(){
     //      1) Whenever a destination point arrives, at the beginning of next turn rotate to face it
     //      2) Sort each valid (success==true) path by distance to end point in increasing order
 
+	// If already close to the target position, or there is no target position, randomly navigate
+	int redZone = 0.3;
+	if (sqrt(pow(nextPosition.x,2) + pow(nextPosition.y,2)) < redZone){
+		PrimitivePlanner::runIteration();
+		return;
+	}
+
+	// If a new path comes in, turn to face it
+	if ((currentTargetPosition.x != nextPosition.x) || (currentTargetPosition.y != nextPosition.y)){
+		currentTargetPosition = nextPosition;
+		//turn to face it
+		float target_angle = atan2(nextPosition.y, nextPosition.x);
+		if (target_angle < Pi){
+			common::BasicMotion on_spot_aim{0, 0.3, (int)(1000*target_angle/0.3)};
+			_plan.push_back(on_spot_aim);
+			_new_plan = true;
+		} else {
+			common::BasicMotion on_spot_aim{0, 0.3, (int)(1000*target_angle/0.3)};
+			_plan.push_back(on_spot_aim);
+			_new_plan = true;
+		}
+		return;
+	}
+
     int planned_path = -1;
 	//int num_on_spots = 2;
 	int num_on_spots = getNumberOnSpots();
@@ -183,14 +207,7 @@ void HeuristicPlanner::runIteration(){
     // Sort the potential paths by euclidean distance (increasing order) from the next_position
     std::vector<pathOptions> optionsVector (optionsArray, optionsArray + _primitives.getLength()-1);
     std::sort (optionsVector.begin(), optionsVector.end(), boolComparison);
-//    for (std::vector<pathOptions>::iterator it=optionsVector.begin(); it!=optionsVector.end(); ++it){
-//        if (*it.valid){
-//            planned_path = *it.index;
-//            std::cout << "Checked path number: " << planned_path << std::endl;
-//    		_vis.publishPath(_primitives.getPath(planned_path, common::BASE), std::chrono::milliseconds(500));
-//            break;
-//        }
-//    }
+
     for (int i = 0; i < _primitives.getLength()-1; i++) {
         if (optionsVector[i].valid){
             planned_path = optionsVector[i].index;
