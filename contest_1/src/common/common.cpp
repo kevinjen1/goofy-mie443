@@ -65,12 +65,12 @@ geometry_msgs::Quaternion yaw2quat(double yaw) {
 	If a string of NANs greater or equal to the window size if found, it will replace
 	them with the average of the two nearest non-NAN numbers.  This will be done in place
 **/
-void filterLaserScan(sensor_msgs::LaserScan& scan, int window){
+/*void filterLaserScan(sensor_msgs::LaserScan::ConstPtr& scan, int window){
 	double begin_val;
 	bool first_scan = false;
 
 	//Iterate through the ranges
-	for (std::vector<float>::iterator i = scan.ranges.begin(); i < (scan.ranges.end() - 1) ; i++){
+	for (std::vector<float>::iterator i = scan->ranges.begin(); i < (scan->ranges.end() - 1) ; i++){
 		float cur_val = *i;
 		//The first values may all be NaNs so we need to wait for our first number to do an average
 		if (!std::isnan(cur_val)){ //see the first  number
@@ -86,13 +86,13 @@ void filterLaserScan(sensor_msgs::LaserScan& scan, int window){
 				}
 				//if we reach the end of our window, the first number is no longer valid (too many nans in between), reset
 				//if we reach the end of the array, stop checking
-				if (j == i + window || j == scan.ranges.end()){
+				if (j == i + window || j == scan->ranges.end()){
 					first_scan = false;
 				}
 			}
 		}
 	}
-}
+} */
 
 double quat2yaw(geometry_msgs::Quaternion quat) {
 	tf::Quaternion q(quat.x, quat.y, quat.z, quat.w);

@@ -22,12 +22,21 @@ sensor_msgs::LaserScan::ConstPtr curr_scan;
 geometry_msgs::Pose2D nextPoint;
 
 void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg){
-	if(msg->bumper == 0)
+	// This callback updates the left right and center bumper states
+	if(msg->bumper == 0 && msg->state == 1){
 		bumperL = !bumperL;
-	else if(msg->bumper == 1)
+	}
+	else if(msg->bumper == 1 && msg->state == 1){
 		bumperC = !bumperC;
-	else if(msg->bumper == 2)
+	}
+	else if(msg->bumper == 2 && msg->state == 1){
 		bumperR = !bumperR;
+	}
+	else if(msg->state == 0){
+		bumperL = 0;
+		bumperC = 0;
+		bumperR = 0;
+	}
 }
 
 void getNextPoint(geometry_msgs::Pose2D nextPose){
@@ -36,9 +45,6 @@ void getNextPoint(geometry_msgs::Pose2D nextPose){
 
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 
-	// Print statement to test checkObstacle() - remove later
-	// std::cout << "Check Obstacle:" << goofy::planner::PrimitivePlanner::checkObstacle(msg, 1, 0.25) << endl;
-	
 	lSize = (msg->angle_max -msg->angle_min)/msg->angle_increment;
 	lOffset = dAngle*Pi/(180*msg->angle_increment);
 	lRange = 11;
@@ -84,13 +90,15 @@ int main(int argc, char **argv)
 	common::BasicMotion straight{0.2, 0, 4000};
 	common::BasicMotion turn_left{0.2,0.15, 4000};
 	common::BasicMotion turn_right{0.2,-0.15, 4000};
-	common::BasicMotion on_spot{0, 0.3, 2000};
+	common::BasicMotion on_spot_right{0, 0.3, 2000};
+	common::BasicMotion on_spot_left{0, 0.3, 2000};
 
 	planner::MotionList motions;
 	motions.push_back(straight);
 	motions.push_back(turn_left);
 	motions.push_back(turn_right);
-	motions.push_back(on_spot);
+	motions.push_back(on_spot_right);
+	motions.push_back(on_spot_left);
 
 	//Setup Planner
 	planner::PrimitiveRepresentation primitives(robot, motions);
@@ -126,6 +134,7 @@ int main(int argc, char **argv)
 
 		// Update laser values in random_planner
 		if(curr_scan) {
+			//common::filterLaserScan(curr_scan, 2);
 			random_planner.updateLaserScan(curr_scan);
 		}
 
