@@ -1,6 +1,7 @@
 #include "planner/primitive_planner.hpp"
 #include <thread>
 #include <sensor_msgs/LaserScan.h>
+#include <geometry_msgs/Pose2D.h>
 #include <math.h>
 #include <stdio.h>
 using namespace std;
@@ -149,8 +150,10 @@ void HeuristicPlanner::runIteration(){
     //      2) Sort each valid (success==true) path by distance to end point in increasing order
 
     int planned_path = -1;
-    pathOptions optionsArray[_primitives.getLength()-2];
-    for (int plan_index = 0; plan_index < _primitives.getLength()-1; plan_index++) {
+	//int num_on_spots = 2;
+	int num_on_spots = getNumberOnSpots();
+    pathOptions optionsArray[_primitives.getLength()-num_on_spots];
+    for (int plan_index = 0; plan_index < _primitives.getLength()-1-num_on_spots; plan_index++) {
 		bool success = checkPath(_primitives.getPath(plan_index, common::BASE));
 
         nav_msgs::Path temp_path = _primitives.getPath(plan_index, common::BASE);
@@ -200,6 +203,24 @@ void HeuristicPlanner::runIteration(){
 	_new_plan = true;
 }
 
+int HeuristicPlanner::getNumberOnSpots(){
+	/*  Count the number of paths that have the same startpoint as endpoint
+		The idea behind this is to leave all turn-only moves as emergency (at the end of the path list), 
+		and only evaluate moves that require moving forward
+	*/
+	int count = 0;
+	for (int i = 0; i < _primitives.getLength(); i++){
+		nav_msgs::Path temp_path = _primitives.getPath(i, common::BASE);
+		float start_position_x = temp_path.poses[0].pose.position.x;
+		float start_position_y = temp_path.poses[0].pose.position.y;
+		float end_position_x = temp_path.poses[temp_path.poses.size()-1].pose.position.x;
+		float end_position_y = temp_path.poses[temp_path.poses.size()-1].pose.position.y;
+		if ((start_position_x == end_position_x) && (start_position_y == end_position_y)){
+			count++;
+		}
+	}
+	return count;
+}
 
 bool HeuristicPlanner::boolComparison(pathOptions i, pathOptions j){
     return (i.euclid_dist < j.euclid_dist);

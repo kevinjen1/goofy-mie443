@@ -87,6 +87,7 @@ public:
     };
 
     static bool boolComparison(pathOptions i, pathOptions j);
+	int getNumberOnSpots();
 };
 
 class WeightedPlanner: public PrimitivePlanner{
