@@ -107,7 +107,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 	}
 }
 
-void RandomPlanner::runIteration(){
+void PrimitivePlanner::runIteration(){
 	bool success = false;
 	int plan_index = -1;
 	while (success == false){
@@ -146,6 +146,30 @@ void HeuristicPlanner::runIteration(){
     // Differences being:
     //      1) Whenever a destination point arrives, at the beginning of next turn rotate to face it
     //      2) Sort each valid (success==true) path by distance to end point in increasing order
+
+	// If already close to the target position, or there is no target position, randomly navigate
+	int redZone = 0.3;
+	if (sqrt(pow(nextPosition.x,2) + pow(nextPosition.y,2)) < redZone){
+		PrimitivePlanner::runIteration();
+		return;
+	}
+
+	// If a new path comes in, turn to face it
+	if ((currentTargetPosition.x != nextPosition.x) || (currentTargetPosition.y != nextPosition.y)){
+		currentTargetPosition = nextPosition;
+		//turn to face it
+		float target_angle = atan2(nextPosition.y, nextPosition.x);
+		if (target_angle < Pi){
+			common::BasicMotion on_spot_aim{0, 0.3, (int)(1000*target_angle/0.3)};
+			_plan.push_back(on_spot_aim);
+			_new_plan = true;
+		} else {
+			common::BasicMotion on_spot_aim{0, 0.3, (int)(1000*target_angle/0.3)};
+			_plan.push_back(on_spot_aim);
+			_new_plan = true;
+		}
+		return;
+	}
 
     int planned_path = -1;
 	//int num_on_spots = 2;
