@@ -128,7 +128,7 @@ void PrimitivePlanner::runIteration(){
 	while (success == false){
 		plan_index++;
 		success = checkPath(_primitives.getPath(plan_index, common::BASE));
-		std::cout << "Checked path number: " << plan_index << std::endl;
+		std::cout << "Checked path number: " << plan_index << "and got " << success << std::endl;
 		_vis.publishPath(_primitives.getPath(plan_index, common::BASE), std::chrono::milliseconds(500));		
 	}
 	
@@ -352,11 +352,13 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 	
 	if (_scan->angle_max < angle || _scan->angle_min > angle){		
 		// outside of the viewing angle is not an obstacle		
-		obstacle = false;
+		std::cout<<"outside of viewing angle"<<std::endl;		
+		return false;
 	}
 	else if (_scan->range_min > tangent || _scan->range_max < tangent){	
 		// anything outside of the range is not an obstacle		
-		obstacle = false;
+		std::cout<<"outside of range"<<std::endl;		
+		return false;
 	}
 	else {
 		// Check (x_pos,y_pos) position for obstacle.
@@ -401,11 +403,13 @@ int PrimitivePlanner::ifObstacle(){
 			}	
 		}
 	}
-	if(turn_right >= turn_left) {
-		return 3;
-	}
-	else if(turn_left >= turn_right){
-		return 4;
+	if(turn_right != 0 && turn_left != 0) {
+		if(turn_right >= turn_left) {
+			return 3;
+		}
+		else if(turn_left >= turn_right){
+			return 4;
+		}
 	}
 	if(bumperLeft == 1) {
 		return 0;
