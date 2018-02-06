@@ -1,5 +1,6 @@
 #include<ros/ros.h>
 #include<sensor_msgs/Image.h>
+#include<sensor_msgs/CameraInfo.h>
 #include<cv_bridge/cv_bridge.h>
 #include<opencv2/core/core.hpp>
 #include<opencv2/highgui/highgui.hpp>
@@ -15,8 +16,14 @@ float IR_THRESHOLD = 30;
 cv::Mat depth_image;
 cv::Mat ir_image;
 
+sensor_msgs::CameraInfo camera_info;
+
 bool updated_image;
 bool updated_ir;
+
+void cameraInfoCallback(const sensor_msgs::CameraInfo& msg){
+  camera_info = msg;
+}
 
 void depthCallback(const sensor_msgs::ImageConstPtr msg){
   //convert the image to an openCV mat
@@ -53,7 +60,7 @@ void processDepth(cv::Mat& depth_image, const cv::Mat& ir_image){
   //std::cout << "Masking images" << std::endl;
 
   std::cout << "Depth image size: " << depth_image.size() << std::endl;
-  std::cout << "IR image size: " << ir_image.size() << std::endl;
+  //std::cout << "IR image size: " << ir_image.size() << std::endl;
 
   //std::cout << ir_image << std::endl;
 
@@ -66,19 +73,19 @@ void processDepth(cv::Mat& depth_image, const cv::Mat& ir_image){
   //depth mask with the nans only out where 1s are nans, comparing against itself does this
   cv::Mat nan_mask = cv::Mat(depth_image != depth_image);
 
-  imwrite("./bright_mask.jpg", mask_bright);
-  imwrite("./dark_mask.jpg", mask_dark);
-  imwrite("./nan_mask.jpg", nan_mask);
-  imwrite("./orig_depth.jpg", depth_image * 40);
+  //imwrite("./bright_mask.jpg", mask_bright);
+  //imwrite("./dark_mask.jpg", mask_dark);
+  //imwrite("./nan_mask.jpg", nan_mask);
+  //imwrite("./orig_depth.jpg", depth_image * 40);
 
   //make copies of it
   cv::Mat nan_mask_bright;
   cv::Mat nan_mask_dark;
 
   nan_mask.copyTo(nan_mask_bright, mask_bright);
-  imwrite("./nan_and_bright.jpg", nan_mask_bright);
+  //imwrite("./nan_and_bright.jpg", nan_mask_bright);
   nan_mask.copyTo(nan_mask_dark, mask_dark);
-  imwrite("./nan_and_dark.jpg", nan_mask_dark);
+  //imwrite("./nan_and_dark.jpg", nan_mask_dark);
 
   // stf::cout << "Creating nans" << std::endl;
 
@@ -103,9 +110,11 @@ using namespace goofy::depth;
 int main(int argc, char** argv){
   ros::init(argc, argv, "depth_publisher");
   ros::NodeHandle nh;
-  ros::Subscriber depth_image_callback = nh.subscribe("/camera/depth_registered/hw_registered/image_rect", 11, &goofy::depth::depthCallback);
+  ros::Subscriber depth_image_callback = nh.subscribe("/camera/depth_registered/hw_registered/image_rect", 1, &goofy::depth::depthCallback);
+  ros::Subscriber camera_info_callback = nh.subscribe("/camera/depth_registered/camera_info", 1, &goofy::depth::cameraInfoCallback);
   ros::Subscriber ir_image_callback = nh.subscribe("/camera/ir/image_rect_ir", 1, &goofy::depth::irCallback);
-  ros::Publisher depth_publisher = nh.advertise<sensor_msgs::Image>("/corrected_depth", 1);
+  ros::Publisher depth_publisher = nh.advertise<sensor_msgs::Image>("/corrected_depth/image", 1);
+  ros::Publisher info_publisher = nh.advertise<sensor_msgs::CameraInfo>("/corrected_depth/camera_info", 1);
 
   //initialize updates to false
   updated_image = false;
@@ -123,6 +132,7 @@ int main(int argc, char** argv){
         depth_msg.image = depth_image;
         depth_msg.encoding = "32FC1";
         depth_publisher.publish(depth_msg.toImageMsg());
+        info_publisher.publish(goofy::depth::camera_info);
 
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         std::chrono::milliseconds processing = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);

@@ -23,10 +23,10 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 			_new_plan = false;
 			//std::cout << "Getting velocity with " << (*_motion_index).time << " milliseconds" << std::endl;
 		}
-
+		
 		if (std::chrono::steady_clock::now() < _end_motion_time){
 			// if the robot is not at the end of the path, but detects an obstacle, stop.
-			// std::cout << "Obstacle index:"<<ifObstacle()<<std::endl;
+			// std::cout << "Obstacle index:"<<ifObstacle()<<std::endl;			
 			if (ifObstacle() == 0) {
 				// Left Bumper pushed in - turn right
 				_vel.linear.x = 0;
@@ -38,7 +38,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				_path.poses.clear();
 				_new_plan = true;
 				_plan.push_back(_primitives.getMotion(3));
-				return false;
+				return true;
 			}
 			else if (ifObstacle() == 1) {
 				// Center Bumper pushed in - move back
@@ -51,7 +51,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				_path.poses.clear();
 				_new_plan = true;
 				_plan.push_back(_primitives.getMotion(3));
-				return false;
+				return true;
 			}
 			else if (ifObstacle() == 2) {
 				// Right Bumper pushed in - move left
@@ -64,19 +64,34 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				_path.poses.clear();
 				_new_plan = true;
 				_plan.push_back(_primitives.getMotion(4));
-				return false;
+				return true;
 			}
 			else if (ifObstacle() == 3) {
-				// Obstacle within 1m - re-execute plan
+				// scanned obstacle to the left
 				_vel.linear.x = 0;
 				_vel.linear.y = 0;
 
-				std::cout << "Obstacle within 0.5 m!" << std::endl;
+				std::cout << "Obstacle within 0.5 m on left!" << std::endl;
 
 				_plan.clear();
 				_path.poses.clear();
-				return false;
-			}			
+				_new_plan = true;
+				_plan.push_back(_primitives.getMotion(3));
+				return true;
+			}
+			else if (ifObstacle() == 4) {
+				// scanned obstacle to the right
+				_vel.linear.x = 0;
+				_vel.linear.y = 0;
+
+				std::cout << "Obstacle within 0.5 m on right!" << std::endl;
+
+				_plan.clear();
+				_path.poses.clear();
+				_new_plan = true;
+				_plan.push_back(_primitives.getMotion(4));
+				return true;
+			}						
 			vel = _vel;
 			std::chrono::milliseconds left = std::chrono::duration_cast<std::chrono::milliseconds>(_end_motion_time - std::chrono::steady_clock::now());
 			// std::cout << "Plan OK -- " << left.count() << " milliseconds left" << std::endl;
@@ -336,12 +351,11 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 	bool obstacle = false;
 	
 	if (_scan->angle_max < angle || _scan->angle_min > angle){		
-		// outside of the viewing angle is an obstacle		
-		obstacle = true;
-		//std::cout<<"Outside of angle"<<std::endl;
+		// outside of the viewing angle is not an obstacle		
+		obstacle = false;
 	}
 	else if (_scan->range_min > tangent || _scan->range_max < tangent){	
-		// anything outside of the range (aka nan) is an obstacle		
+		// anything outside of the range is not an obstacle		
 		obstacle = false;
 	}
 	else {
@@ -353,13 +367,7 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 		for(int i = index-scan_width; i <= index+scan_width; i++){
 			if(0 <= i <= laserSize){
 				if(tangent > _scan->ranges[i]){
-					obstacle = true;
-					//std::cout<<"LaserSize: "<< laserSize <<std::endl;
-					//std::cout<<"obstacle in the way at:"<< x_pos << " : " << y_pos <<std::endl;
-					//std::cout<<"index: " << i << std::endl;
-					//std::cout<<"check angle: " << i*_scan->angle_increment+_scan->angle_min << std::endl;
-					//std::cout<<"range at scan: " << _scan->ranges[i] << std::endl;
-					return obstacle;	
+					return true;	
 				}
 			}
 		}
@@ -375,16 +383,29 @@ int PrimitivePlanner::ifObstacle(){
 			- 0 for left bump
 			- 1 for center bump
 			- 2 for right bump
-			- 3 for scanned obstacle
-			- 4 for nothing
+			- 3 for scanned obstacle to the left
+			- 4 for scanned obstacle to the right
+			- 5 for nothing
 	*/	
 
 	int laserSize = (_scan->angle_max -_scan->angle_min)/_scan->angle_increment;
+	int turn_right = 0;
+	int turn_left = 0;
 	for (int i = 1; i <= laserSize; i++){
-		if(_scan->ranges[i] < 0.5) { // This can be changed to nan after implementation of IR
-			//std::cout << "Range: " << _scan->ranges[i] << "at index: " <<i<< std::endl;
-			return 3;	
+		if(_scan->ranges[i] < 0.5) { 
+			if(i<= laserSize/2) {
+				turn_right++;
+			} 
+			else {
+				turn_left++;
+			}	
 		}
+	}
+	if(turn_right >= turn_left) {
+		return 3;
+	}
+	else if(turn_left >= turn_right){
+		return 4;
 	}
 	if(bumperLeft == 1) {
 		return 0;
@@ -396,7 +417,7 @@ int PrimitivePlanner::ifObstacle(){
 		return 2;
 	}
 	else {
-		return 4;
+		return 5;
 	}
 }
 
