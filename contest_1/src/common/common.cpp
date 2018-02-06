@@ -60,19 +60,34 @@ geometry_msgs::Quaternion yaw2quat(double yaw) {
 	return retval;
 }
 
+/**
+	This function will scan the laserscan from beginning to end and look for NANs.
+	If a string of NANs greater or equal to the window size if found, it will replace
+	them with the average of the two nearest non-NAN numbers.  This will be done in place
+**/
 void filterLaserScan(sensor_msgs::LaserScan& scan, int window){
 	double begin_val;
 	bool first_scan = false;
-	for (std::vector<float>::iterator i = scan.ranges.begin(); i < (scan.ranges.end() - window) ; i++){
+
+	//Iterate through the ranges
+	for (std::vector<float>::iterator i = scan.ranges.begin(); i < (scan.ranges.end() - 1) ; i++){
 		float cur_val = *i;
-		if (!std::isnan(cur_val)){ //see our first number
+		//The first values may all be NaNs so we need to wait for our first number to do an average
+		if (!std::isnan(cur_val)){ //see the first  number
 			begin_val = cur_val;
 			first_scan = true;
-		} else if (first_scan == true){ //is currently nan, check up to the window
-			for (std::vector<float>::iterator j = i; j < i + window; j++){
+		} else if (std::isnan(cur_val) && first_scan == true){ //if the first number is set, and the value is nan, check the window
+			for (std::vector<float>::iterator j = i; (j <= i + window); j++){
 				float cur_check = *j;
 				if (!std::isnan(cur_check)){
+					//if we see our second number, do the average and set the value
 					*i = (begin_val + cur_check)/2; //set to the average value between the two
+					break;
+				}
+				//if we reach the end of our window, the first number is no longer valid (too many nans in between), reset
+				//if we reach the end of the array, stop checking
+				if (j == i + window || j == scan.ranges.end()){
+					first_scan = false;
 				}
 			}
 		}
@@ -89,4 +104,3 @@ double quat2yaw(geometry_msgs::Quaternion quat) {
 
 }
 }
-

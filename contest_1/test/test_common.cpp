@@ -12,13 +12,23 @@ using namespace goofy;
 
 TEST(Filters, LaserScanNANFilter){
 	sensor_msgs::LaserScan scan;
-	scan.intensities = {nan, nan, 1.05, 1.8, 2.0, 2.0, nan, nan, nan, 3.0, nan, nan};
+	float test[] = {nanf(""), nanf(""), 1.05, 1.8, 2.0, 2.0, nanf(""), nanf(""), nanf(""), 3.0, nanf(""), nanf("")};
+	scan.ranges = std::vector<float>(test, test + sizeof(test)/sizeof(test[0]) - 1);
+	//std::cout << "Created test case" << std::endl;
 
 	sensor_msgs::LaserScan corr;
-	corr.intensities = {nan, nan, 1.05, 1.8, 2.0, 2.0, 2.5, 2.5, 2.5, 3.0, nan, nan};
+	float corr_res[] = {nanf(""), nanf(""), 1.05, 1.8, 2.0, 2.0, 2.5, 2.5, 2.5, 3.0, nanf(""), nanf("")};
+	corr.ranges = std::vector<float>(corr_res, corr_res + sizeof(corr_res)/sizeof(corr_res[0]) - 1);
+	//std::cout << "Created correct case" << std::endl;
+	common::filterLaserScan(scan, 3);
 
-	common::filterLaserScan(scan, 4);
-	ASSERT_EQ(scan.intensities, corr.intensities);
+	for (int i = 0; i < scan.ranges.size(); ++i){
+		if (std::isnan(corr.ranges[i])){
+			ASSERT_TRUE(std::isnan(scan.ranges[i]));
+			continue;
+		}
+		ASSERT_EQ(corr.ranges[i], scan.ranges[i]);
+	}
 }
 
 int main(int argc, char **argv){
@@ -27,4 +37,3 @@ int main(int argc, char **argv){
 
 	return RUN_ALL_TESTS();
 }
-

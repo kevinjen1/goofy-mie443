@@ -7,11 +7,11 @@ set(CMAKE_CXX_STANDARD 11)
 
 find_package(OpenCV 3 REQUIRED)
 
-find_package(catkin REQUIRED COMPONENTS 
-	cv_bridge 
-	genmsg 
-	image_transport 
-	sensor_msgs 
+find_package(catkin REQUIRED COMPONENTS
+	cv_bridge
+	genmsg
+	image_transport
+	sensor_msgs
 	kobuki_msgs
 	nav_msgs
 	message_generation)
@@ -53,3 +53,6 @@ add_executable(goofMapper src/mapper/mapper.cpp)
 target_link_libraries(goofMapper ${catkin_LIBRARIES} goofy_common)
 add_executable(goofNavigator src/mapper/navigator.cpp)
 target_link_libraries(goofNavigator ${catkin_LIBRARIES} goofy_common)
+
+add_executable(depth_processor src/depth/depth.cpp)
+target_link_libraries(depth_processor ${catkin_LIBRARIES} ${OpenCV_LIB} goofy_common)
