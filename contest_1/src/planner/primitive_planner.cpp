@@ -22,10 +22,10 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 			_new_plan = false;
 			//std::cout << "Getting velocity with " << (*_motion_index).time << " milliseconds" << std::endl;
 		}
-
+		
 		if (std::chrono::steady_clock::now() < _end_motion_time){
 			// if the robot is not at the end of the path, but detects an obstacle, stop.
-			// std::cout << "Obstacle index:"<<ifObstacle()<<std::endl;
+			// std::cout << "Obstacle index:"<<ifObstacle()<<std::endl;			
 			if (ifObstacle() == 0) {
 				// Left Bumper pushed in - turn right
 				_vel.linear.x = 0;
@@ -37,7 +37,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				_path.poses.clear();
 				_new_plan = true;
 				_plan.push_back(_primitives.getMotion(3));
-				return false;
+				return true;
 			}
 			else if (ifObstacle() == 1) {
 				// Center Bumper pushed in - move back
@@ -50,7 +50,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				_path.poses.clear();
 				_new_plan = true;
 				_plan.push_back(_primitives.getMotion(3));
-				return false;
+				return true;
 			}
 			else if (ifObstacle() == 2) {
 				// Right Bumper pushed in - move left
@@ -63,7 +63,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				_path.poses.clear();
 				_new_plan = true;
 				_plan.push_back(_primitives.getMotion(4));
-				return false;
+				return true;
 			}
 			else if (ifObstacle() == 3) {
 				// Obstacle within 1m - re-execute plan
@@ -74,7 +74,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 
 				_plan.clear();
 				_path.poses.clear();
-				return false;
+				return true;
 			}			
 			vel = _vel;
 			std::chrono::milliseconds left = std::chrono::duration_cast<std::chrono::milliseconds>(_end_motion_time - std::chrono::steady_clock::now());
