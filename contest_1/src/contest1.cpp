@@ -1,7 +1,6 @@
 #include <ros/console.h>
 #include "ros/ros.h"
 #include <geometry_msgs/Twist.h>
-#include <geometry_msgs/Pose2D.h>
 #include <kobuki_msgs/BumperEvent.h>
 #include <sensor_msgs/LaserScan.h>
 #include <eStop.h>
@@ -18,8 +17,7 @@ using namespace goofy;
 bool bumperL = 0, bumperC = 0, bumperR = 0;
 double lRange = 10;
 int lSize = 0, lOffset = 0, dAngle = 5;
-sensor_msgs::LaserScan::ConstPtr curr_scan;
-geometry_msgs::Pose2D nextPoint;
+sensor_msgs::LaserScan::Ptr curr_scan;
 
 void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg){
 	if(msg->bumper == 0)
@@ -30,19 +28,15 @@ void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg){
 		bumperR = !bumperR;
 }
 
-void getNextPoint(geometry_msgs::Pose2D nextPose){
-	nextPoint = nextPose;
-}
-
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 
 	// Print statement to test checkObstacle() - remove later
 	// std::cout << "Check Obstacle:" << goofy::planner::PrimitivePlanner::checkObstacle(msg, 1, 0.25) << endl;
-	
+
 	lSize = (msg->angle_max -msg->angle_min)/msg->angle_increment;
 	lOffset = dAngle*Pi/(180*msg->angle_increment);
 	lRange = 11;
-	
+
 	if (dAngle*Pi/180 < msg->angle_max && -dAngle*Pi/180 > msg->angle_min){
 		for (int i = lSize/2 - lOffset; i < lSize/2 + lOffset; i++){
 			if (lRange > msg->ranges[i])
@@ -60,7 +54,7 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 		lRange = 0;
 	}
 
-	curr_scan = msg;
+	curr_scan = boost::make_shared<sensor_msgs::LaserScan>(*(msg.get()));
 	return;
 }
 
@@ -75,16 +69,14 @@ int main(int argc, char **argv)
 
 	ros::Publisher vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel_mux/input/teleop", 1);
 
-	ros::Subscriber next_coord_sub = nh.subscribe("goofCoord", 1, &getNextPoint);
-
 	//Setup Robot
 	common::RobotModel robot(0.5,0.5,0.5);
 
 	//Setup Primitives
-	common::BasicMotion straight{0.2, 0, 4000};
-	common::BasicMotion turn_left{0.2,0.15, 4000};
-	common::BasicMotion turn_right{0.2,-0.15, 4000};
-	common::BasicMotion on_spot{0, 0.3, 2000};
+	common::BasicMotion straight{1, 0, 6000};
+	common::BasicMotion turn_left{1,0.3, 6000};
+	common::BasicMotion turn_right{1.,-0.3, 6000};
+	common::BasicMotion on_spot{0, 0.3, 6000};
 
 	planner::MotionList motions;
 	motions.push_back(straight);
@@ -94,20 +86,19 @@ int main(int argc, char **argv)
 
 	//Setup Planner
 	planner::PrimitiveRepresentation primitives(robot, motions);
-	//planner::WeightedPlanner random_planner(primitives);
-	planner::HeuristicPlanner random_planner(primitives);
+	planner::RandomPlanner random_planner(primitives);
 	common::Visualizer vis;
 
 	double angular = 0.0;
 	double linear = 0.0;
 	geometry_msgs::Twist vel;
-	
+
 	while (!curr_scan){
 		ros::spinOnce();
 	}
 
 	if(curr_scan){
-		random_planner.updateLaserScan(curr_scan);		
+		random_planner.updateLaserScan(curr_scan);
 		random_planner.runIteration();
 	}
 
@@ -122,7 +113,6 @@ int main(int argc, char **argv)
 		random_planner.bumperLeft = bumperL;
 		random_planner.bumperCenter = bumperC;
 		random_planner.bumperRight = bumperR;
-		random_planner.nextPosition = nextPoint;
 
 		// Update laser values in random_planner
 		if(curr_scan) {
@@ -133,7 +123,7 @@ int main(int argc, char **argv)
 		nav_msgs::Path path = random_planner.getPath();
 		vis.publishPath(path, std::chrono::milliseconds(10));
 		if (!random_planner.getVelocity(vel) && curr_scan){
-			random_planner.updateLaserScan(curr_scan);			
+			random_planner.updateLaserScan(curr_scan);
 			random_planner.runIteration();
 			std::cout << "Getting new plan!" << std::endl;
 		}
