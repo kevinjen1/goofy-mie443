@@ -2,8 +2,10 @@
 //#include "mapper/mapper.hpp"
 #include "common/common.hpp"
 #include <geometry_msgs/Pose2D.h>
+#include <geometry_msgs/Point.h>
 #include <nav_msgs/Odometry.h>
 #include <tf/tf.h>
+#include <visualization_msgs/Marker.h>
 #include "mapper/navigator.hpp"
 
 /*
@@ -21,6 +23,7 @@ public:
 		pub = n.advertise<geometry_msgs::Pose2D>("goofCoord",1);
 		subMap = n.subscribe("goofMap", 1, &FindCoord::callbackMap, this);
 		subOdom = n.subscribe("odom", 1, &FindCoord::callbackOdom, this);
+		marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 
 		// Set robot's initial pose
 		robotPos.x = 0.0f;
@@ -54,12 +57,13 @@ public:
 		geometry_msgs::Pose2D coord = getCoordinateRayCasting(grid, slope, row, col, robotPos);
 
 		// couldn't retrieve an unknown location
-		if (isZero(coord.x) && isZero(coord.y == 0)) {
+		if (isZero(coord.x) && isZero(coord.y)) {
 			return;
 		}
 
 		//publish coordinate
 		pub.publish(coord);
+		publishToRviz(coord);
 	}
 	void callbackOdom(const nav_msgs::Odometry odom)
 	{
@@ -71,11 +75,43 @@ public:
 		robotPos.theta = goofy::common::quat2yaw(odom.pose.pose.orientation);
 	}
 
+	void publishToRviz(geometry_msgs::Pose2D coord) {
+		ROS_INFO_STREAM("publishing to RVIZ");
+		visualization_msgs::Marker points;
+		points.header.frame_id = "map";
+		points.header.stamp = ros::Time::now();
+		points.ns = "points_and_lines";
+		points.action = visualization_msgs::Marker::ADD;
+		points.pose.orientation.w = 1.0;
+
+		points.id = 0;
+
+		points.type = visualization_msgs::Marker::POINTS;
+
+		// POINTS markers use x and y scale for width/height respectively
+		points.scale.x = 0.2;
+		points.scale.y = 0.2;
+
+		// Points are green
+		points.color.g = 1.0f;
+		points.color.a = 1.0;
+
+		geometry_msgs::Point p;
+		p.x = coord.x;
+		p.y = coord.y;
+		p.z = 0;
+
+		points.points.push_back(p);
+
+		marker_pub.publish(points);
+	}
+
 private:
 	ros::NodeHandle n;
 	ros::Publisher pub;
 	ros::Subscriber subMap;
 	ros::Subscriber subOdom;
+	ros::Publisher marker_pub;
 
 	geometry_msgs::Pose2D robotPos;
 };
