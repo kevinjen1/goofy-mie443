@@ -52,8 +52,8 @@ void processIR(cv::Mat& ir_image){
 void processDepth(cv::Mat& depth_image, const cv::Mat& ir_image){
   //std::cout << "Masking images" << std::endl;
 
-  std::cout << "Depth image size: " << depth_image.size() << std::endl;
-  std::cout << "IR image size: " << ir_image.size() << std::endl;
+  //std::cout << "Depth image size: " << depth_image.size() << std::endl;
+  //std::cout << "IR image size: " << ir_image.size() << std::endl;
 
   //std::cout << ir_image << std::endl;
 
@@ -66,19 +66,19 @@ void processDepth(cv::Mat& depth_image, const cv::Mat& ir_image){
   //depth mask with the nans only out where 1s are nans, comparing against itself does this
   cv::Mat nan_mask = cv::Mat(depth_image != depth_image);
 
-  imwrite("./bright_mask.jpg", mask_bright);
-  imwrite("./dark_mask.jpg", mask_dark);
-  imwrite("./nan_mask.jpg", nan_mask);
-  imwrite("./orig_depth.jpg", depth_image * 40);
+  //imwrite("./bright_mask.jpg", mask_bright);
+  //imwrite("./dark_mask.jpg", mask_dark);
+  //imwrite("./nan_mask.jpg", nan_mask);
+  //imwrite("./orig_depth.jpg", depth_image * 40);
 
   //make copies of it
   cv::Mat nan_mask_bright;
   cv::Mat nan_mask_dark;
 
   nan_mask.copyTo(nan_mask_bright, mask_bright);
-  imwrite("./nan_and_bright.jpg", nan_mask_bright);
+  //imwrite("./nan_and_bright.jpg", nan_mask_bright);
   nan_mask.copyTo(nan_mask_dark, mask_dark);
-  imwrite("./nan_and_dark.jpg", nan_mask_dark);
+  //imwrite("./nan_and_dark.jpg", nan_mask_dark);
 
   // stf::cout << "Creating nans" << std::endl;
 
