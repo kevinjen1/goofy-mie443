@@ -14,7 +14,8 @@ find_package(catkin REQUIRED COMPONENTS
 	sensor_msgs
 	kobuki_msgs
 	nav_msgs
-	message_generation)
+	message_generation
+	tf)
 
 add_message_files (
 	FILES

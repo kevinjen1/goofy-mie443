@@ -5,6 +5,7 @@
 #include <geometry_msgs/Point.h>
 #include <nav_msgs/Odometry.h>
 #include <tf/tf.h>
+#include <tf/transform_listener.h>
 #include <visualization_msgs/Marker.h>
 #include "mapper/navigator.hpp"
 
@@ -31,6 +32,20 @@ public:
 		robotPos.theta = 0.0f;
 	}
 	void callbackMap(const nav_msgs::OccupancyGrid grid) {
+		tf::TransformListener listener;
+		tf::StampedTransform transform;
+		try{
+		  listener.lookupTransform("base_link", "map",
+								   ros::Time(0), transform);
+		  ROS_INFO_STREAM("Got the transform");
+		}
+		catch (tf::TransformException ex){
+		  ROS_ERROR("%s",ex.what());
+		  ros::Duration(1.0).sleep();
+		}
+		ROS_INFO_STREAM("transform pos: "<< transform.getOrigin().x() << ", " << transform.getOrigin().y());
+		ROS_INFO_STREAM("robot pos: "<< robotPos.x << ", "<< robotPos.y);
+
 		// need a position
 		// have an A* search, without going the way we came
 		// need to have a list of past places
@@ -112,6 +127,8 @@ private:
 	ros::Subscriber subMap;
 	ros::Subscriber subOdom;
 	ros::Publisher marker_pub;
+
+//	tf::TransformListener listener;
 
 	geometry_msgs::Pose2D robotPos;
 };
