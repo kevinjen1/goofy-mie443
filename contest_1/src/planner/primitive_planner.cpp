@@ -324,8 +324,9 @@ float PrimitivePlanner::scanWidthAngle(nav_msgs::Path path, float x, float y){
 }
 
 bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle){
-	/* Given (x_pos,y_pos) and a scan angle, determine whether there is an obstacle there. 
-		return true if there is an obstacle. Return false if there is no obstacle
+	/* Given (x_pos,y_pos) and a scan angle, determine whether there is an obstacle there. return 
+			- true if there is an obstacle
+			- false if there is no obstacle
 	*/	
 	
 	// take the (x_pos,y_pos) and calculate the angle and tangent.
