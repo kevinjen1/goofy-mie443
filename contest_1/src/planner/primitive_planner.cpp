@@ -51,7 +51,6 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				_path.poses.clear();
 				_new_plan = true;
 				_plan.push_back(_primitives.getMotion(3));
-				_plan.push_back(_primitives.getMotion(3));
 				return false;
 			}
 			else if (ifObstacle() == 2) {
@@ -68,7 +67,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				return false;
 			}
 			else if (ifObstacle() == 3) {
-				// Obstacle within 0.5m - re-execute plan
+				// Obstacle within 1m - re-execute plan
 				_vel.linear.x = 0;
 				_vel.linear.y = 0;
 
@@ -110,14 +109,13 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 
 void RandomPlanner::runIteration(){
 	bool success = false;
-	int plan_index = 0;
-	//int plan_index = -1;
-	//while (success == false){
-	//	plan_index++;
-	//	success = checkPath(_primitives.getPath(plan_index, common::BASE));
-	//	std::cout << "Checked path number: " << plan_index << std::endl;
-	//	_vis.publishPath(_primitives.getPath(plan_index, common::BASE), std::chrono::milliseconds(500));		
-	//}
+	int plan_index = -1;
+	while (success == false){
+		plan_index++;
+		success = checkPath(_primitives.getPath(plan_index, common::BASE));
+		std::cout << "Checked path number: " << plan_index << std::endl;
+		_vis.publishPath(_primitives.getPath(plan_index, common::BASE), std::chrono::milliseconds(500));		
+	}
 	
 	/*  Using the extra bin width so this isn't needed, 
 		but if we decide to do the shorten path method, this is what we would use:
@@ -153,7 +151,7 @@ void HeuristicPlanner::runIteration(){
 	//int num_on_spots = 2;
 	int num_on_spots = getNumberOnSpots();
     pathOptions optionsArray[_primitives.getLength()-num_on_spots];
-    for (int plan_index = 0; plan_index < _primitives.getLength()-1-num_on_spots; plan_index++) {
+    for (int plan_index = 0; plan_index < _primitives.getLength()-num_on_spots-1; plan_index++) {
 		bool success = checkPath(_primitives.getPath(plan_index, common::BASE));
 
         nav_msgs::Path temp_path = _primitives.getPath(plan_index, common::BASE);
