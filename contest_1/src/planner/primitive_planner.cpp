@@ -497,13 +497,13 @@ bool PrimitivePlanner::checkPath(nav_msgs::Path path){
 		float y = path.poses[i].pose.position.y;
 		float scan_angle = scanWidthAngle(path, x, y);
 		//float scan_angle = 2;
-		hit_points += checkObstacle(x, y, scan_angle);
-		if (hit_points == 1) {
+		if (checkObstacle(x, y, scan_angle)){
+			std::cout << "invalid path" << std::endl;
 			return 0;
-		}
 	}
 
-	return (hit_points == 0);
+	std::cout << "invalid path" << std::endl;
+	return 1;
 }
 
 float WeightedPlanner::scanWidthAngle(float curr_x, float curr_y, float x, float y){
