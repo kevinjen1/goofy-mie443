@@ -39,7 +39,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				_new_plan = true;
 				common::BasicMotion back{-0.1, 0, 1000};
 				_plan.push_back(back);
-				_plan.push_back(_primitives.getMotion(4));
+				_plan.push_back(_primitives.getMotion(3));
 				return true;
 			}
 			else if (ifObstacle() == 1) {
@@ -69,7 +69,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				_new_plan = true;
 				common::BasicMotion back{-0.1, 0, 1000};
 				_plan.push_back(back);
-				_plan.push_back(_primitives.getMotion(3));
+				_plan.push_back(_primitives.getMotion(4));
 				return true;
 			}
 			else if (ifObstacle() == 3) {
@@ -400,7 +400,7 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 	
 		for(int i = index-scan_width; i <= index+scan_width; i++){
 			if(0 <= i <= laserSize){
-				if(tangent > _scan->ranges[i] || std::isnan(_scan->ranges[i])){
+				if(tangent > _scan->ranges[i]){
 					return true;	
 				}
 			}
