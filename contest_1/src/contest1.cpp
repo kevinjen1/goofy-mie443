@@ -90,8 +90,8 @@ int main(int argc, char **argv)
 	common::BasicMotion straight{0.2, 0, 4000};
 	common::BasicMotion turn_left{0.2,0.15, 4000};
 	common::BasicMotion turn_right{0.2,-0.15, 4000};
-	common::BasicMotion on_spot_right{0, -0.3, 8000};
-	common::BasicMotion on_spot_left{0, 0.3, 8000};
+	common::BasicMotion on_spot_right{0, -0.3, 5000};
+	common::BasicMotion on_spot_left{0, 0.3, 5000};
 
 	planner::MotionList motions;
 	motions.push_back(straight);
@@ -135,7 +135,7 @@ int main(int argc, char **argv)
 
 		// Update laser values in random_planner
 		if(curr_scan) {
-			//common::filterLaserScan(curr_scan, 2);
+			//common::filterLaserScan(curr_scan, 5);
 			random_planner.updateLaserScan(curr_scan);
 		}
 

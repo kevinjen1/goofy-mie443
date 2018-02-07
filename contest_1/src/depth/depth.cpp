@@ -59,7 +59,7 @@ void processIR(cv::Mat& ir_image){
 void processDepth(cv::Mat& depth_image, const cv::Mat& ir_image){
   //std::cout << "Masking images" << std::endl;
 
-  std::cout << "Depth image size: " << depth_image.size() << std::endl;
+  //std::cout << "Depth image size: " << depth_image.size() << std::endl;
   //std::cout << "IR image size: " << ir_image.size() << std::endl;
 
   //std::cout << ir_image << std::endl;
@@ -110,8 +110,8 @@ using namespace goofy::depth;
 int main(int argc, char** argv){
   ros::init(argc, argv, "depth_publisher");
   ros::NodeHandle nh;
-  ros::Subscriber depth_image_callback = nh.subscribe("/camera/depth_registered/hw_registered/image_rect", 1, &goofy::depth::depthCallback);
-  ros::Subscriber camera_info_callback = nh.subscribe("/camera/depth_registered/camera_info", 1, &goofy::depth::cameraInfoCallback);
+  ros::Subscriber depth_image_callback = nh.subscribe("/camera/depth/image_raw", 1, &goofy::depth::depthCallback);
+  ros::Subscriber camera_info_callback = nh.subscribe("/camera/depth/camera_info", 1, &goofy::depth::cameraInfoCallback);
   ros::Subscriber ir_image_callback = nh.subscribe("/camera/ir/image_rect_ir", 1, &goofy::depth::irCallback);
   ros::Publisher depth_publisher = nh.advertise<sensor_msgs::Image>("/corrected_depth/image", 1);
   ros::Publisher info_publisher = nh.advertise<sensor_msgs::CameraInfo>("/corrected_depth/camera_info", 1);
@@ -124,15 +124,22 @@ int main(int argc, char** argv){
     ros::spinOnce();
     if (updated_image == true & updated_ir == true){
 
-        std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
+        //ROS_DEBUG("I am a debug message");
+	std::chrono::steady_clock::time_point start = std::chrono::steady_clock::now();
         processIR(ir_image);
         processDepth(depth_image, ir_image);
 
         cv_bridge::CvImage depth_msg;
         depth_msg.image = depth_image;
         depth_msg.encoding = "32FC1";
+
+	ros::Time publish_time = ros::Time::now();
+
+	depth_msg.header.stamp = publish_time;
+	camera_info.header.stamp = publish_time;
+
         depth_publisher.publish(depth_msg.toImageMsg());
-        info_publisher.publish(goofy::depth::camera_info);
+	info_publisher.publish(goofy::depth::camera_info);
 
         std::chrono::steady_clock::time_point end = std::chrono::steady_clock::now();
         std::chrono::milliseconds processing = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
