@@ -190,9 +190,9 @@ void HeuristicPlanner::runIteration(){
 	
 
 	// If already close to the target position, or there is no target position, randomly navigate
-	int redZone = 0.3;
+	int redZone = 0.5;
 	if (sqrt(pow(nextPosition.x,2) + pow(nextPosition.y,2)) < redZone){
-		std::cout << "[HP->runIter] TOO CLOSE TO THE ENDPOINT! Within " << sqrt(pow(nextPosition.x,2) + pow(nextPosition.y,2)) << "m" << std::endl;
+		std::cout << "[HP->runIter] TOO CLOSE TO THE ENDPOINT! Within " << sqrt(pow(nextPosition.x,2) + pow(nextPosition.y,2)) << "m. Danger zone is: " << redZone << "m." << std::endl;
 		std::cout << "[HP->runIter] Jumping over to RandomPlanner now!\n" << std::endl;
 		PrimitivePlanner::runIteration();
 		return;
@@ -203,16 +203,17 @@ void HeuristicPlanner::runIteration(){
 		currentTargetPosition = nextPosition;
 		//turn to face it
 		float target_angle = atan2(nextPosition.y, nextPosition.x);
+		std::cout << "[HP->runIter] Target angle to the new path: " << target_angle << std::endl;
 		if (target_angle < Pi){
 			common::BasicMotion on_spot_aim{0, 0.3, (int)(1000*target_angle/0.3)};
 			_plan.push_back(on_spot_aim);
 			_new_plan = true;
-			std::cout << "[HP->runIter] New target point detected. Turning left for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
+			std::cout << "[HP->runIter] New target point detected. Turning left (0.3) for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
 		} else {
 			common::BasicMotion on_spot_aim{0, -0.3, (int)(1000*target_angle/0.3)};
 			_plan.push_back(on_spot_aim);
 			_new_plan = true;
-			std::cout << "[HP->runIter] New target point detected. Turning right for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
+			std::cout << "[HP->runIter] New target point detected. Turning right (-0.3) for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
 		}
 		return;
 	}
@@ -229,11 +230,12 @@ void HeuristicPlanner::runIteration(){
         float y = temp_path.poses[temp_path.poses.size()-1].pose.position.y;
 
         // Expecting next_position struct style with .x and .y fields
-        float euclid_dist = sqrt(pow(nextPosition.x-x,2) + pow(nextPosition.y-y,2));
+        float euclid_dist = sqrt(pow(currentTargetPosition.x-x,2) + pow(currentTargetPosition.y-y,2));
         //float euclid_dist = 0;  // while I wait for input
 
         optionsArray[plan_index] = {plan_index, success, euclid_dist};	
-		std::cout << "[HP->runIter] Checking path: " << plan_index << " => success: " << success << ", euclid_dist: " << euclid_dist << std::endl;	
+		std::cout << "[HP->runIter] Checking path " << plan_index << std::endl;
+		std::cout << "\tsuccess: " << success << ", path end point: (" << x << ", " << y << "), euclid_dist: " << euclid_dist << std::endl;	
 	}
 
     // Sort the potential paths by euclidean distance (increasing order) from the next_position
