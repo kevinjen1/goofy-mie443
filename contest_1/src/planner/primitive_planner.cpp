@@ -187,8 +187,8 @@ void HeuristicPlanner::runIteration(){
 	}
 
     int planned_path = -1;
-	//int num_on_spots = 2;
-	int num_on_spots = getNumberOnSpots();
+	int num_on_spots = 2;
+	//int num_on_spots = getNumberOnSpots();
     pathOptions optionsArray[_primitives.getLength()-num_on_spots];
     for (int plan_index = 0; plan_index < _primitives.getLength()-num_on_spots-1; plan_index++) {
 		bool success = checkPath(_primitives.getPath(plan_index, common::BASE));
@@ -218,9 +218,11 @@ void HeuristicPlanner::runIteration(){
     }
 
     // If none of the paths are valid, spin on the spot
-    // Still want to add some functionality for choosing to turn left or right, or custom amounts
+    // Call leftOrRightWhileStuck to decide left or right
+	// Note: This depends on the last 2 paths being left and right
     if (planned_path < 0){
-        planned_path = _primitives.getLength()-1;
+        planned_path = _primitives.getLength()-num_on_spots;
+		planned_path += leftOrRightWhileStuck();
 	}
 
 	// add the primitive motion to the plan
@@ -231,6 +233,32 @@ void HeuristicPlanner::runIteration(){
 	_path.poses.insert(_path.poses.end(), cur_path.poses.begin(), cur_path.poses.end());
 
 	_new_plan = true;
+}
+
+bool HeuristicPlanner::leftOrRightWhileStuck(){
+	/*  Choose to turn in place left or right
+		From straight ahead, sum up the distances of buckets to the right or left
+		Pick the one with the max value (more room to move)
+		Returns 0 for left, and 1 for right
+	*/
+
+	int laserSize = (_scan->angle_max -_scan->angle_min)/_scan->angle_increment;
+	float left_distances = 0;
+	float right_distances = 0;
+	for (int i = 1; i <= laserSize; i++){
+		if(i<= laserSize/2) {
+			if(!isnan(_scan->ranges[i])) { 
+				left_distances += _scan->ranges[i];
+			}
+		} 
+		else {
+			if(!isnan(_scan->ranges[i])) { 
+				right_distances += _scan->ranges[i];
+			}
+		}	
+	}
+
+	return (left_distances < right_distances);	// 0 if left >= right to go left, 1 if left < right to go right
 }
 
 int HeuristicPlanner::getNumberOnSpots(){

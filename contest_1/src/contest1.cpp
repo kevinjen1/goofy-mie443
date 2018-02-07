@@ -91,8 +91,8 @@ int main(int argc, char **argv)
 	common::BasicMotion straight{0.2, 0, 4000};
 	common::BasicMotion turn_left{0.2,0.15, 4000};
 	common::BasicMotion turn_right{0.2,-0.15, 4000};
-	common::BasicMotion on_spot_right{0, -0.3, 8000};
 	common::BasicMotion on_spot_left{0, 0.3, 8000};
+	common::BasicMotion on_spot_right{0, -0.3, 8000};
 
 	planner::MotionList motions;
 	motions.push_back(straight);
