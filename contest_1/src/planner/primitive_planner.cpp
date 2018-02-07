@@ -444,7 +444,7 @@ int PrimitivePlanner::ifObstacle(){
 			- 4 for scanned obstacle to the right
 			- 5 for nothing
 	*/	
-	std::cout << "Calling ifObstacle! at: " << rand() << std::endl;
+	//std::cout << "Calling ifObstacle! at: " << rand() << std::endl;
 	int laserSize = (_scan->angle_max -_scan->angle_min)/_scan->angle_increment;
 	int turn_right = 0;
 	int turn_left = 0;
