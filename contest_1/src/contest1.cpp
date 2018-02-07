@@ -88,18 +88,16 @@ int main(int argc, char **argv)
 	common::RobotModel robot(0.5,0.5,0.5);
 
 	//Setup Primitives
-	common::BasicMotion straight{0.2, 0, 4000};
+	common::BasicMotion straight{0.2, 0, 5000};
 	common::BasicMotion mild_right{0.15, -0.1, 4000};
 	common::BasicMotion mild_left{0.15, -0.1, 4000};
 	common::BasicMotion turn_left{0.15,0.25, 4000};
 	common::BasicMotion turn_right{0.15,-0.25, 4000};
-	common::BasicMotion on_spot_right{0, -0.3, 5000};
-	common::BasicMotion on_spot_left{0, 0.3, 5000};
+	common::BasicMotion on_spot_right{0, -0.3, 2000};
+	common::BasicMotion on_spot_left{0, 0.3, 2000};
 
 	planner::MotionList motions;
 	motions.push_back(straight);
-	motions.push_back(mild_right);
-	motions.push_back(mild_left);
 	motions.push_back(turn_left);
 	motions.push_back(turn_right);
 	motions.push_back(on_spot_right);

@@ -82,6 +82,7 @@ void filterLaserScan(sensor_msgs::LaserScan::Ptr scan, int window){
 				if (!std::isnan(cur_check)){
 					//if we see our second number, do the average and set the value
 					*i = (begin_val + cur_check)/2; //set to the average value between the two
+					//std::cout << "Removed nan" <<  std::endl;
 					break;
 				}
 				//if we reach the end of our window, the first number is no longer valid (too many nans in between), reset

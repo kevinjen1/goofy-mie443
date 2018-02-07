@@ -40,7 +40,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
+					common::BasicMotion recovery_turn_right{0, -0.3, 1000};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -58,7 +58,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
+					common::BasicMotion recovery_turn_right{0, -0.3, 1000};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -75,7 +75,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_left{0, 0.3, 3000};
+					common::BasicMotion recovery_turn_left{0, 0.3, 1000};
 					_plan.push_back(recovery_turn_left);
 					_recovery = true;
 					return true;
@@ -85,17 +85,17 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_vel.linear.x = 0;
 					_vel.linear.y = 0;
 
-					std::cout << "Obstacle within 0.5m, starting recovery behavior" << std::endl;
+					std::cout << "Obstacle within 0.5m on left!" << std::endl;
 
 					_plan.clear();
 					_path.poses.clear();
 					_new_plan = true;
-					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
+					common::BasicMotion recovery_turn_right{0, 0.3, 1000};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
 				}
-				/*else if (ifObstacle() == 4) {
+				else if (ifObstacle() == 4) {
 					// scanned obstacle to the right
 					_vel.linear.x = 0;
 					_vel.linear.y = 0;
@@ -105,9 +105,11 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_plan.clear();
 					_path.poses.clear();
 					_new_plan = true;
-					_plan.push_back(_primitives.getMotion(4));
+					common::BasicMotion recovery_turn_left{0, -0.3, 1000};
+					_plan.push_back(recovery_turn_left);
+					_recovery = true;
 					return true;
-				}*/
+				}
 			}
 			vel = _vel;
 			std::chrono::milliseconds left = std::chrono::duration_cast<std::chrono::milliseconds>(_end_motion_time - std::chrono::steady_clock::now());
@@ -149,9 +151,9 @@ void PrimitivePlanner::runIteration(){
 		plan_index++;
 		success = checkPath(_primitives.getPath(plan_index, common::BASE));
 		std::cout << "Checked path number: " << plan_index << " and got  " << success << std::endl;
-		_vis.publishPath(_primitives.getPath(plan_index, common::BASE), std::chrono::milliseconds(1000));
-		_vis.publishErrorPoint(0, 0, std::chrono::milliseconds(10));
-		_vis.publishLaserPoint(0, 0, std::chrono::milliseconds(10));
+		_vis.publishPath(_primitives.getPath(plan_index, common::BASE), std::chrono::milliseconds(5));
+		_vis.publishErrorPoint(0, 0, std::chrono::milliseconds(5));
+		_vis.publishLaserPoint(0, 0, std::chrono::milliseconds(5));
 	}
 	
 	/*  Using the extra bin width so this isn't needed, 
@@ -386,7 +388,7 @@ float PrimitivePlanner::scanWidthAngle(nav_msgs::Path path, float x, float y){
 		This is to account for the non-point-mass nature of the robot, for collision avoidance
 	*/	
 	double curr_position[2] = {path.poses[0].pose.position.x, path.poses[0].pose.position.y};
-	double dist = sqrt(pow(curr_position[0]-x,2) + pow(curr_position[1]-y,2)) + 0.1;
+	double dist = sqrt(pow(curr_position[0]-x,2) + pow(curr_position[1]-y,2)) + 0.05;
 	return atan2(robotRadius, dist);
 }
 
@@ -418,12 +420,12 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 	
 		for(int i = index-scan_width; i <= index+scan_width; i++){
 			if(i > 0 && i < laserSize){
-				if(tangent > _scan->ranges[i] || std::isnan(_scan->ranges[i])){
+				if(tangent > (_scan->ranges[i]-0.3) || std::isnan(_scan->ranges[i])){
 					_vis.publishErrorPoint(x_pos, y_pos, std::chrono::milliseconds(1));
 					float angle = i * _scan->angle_increment + _scan->angle_min;
 					_vis.publishLaserPoint(_scan->ranges[i], angle, std::chrono::milliseconds(1));
-					std::cout << "Found issue at positin [" << x_pos << "," << y_pos << "], index [" << i << "] with range [" << _scan->ranges[i] << "], angle [" << angle << "]" << std::endl;
-					std::cout << "Maximum laserSize: " << laserSize << std::endl;
+					//std::cout << "Found issue at positin [" << x_pos << "," << y_pos << "], index [" << i << "] with range [" << _scan->ranges[i] << "], angle [" << angle << "]" << std::endl;
+					//std::cout << "Maximum laserSize: " << laserSize << std::endl;
 					return true;	
 				}
 			}
@@ -454,8 +456,8 @@ int PrimitivePlanner::ifObstacle(){
 		} else {
 			//std::cout << _scan->ranges[i] << std::endl;
 		}
-		if(_scan->ranges[i] < 0.5 || std::isnan(_scan->ranges[i])) {
-			//std::cout << "Found nan" << std::endl;
+		if(_scan->ranges[i] < 0.3 ) {
+			//std::cout << "Found nan " << rand() << std::endl;
 			if(i<= laserSize/2) {
 				turn_right++;
 			} 
@@ -465,12 +467,12 @@ int PrimitivePlanner::ifObstacle(){
 		}
 	}
 	//std::cout << "Left: " << turn_left << " Right: " << turn_right << std::endl;
-	if(turn_right != 0 && turn_left != 0) {
+	if(turn_right != 0 || turn_left != 0) {
 		if(turn_right >= turn_left) {
-			return 3;
+			return 4;
 		}
 		else if(turn_left >= turn_right){
-			return 3;
+			return 4;
 		}
 	}
 	if(bumperLeft == 1) {
