@@ -26,78 +26,89 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 		
 		if (std::chrono::steady_clock::now() < _end_motion_time){
 			// if the robot is not at the end of the path, but detects an obstacle, stop.
-			// std::cout << "Obstacle index:"<<ifObstacle()<<std::endl;			
-			if (ifObstacle() == 0) {
-				// Left Bumper pushed in - turn right
-				_vel.linear.x = 0;
-				_vel.linear.y = 0;
+			// std::cout << "Obstacle index:"<<ifObstacle()<<std::endl;
+			if (_recovery == false){
+				if (ifObstacle() == 0) {
+					// Left Bumper pushed in - turn right
+					_vel.linear.x = 0;
+					_vel.linear.y = 0;
 
-				std::cout << "Left Bump" << std::endl;
+					std::cout << "Left Bump" << std::endl;
 
-				_plan.clear();
-				_path.poses.clear();
-				_new_plan = true;
-				common::BasicMotion back{-0.1, 0, 1000};
-				_plan.push_back(back);
-				_plan.push_back(_primitives.getMotion(3));
-				return true;
+					_plan.clear();
+					_path.poses.clear();
+					_new_plan = true;
+					common::BasicMotion back{-0.1, 0, 1000};
+					_plan.push_back(back);
+					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
+					_plan.push_back(recovery_turn_right);
+					_recovery = true;
+					return true;
+				}
+				else if (ifObstacle() == 1) {
+					// Center Bumper pushed in - move back
+					_vel.linear.x = 0;
+					_vel.linear.y = 0;
+
+					std::cout << "Center Bump" << std::endl;
+
+					_plan.clear();
+					_path.poses.clear();
+
+					_new_plan = true;
+					common::BasicMotion back{-0.1, 0, 1000};
+					_plan.push_back(back);
+					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
+					_plan.push_back(recovery_turn_right);
+					_recovery = true;
+					return true;
+				}
+				else if (ifObstacle() == 2) {
+					// Right Bumper pushed in - move left
+					_vel.linear.x = 0;
+					_vel.linear.y = 0;
+
+					std::cout << "Right Bump" << std::endl;
+
+					_plan.clear();
+					_path.poses.clear();
+					_new_plan = true;
+					common::BasicMotion back{-0.1, 0, 1000};
+					_plan.push_back(back);
+					common::BasicMotion recovery_turn_left{0, 0.3, 3000};
+					_plan.push_back(recovery_turn_left);
+					_recovery = true;
+					return true;
+				}
+				else if (ifObstacle() == 3) { //if we are not in a recovery behavior
+					// scanned obstacle
+					_vel.linear.x = 0;
+					_vel.linear.y = 0;
+
+					std::cout << "Obstacle within 0.5m, starting recovery behavior" << std::endl;
+
+					_plan.clear();
+					_path.poses.clear();
+					_new_plan = true;
+					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
+					_plan.push_back(recovery_turn_right);
+					_recovery = true;
+					return true;
+				}
+				/*else if (ifObstacle() == 4) {
+					// scanned obstacle to the right
+					_vel.linear.x = 0;
+					_vel.linear.y = 0;
+
+					std::cout << "Obstacle within 0.5 m on right!" << std::endl;
+
+					_plan.clear();
+					_path.poses.clear();
+					_new_plan = true;
+					_plan.push_back(_primitives.getMotion(4));
+					return true;
+				}*/
 			}
-			else if (ifObstacle() == 1) {
-				// Center Bumper pushed in - move back
-				_vel.linear.x = 0;
-				_vel.linear.y = 0;
-
-				std::cout << "Center Bump" << std::endl;
-
-				_plan.clear();
-				_path.poses.clear();
-				_new_plan = true;
-				common::BasicMotion back{-0.1, 0, 1000};
-				_plan.push_back(back);
-				_plan.push_back(_primitives.getMotion(4));
-				return true;
-			}
-			else if (ifObstacle() == 2) {
-				// Right Bumper pushed in - move left
-				_vel.linear.x = 0;
-				_vel.linear.y = 0;
-
-				std::cout << "Right Bump" << std::endl;
-
-				_plan.clear();
-				_path.poses.clear();
-				_new_plan = true;
-				common::BasicMotion back{-0.1, 0, 1000};
-				_plan.push_back(back);
-				_plan.push_back(_primitives.getMotion(4));
-				return true;
-			}
-			else if (ifObstacle() == 3) {
-				// scanned obstacle 
-				_vel.linear.x = 0;
-				_vel.linear.y = 0;
-
-				std::cout << "Obstacle within 0.5 m" << std::endl;
-
-				_plan.clear();
-				_path.poses.clear();
-				_new_plan = true;
-				_plan.push_back(_primitives.getMotion(4));
-				return true;
-			}
-			/*else if (ifObstacle() == 4) {
-				// scanned obstacle to the right
-				_vel.linear.x = 0;
-				_vel.linear.y = 0;
-
-				std::cout << "Obstacle within 0.5 m on right!" << std::endl;
-
-				_plan.clear();
-				_path.poses.clear();
-				_new_plan = true;
-				_plan.push_back(_primitives.getMotion(4));
-				return true;
-			}*/						
 			vel = _vel;
 			std::chrono::milliseconds left = std::chrono::duration_cast<std::chrono::milliseconds>(_end_motion_time - std::chrono::steady_clock::now());
 			// std::cout << "Plan OK -- " << left.count() << " milliseconds left" << std::endl;
@@ -115,6 +126,8 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				_plan.clear();
 				_path.poses.clear();
 
+				_recovery = false;
+
 				return false;
 			} else {
 				//std::cout << "Current motion has ended" << std::endl;
@@ -130,12 +143,15 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 
 void PrimitivePlanner::runIteration(){
 	bool success = false;
+	_recovery = false;
 	int plan_index = -1;
 	while (success == false){
 		plan_index++;
 		success = checkPath(_primitives.getPath(plan_index, common::BASE));
-		std::cout << "Checked path number: " << plan_index << "and got " << success << std::endl;
-		_vis.publishPath(_primitives.getPath(plan_index, common::BASE), std::chrono::milliseconds(500));		
+		std::cout << "Checked path number: " << plan_index << " and got  " << success << std::endl;
+		_vis.publishPath(_primitives.getPath(plan_index, common::BASE), std::chrono::milliseconds(1000));
+		_vis.publishErrorPoint(0, 0, std::chrono::milliseconds(10));
+		_vis.publishLaserPoint(0, 0, std::chrono::milliseconds(10));
 	}
 	
 	/*  Using the extra bin width so this isn't needed, 
@@ -386,12 +402,12 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 	
 	if (_scan->angle_max < angle || _scan->angle_min > angle){		
 		// outside of the viewing angle is not an obstacle		
-		std::cout<<"outside of viewing angle"<<std::endl;		
+		//std::cout<<"outside of viewing angle"<<std::endl;
 		return false;
 	}
 	else if (_scan->range_min > tangent || _scan->range_max < tangent){	
 		// anything outside of the range is not an obstacle		
-		std::cout<<"outside of range"<<std::endl;		
+		//std::cout<<"outside of range"<<std::endl;
 		return false;
 	}
 	else {
@@ -401,8 +417,13 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 		int scan_width = (scan_angle)/_scan->angle_increment;
 	
 		for(int i = index-scan_width; i <= index+scan_width; i++){
-			if(0 <= i <= laserSize){
-				if(tangent > _scan->ranges[i]){
+			if(i > 0 && i < laserSize){
+				if(tangent > _scan->ranges[i] || std::isnan(_scan->ranges[i])){
+					_vis.publishErrorPoint(x_pos, y_pos, std::chrono::milliseconds(1));
+					float angle = i * _scan->angle_increment + _scan->angle_min;
+					_vis.publishLaserPoint(_scan->ranges[i], angle, std::chrono::milliseconds(1));
+					std::cout << "Found issue at positin [" << x_pos << "," << y_pos << "], index [" << i << "] with range [" << _scan->ranges[i] << "], angle [" << angle << "]" << std::endl;
+					std::cout << "Maximum laserSize: " << laserSize << std::endl;
 					return true;	
 				}
 			}
@@ -423,12 +444,18 @@ int PrimitivePlanner::ifObstacle(){
 			- 4 for scanned obstacle to the right
 			- 5 for nothing
 	*/	
-
+	std::cout << "Calling ifObstacle! at: " << rand() << std::endl;
 	int laserSize = (_scan->angle_max -_scan->angle_min)/_scan->angle_increment;
 	int turn_right = 0;
 	int turn_left = 0;
 	for (int i = 1; i <= laserSize; i++){
-		if(_scan->ranges[i] < 0.5) { 
+		if (std::isnan(_scan->ranges[i])){
+			//std::cout << "NaN" << std::endl;
+		} else {
+			//std::cout << _scan->ranges[i] << std::endl;
+		}
+		if(_scan->ranges[i] < 0.5 || std::isnan(_scan->ranges[i])) {
+			//std::cout << "Found nan" << std::endl;
 			if(i<= laserSize/2) {
 				turn_right++;
 			} 
@@ -437,12 +464,13 @@ int PrimitivePlanner::ifObstacle(){
 			}	
 		}
 	}
+	//std::cout << "Left: " << turn_left << " Right: " << turn_right << std::endl;
 	if(turn_right != 0 && turn_left != 0) {
 		if(turn_right >= turn_left) {
 			return 3;
 		}
 		else if(turn_left >= turn_right){
-			return 4;
+			return 3;
 		}
 	}
 	if(bumperLeft == 1) {

@@ -18,7 +18,8 @@ class PrimitivePlanner{
 public:
 	PrimitivePlanner(PrimitiveRepresentation primitives):
 		_primitives(primitives),
-		_new_plan(false){
+		_new_plan(false),
+		_recovery(false){
 		_path.header.frame_id = "camera_depth_frame";
 		nextPosition.x = 0;
 		nextPosition.y = 0;
@@ -64,6 +65,7 @@ private:
 	geometry_msgs::Twist _vel;
 	common::BasicMotion _curr_motion;
 	MotionList::iterator _motion_index;
+	bool _recovery;
 	std::chrono::steady_clock::time_point _end_motion_time;
 };
 

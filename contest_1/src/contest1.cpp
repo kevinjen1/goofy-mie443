@@ -89,13 +89,17 @@ int main(int argc, char **argv)
 
 	//Setup Primitives
 	common::BasicMotion straight{0.2, 0, 4000};
-	common::BasicMotion turn_left{0.2,0.15, 4000};
-	common::BasicMotion turn_right{0.2,-0.15, 4000};
-	common::BasicMotion on_spot_left{0, 0.3, 5000};
+	common::BasicMotion mild_right{0.15, -0.1, 4000};
+	common::BasicMotion mild_left{0.15, -0.1, 4000};
+	common::BasicMotion turn_left{0.15,0.25, 4000};
+	common::BasicMotion turn_right{0.15,-0.25, 4000};
 	common::BasicMotion on_spot_right{0, -0.3, 5000};
+	common::BasicMotion on_spot_left{0, 0.3, 5000};
 
 	planner::MotionList motions;
 	motions.push_back(straight);
+	motions.push_back(mild_right);
+	motions.push_back(mild_left);
 	motions.push_back(turn_left);
 	motions.push_back(turn_right);
 	motions.push_back(on_spot_right);
@@ -108,15 +112,17 @@ int main(int argc, char **argv)
 	planner::PrimitivePlanner random_planner(primitives);
 	common::Visualizer vis;
 
-	double angular = 0.0;
-	double linear = 0.0;
-	geometry_msgs::Twist vel;
+	geometry_msgs::Twist stop;
+	stop.angular.z = 0;
+	stop.linear.x = 0;
+	geometry_msgs::Twist vel = stop;
 
 	while (!curr_scan){
 		ros::spinOnce();
 	}
 
 	if(curr_scan){
+		common::filterLaserScan(curr_scan, 5);
 		random_planner.updateLaserScan(curr_scan);
 		random_planner.runIteration();
 	}
@@ -136,7 +142,7 @@ int main(int argc, char **argv)
 
 		// Update laser values in random_planner
 		if(curr_scan) {
-			common::filterLaserScan(curr_scan, 2);
+			common::filterLaserScan(curr_scan, 5);
 			random_planner.updateLaserScan(curr_scan);
 		}
 
@@ -144,9 +150,12 @@ int main(int argc, char **argv)
 		nav_msgs::Path path = random_planner.getPath();
 		vis.publishPath(path, std::chrono::milliseconds(10));
 		if (!random_planner.getVelocity(vel) && curr_scan){
+			vel_pub.publish(stop); //need to publish a zero velocity here!
+			common::filterLaserScan(curr_scan, 5);
 			random_planner.updateLaserScan(curr_scan);
 			random_planner.runIteration();
 			std::cout << "Getting new plan!" << std::endl;
+			random_planner.getVelocity(vel);
 		}
 
  		vel_pub.publish(vel);
