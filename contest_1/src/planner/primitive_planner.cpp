@@ -186,9 +186,14 @@ void HeuristicPlanner::runIteration(){
     //      1) Whenever a destination point arrives, at the beginning of next turn rotate to face it
     //      2) Sort each valid (success==true) path by distance to end point in increasing order
 
+	// Convert global poses to be in local reference frame
+	
+
 	// If already close to the target position, or there is no target position, randomly navigate
 	int redZone = 0.3;
 	if (sqrt(pow(nextPosition.x,2) + pow(nextPosition.y,2)) < redZone){
+		std::cout << "[HP->runIter] TOO CLOSE TO THE ENDPOINT! Within " << sqrt(pow(nextPosition.x,2) + pow(nextPosition.y,2)) << "m" << std::endl;
+		std::cout << "[HP->runIter] Jumping over to RandomPlanner now!\n" << std::endl;
 		PrimitivePlanner::runIteration();
 		return;
 	}
@@ -202,10 +207,12 @@ void HeuristicPlanner::runIteration(){
 			common::BasicMotion on_spot_aim{0, 0.3, (int)(1000*target_angle/0.3)};
 			_plan.push_back(on_spot_aim);
 			_new_plan = true;
+			std::cout << "[HP->runIter] New target point detected. Turning left for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
 		} else {
-			common::BasicMotion on_spot_aim{0, 0.3, (int)(1000*target_angle/0.3)};
+			common::BasicMotion on_spot_aim{0, -0.3, (int)(1000*target_angle/0.3)};
 			_plan.push_back(on_spot_aim);
 			_new_plan = true;
+			std::cout << "[HP->runIter] New target point detected. Turning right for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
 		}
 		return;
 	}
@@ -225,7 +232,8 @@ void HeuristicPlanner::runIteration(){
         float euclid_dist = sqrt(pow(nextPosition.x-x,2) + pow(nextPosition.y-y,2));
         //float euclid_dist = 0;  // while I wait for input
 
-        optionsArray[plan_index] = {plan_index, success, euclid_dist};		
+        optionsArray[plan_index] = {plan_index, success, euclid_dist};	
+		std::cout << "[HP->runIter] Checking path: " << plan_index << " => success: " << success << ", euclid_dist: " << euclid_dist << std::endl;	
 	}
 
     // Sort the potential paths by euclidean distance (increasing order) from the next_position
@@ -233,10 +241,12 @@ void HeuristicPlanner::runIteration(){
     std::sort (optionsVector.begin(), optionsVector.end(), boolComparison);
 
     for (int i = 0; i < _primitives.getLength()-1; i++) {
+		std::cout << "[HP->runIter] Sorted path check: " << i << std::endl;
         if (optionsVector[i].valid){
             planned_path = optionsVector[i].index;
             //std::cout << "Checked path number: " << planned_path << std::endl;
     		_vis.publishPath(_primitives.getPath(planned_path, common::BASE), std::chrono::milliseconds(500));
+			std::cout << "[HP->runIter] Chose path: " << i << " => success: " << optionsVector[i].valid << ", euclid_dist: " << optionsVector[i].euclid_dist << std::endl;
             break;
         }
     }
@@ -246,7 +256,9 @@ void HeuristicPlanner::runIteration(){
 	// Note: This depends on the last 2 paths being left and right
     if (planned_path < 0){
         planned_path = _primitives.getLength()-num_on_spots;
-		planned_path += leftOrRightWhileStuck();
+		bool result = leftOrRightWhileStuck();
+		std::cout << "[HP->runIter] No good path. Turning on the spot (0=L, 1=R): " << result << std::endl;
+		planned_path += result;
 	}
 
 	// add the primitive motion to the plan
@@ -257,6 +269,22 @@ void HeuristicPlanner::runIteration(){
 	_path.poses.insert(_path.poses.end(), cur_path.poses.begin(), cur_path.poses.end());
 
 	_new_plan = true;
+}
+
+void HeuristicPlanner::getLocalTargetPosition(){
+	/*  Return the target pose in the local frame of reference 
+		r_pi = R*r_pv + r_vi 	=>	 r_pv = R_inv*(r_pi - r_vi)	 =>	 r_pv = R_inv*delta_vector
+		r_pi = global point (currentTargetPosition)
+		r_vi = odometry measurements (current_pose)
+		R = [cos_theta	-sin_theta		=> R_inv = [cos_theta	sin_theta
+			 sin_theta	cos_theta]				    -sin_theta	cos_theta]
+	*/	
+	float delta_x = (currentTargetPosition.x - current_pose.x);
+	float delta_y = (currentTargetPosition.y - current_pose.y);
+	local_target_pose.theta = atan2(delta_y, delta_x) + current_pose.theta;
+	local_target_pose.x = delta_x*cos(local_target_pose.theta) + delta_y*sin(local_target_pose.theta);
+	local_target_pose.y = -delta_x*sin(local_target_pose.theta) + delta_y*cos(local_target_pose.theta);
+	std::cout << "[HP->localTarget] Local point: (" << local_target_pose.x << ", " << local_target_pose.y << ", " << local_target_pose.theta << ")" << std::endl;
 }
 
 bool HeuristicPlanner::leftOrRightWhileStuck(){
@@ -282,6 +310,7 @@ bool HeuristicPlanner::leftOrRightWhileStuck(){
 		}	
 	}
 
+	std::cout << "[HP->L/R Stuck] Left dist: " << left_distances << ", right dist: " << right_distances << std::endl;
 	return (left_distances < right_distances);	// 0 if left >= right to go left, 1 if left < right to go right
 }
 

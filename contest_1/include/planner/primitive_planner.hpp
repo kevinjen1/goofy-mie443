@@ -46,6 +46,9 @@ public:
 	int laserSize = 0, laserOffset = 0, desiredAngle = 5;
 	float robotRadius = 0.2;	// in m
 	geometry_msgs::Pose2D nextPosition;
+	geometry_msgs::Pose2D current_pose;
+	geometry_msgs::Pose2D currentTargetPosition;
+	geometry_msgs::Pose2D local_target_pose;
 
 protected:
 	bool checkObstacle(float x_pos, float y_pos, float scan_angle);
@@ -85,8 +88,7 @@ public:
     static bool boolComparison(pathOptions i, pathOptions j);
 	int getNumberOnSpots();
 	bool leftOrRightWhileStuck();
-	
-	geometry_msgs::Pose2D currentTargetPosition;
+	void getLocalTargetPosition();
 };
 
 class WeightedPlanner: public PrimitivePlanner{

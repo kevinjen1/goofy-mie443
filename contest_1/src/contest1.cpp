@@ -4,6 +4,7 @@
 #include <geometry_msgs/Pose2D.h>
 #include <kobuki_msgs/BumperEvent.h>
 #include <sensor_msgs/LaserScan.h>
+#include <nav_msgs/Odometry.h>
 #include <eStop.h>
 
 #include <stdio.h>
@@ -20,6 +21,7 @@ double lRange = 10;
 int lSize = 0, lOffset = 0, dAngle = 5;
 sensor_msgs::LaserScan::Ptr curr_scan;
 geometry_msgs::Pose2D nextPoint;
+geometry_msgs::Pose2D currPose;
 
 void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg){
 	// This callback updates the left right and center bumper states
@@ -71,6 +73,16 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 	return;
 }
 
+void callbackOdom(const nav_msgs::Odometry odom)
+{
+	// Find robot 2D pose from odometry
+	// Position (x,y)
+	currPose.x = odom.pose.pose.position.x;
+	currPose.y = odom.pose.pose.position.y;
+
+	currPose.theta = goofy::common::quat2yaw(odom.pose.pose.orientation);
+}
+
 int main(int argc, char **argv)
 {
 	ros::init(argc, argv, "image_listener");
@@ -83,6 +95,7 @@ int main(int argc, char **argv)
 	ros::Publisher vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel_mux/input/teleop", 1);
 
 	ros::Subscriber next_coord_sub = nh.subscribe("goofCoord", 1, &getNextPoint);
+	ros::Subscriber sub_odom = nh.subscribe("odom", 1, &callbackOdom);
 
 	//Setup Robot
 	common::RobotModel robot(0.5,0.5,0.5);
@@ -90,7 +103,7 @@ int main(int argc, char **argv)
 	//Setup Primitives
 	common::BasicMotion straight{0.2, 0, 5000};
 	common::BasicMotion mild_right{0.15, -0.1, 4000};
-	common::BasicMotion mild_left{0.15, -0.1, 4000};
+	common::BasicMotion mild_left{0.15, 0.1, 4000};
 	common::BasicMotion turn_left{0.15,0.25, 4000};
 	common::BasicMotion turn_right{0.15,-0.25, 4000};
 	common::BasicMotion on_spot_right{0, -0.3, 2000};
@@ -137,6 +150,7 @@ int main(int argc, char **argv)
 		random_planner.bumperCenter = bumperC;
 		random_planner.bumperRight = bumperR;
 		random_planner.nextPosition = nextPoint;
+		random_planner.current_pose = currPose;
 
 		// Update laser values in random_planner
 		if(curr_scan) {
