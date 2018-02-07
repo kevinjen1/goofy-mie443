@@ -179,7 +179,6 @@ void PrimitivePlanner::runIteration(){
 	_new_plan = true;
 }
 
-
 void HeuristicPlanner::runIteration(){
     // This implementation is the same as RandomPlanner	(peruses around, avoiding obstacles
     // Differences being:
@@ -340,7 +339,6 @@ bool HeuristicPlanner::boolComparison(pathOptions i, pathOptions j){
     return (i.euclid_dist < j.euclid_dist);
 }
 
-
 void WeightedPlanner::runIteration(){
 	/* Need implementing 
         Does all the same path overhead as RandomPlanner::runIteration above
@@ -351,17 +349,17 @@ void WeightedPlanner::runIteration(){
         Pick the path with the max value (furthest from an obstacle)
     */
 
-//	int backupPathIndex;
+	//int backupPathIndex;
     int max_path = -1;
     float max_outcome = 0;
 	for (int i = 0; i < _primitives.getLength()-1; i++) {
 		// Hacked way to see if it is on_spot		
 		//if (_primitives.getPath(i, common::BASE).linear_velocity == 0){
-//		nav_msgs::Path tempPath = _primitives.getPath(i, common::BASE);
-//		if (tempPath.poses[0].pose.position == tempPath.poses[tempPath.poses.size()-1].pose.position){
-//			backupPathIndex = i;
-//			continue;
-//		}
+		//nav_msgs::Path tempPath = _primitives.getPath(i, common::BASE);
+		//if (tempPath.poses[0].pose.position == tempPath.poses[tempPath.poses.size()-1].pose.position){
+		//	backupPathIndex = i;
+		//	continue;
+		//}
 		float outcome = checkPath(_primitives.getPath(i, common::BASE));    
         //std::cout << "Checked path number: " << i << std::endl;   
 		_vis.publishPath(_primitives.getPath(i, common::BASE), std::chrono::milliseconds(1000));
@@ -425,8 +423,9 @@ float PrimitivePlanner::scanWidthAngle(nav_msgs::Path path, float x, float y){
 }
 
 bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle){
-	/* Given (x_pos,y_pos) and a scan angle, determine whether there is an obstacle there. 
-		return true if there is an obstacle. Return false if there is no obstacle
+	/* Given (x_pos,y_pos) and a scan angle, determine whether there is an obstacle there. return 
+			- true if there is an obstacle
+			- false if there is no obstacle
 	*/	
 	
 	// take the (x_pos,y_pos) and calculate the angle and tangent.
@@ -520,7 +519,6 @@ int PrimitivePlanner::ifObstacle(){
 		return 5;
 	}
 }
-
 
 bool PrimitivePlanner::checkPath(nav_msgs::Path path){
 	/*  Goes through each of the points in a path
