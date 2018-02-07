@@ -40,7 +40,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_right{0, -0.3, 1000};
+					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -58,7 +58,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_right{0, -0.3, 1000};
+					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -75,7 +75,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_left{0, 0.3, 1000};
+					common::BasicMotion recovery_turn_left{0, 0.3, 3000};
 					_plan.push_back(recovery_turn_left);
 					_recovery = true;
 					return true;
@@ -85,28 +85,13 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_vel.linear.x = 0;
 					_vel.linear.y = 0;
 
-					std::cout << "Obstacle within 0.5m on left!" << std::endl;
+					std::cout << "Obstacle within 0.5m!" << std::endl;
 
 					_plan.clear();
 					_path.poses.clear();
 					_new_plan = true;
-					common::BasicMotion recovery_turn_right{0, 0.3, 1000};
+					common::BasicMotion recovery_turn_right{0, 0.3, 3000};
 					_plan.push_back(recovery_turn_right);
-					_recovery = true;
-					return true;
-				}
-				else if (ifObstacle() == 4) {
-					// scanned obstacle to the right
-					_vel.linear.x = 0;
-					_vel.linear.y = 0;
-
-					std::cout << "Obstacle within 0.5 m on right!" << std::endl;
-
-					_plan.clear();
-					_path.poses.clear();
-					_new_plan = true;
-					common::BasicMotion recovery_turn_left{0, -0.3, 1000};
-					_plan.push_back(recovery_turn_left);
 					_recovery = true;
 					return true;
 				}
@@ -472,37 +457,16 @@ int PrimitivePlanner::ifObstacle(){
 			- 0 for left bump
 			- 1 for center bump
 			- 2 for right bump
-			- 3 for scanned obstacle to the left
-			- 4 for scanned obstacle to the right
-			- 5 for nothing
+			- 3 for scanned obstacle within 0.5
+			- 4 for nothing
 	*/	
-	//std::cout << "Calling ifObstacle! at: " << rand() << std::endl;
+
 	int laserSize = (_scan->angle_max -_scan->angle_min)/_scan->angle_increment;
 	int turn_right = 0;
 	int turn_left = 0;
 	for (int i = 1; i <= laserSize; i++){
-		if (std::isnan(_scan->ranges[i])){
-			//std::cout << "NaN" << std::endl;
-		} else {
-			//std::cout << _scan->ranges[i] << std::endl;
-		}
-		if(_scan->ranges[i] < 0.3 ) {
-			//std::cout << "Found nan " << rand() << std::endl;
-			if(i<= laserSize/2) {
-				turn_right++;
-			} 
-			else {
-				turn_left++;
-			}	
-		}
-	}
-	//std::cout << "Left: " << turn_left << " Right: " << turn_right << std::endl;
-	if(turn_right != 0 || turn_left != 0) {
-		if(turn_right >= turn_left) {
-			return 4;
-		}
-		else if(turn_left >= turn_right){
-			return 4;
+		if(_scan->ranges[i] < 0.5 ) {
+			return 3;
 		}
 	}
 	if(bumperLeft == 1) {
@@ -515,7 +479,7 @@ int PrimitivePlanner::ifObstacle(){
 		return 2;
 	}
 	else {
-		return 5;
+		return 4;
 	}
 }
 
