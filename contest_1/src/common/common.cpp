@@ -92,7 +92,7 @@ void filterLaserScan(sensor_msgs::LaserScan::Ptr scan, int window){
 			}
 		}
 	}
-} 
+}
 
 double quat2yaw(geometry_msgs::Quaternion quat) {
 	tf::Quaternion q(quat.x, quat.y, quat.z, quat.w);

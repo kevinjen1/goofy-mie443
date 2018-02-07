@@ -18,7 +18,7 @@ using namespace goofy;
 bool bumperL = 0, bumperC = 0, bumperR = 0;
 double lRange = 10;
 int lSize = 0, lOffset = 0, dAngle = 5;
-sensor_msgs::LaserScan::ConstPtr curr_scan;
+sensor_msgs::LaserScan::Ptr curr_scan;
 geometry_msgs::Pose2D nextPoint;
 
 void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg){
@@ -48,7 +48,7 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 	lSize = (msg->angle_max -msg->angle_min)/msg->angle_increment;
 	lOffset = dAngle*Pi/(180*msg->angle_increment);
 	lRange = 11;
-	
+
 	if (dAngle*Pi/180 < msg->angle_max && -dAngle*Pi/180 > msg->angle_min){
 		for (int i = lSize/2 - lOffset; i < lSize/2 + lOffset; i++){
 			if (lRange > msg->ranges[i])
@@ -66,7 +66,8 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 		lRange = 0;
 	}
 
-	curr_scan = msg;
+	//recast this as a non-const pointer
+	curr_scan = boost::make_shared<sensor_msgs::LaserScan>(*(msg.get()));
 	return;
 }
 
@@ -110,13 +111,13 @@ int main(int argc, char **argv)
 	double angular = 0.0;
 	double linear = 0.0;
 	geometry_msgs::Twist vel;
-	
+
 	while (!curr_scan){
 		ros::spinOnce();
 	}
 
 	if(curr_scan){
-		random_planner.updateLaserScan(curr_scan);		
+		random_planner.updateLaserScan(curr_scan);
 		random_planner.runIteration();
 	}
 
@@ -135,7 +136,7 @@ int main(int argc, char **argv)
 
 		// Update laser values in random_planner
 		if(curr_scan) {
-			//common::filterLaserScan(curr_scan, 2);
+			common::filterLaserScan(curr_scan, 2);
 			random_planner.updateLaserScan(curr_scan);
 		}
 
@@ -143,7 +144,7 @@ int main(int argc, char **argv)
 		nav_msgs::Path path = random_planner.getPath();
 		vis.publishPath(path, std::chrono::milliseconds(10));
 		if (!random_planner.getVelocity(vel) && curr_scan){
-			random_planner.updateLaserScan(curr_scan);			
+			random_planner.updateLaserScan(curr_scan);
 			random_planner.runIteration();
 			std::cout << "Getting new plan!" << std::endl;
 		}

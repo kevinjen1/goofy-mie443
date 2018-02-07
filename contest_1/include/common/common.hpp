@@ -49,7 +49,7 @@ private:
 
 geometry_msgs::Quaternion yaw2quat(double yaw);
 
-void filterLaserScan(sensor_msgs::LaserScan& scan, int window);
+void filterLaserScan(sensor_msgs::LaserScan::Ptr scan, int window);
 double quat2yaw(geometry_msgs::Quaternion quat);
 
 }
