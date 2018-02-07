@@ -37,6 +37,8 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				_plan.clear();
 				_path.poses.clear();
 				_new_plan = true;
+				common::BasicMotion back{-0.1, 0, 1000};
+				_plan.push_back(back);
 				_plan.push_back(_primitives.getMotion(3));
 				return true;
 			}
@@ -50,7 +52,9 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				_plan.clear();
 				_path.poses.clear();
 				_new_plan = true;
-				_plan.push_back(_primitives.getMotion(3));
+				common::BasicMotion back{-0.1, 0, 1000};
+				_plan.push_back(back);
+				_plan.push_back(_primitives.getMotion(4));
 				return true;
 			}
 			else if (ifObstacle() == 2) {
@@ -63,23 +67,25 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				_plan.clear();
 				_path.poses.clear();
 				_new_plan = true;
+				common::BasicMotion back{-0.1, 0, 1000};
+				_plan.push_back(back);
 				_plan.push_back(_primitives.getMotion(4));
 				return true;
 			}
 			else if (ifObstacle() == 3) {
-				// scanned obstacle to the left
+				// scanned obstacle 
 				_vel.linear.x = 0;
 				_vel.linear.y = 0;
 
-				std::cout << "Obstacle within 0.5 m on left!" << std::endl;
+				std::cout << "Obstacle within 0.5 m" << std::endl;
 
 				_plan.clear();
 				_path.poses.clear();
 				_new_plan = true;
-				_plan.push_back(_primitives.getMotion(3));
+				_plan.push_back(_primitives.getMotion(4));
 				return true;
 			}
-			else if (ifObstacle() == 4) {
+			/*else if (ifObstacle() == 4) {
 				// scanned obstacle to the right
 				_vel.linear.x = 0;
 				_vel.linear.y = 0;
@@ -91,7 +97,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 				_new_plan = true;
 				_plan.push_back(_primitives.getMotion(4));
 				return true;
-			}						
+			}*/						
 			vel = _vel;
 			std::chrono::milliseconds left = std::chrono::duration_cast<std::chrono::milliseconds>(_end_motion_time - std::chrono::steady_clock::now());
 			// std::cout << "Plan OK -- " << left.count() << " milliseconds left" << std::endl;
