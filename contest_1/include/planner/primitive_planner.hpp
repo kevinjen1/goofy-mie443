@@ -82,6 +82,7 @@ public:
 
     static bool boolComparison(pathOptions i, pathOptions j);
 	int getNumberOnSpots();
+	bool leftOrRightWhileStuck();
 	
 	geometry_msgs::Pose2D currentTargetPosition;
 };
