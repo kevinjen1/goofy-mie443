@@ -205,6 +205,7 @@ void HeuristicPlanner::runIteration(){
     int planned_path = -1;
 	int num_on_spots = 2;
 	//int num_on_spots = getNumberOnSpots();
+	std::cout << "\nNum paths to check: " << _primitives.getLength() << std::endl;
     pathOptions optionsArray[_primitives.getLength()-num_on_spots];
     for (int plan_index = 0; plan_index < _primitives.getLength()-num_on_spots-1; plan_index++) {
 		bool success = checkPath(_primitives.getPath(plan_index, common::BASE));
