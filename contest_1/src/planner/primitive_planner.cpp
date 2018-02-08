@@ -40,7 +40,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_right{0, -0.3, 1000};
+					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -58,7 +58,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_right{0, -0.3, 1000};
+					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -75,7 +75,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_left{0, 0.3, 1000};
+					common::BasicMotion recovery_turn_left{0, 0.3, 3000};
 					_plan.push_back(recovery_turn_left);
 					_recovery = true;
 					return true;
@@ -90,7 +90,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_plan.clear();
 					_path.poses.clear();
 					_new_plan = true;
-					common::BasicMotion recovery_turn_right{0, -0.3, 1000};
+					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -132,13 +132,18 @@ void PrimitivePlanner::runIteration(){
 	bool success = false;
 	_recovery = false;
 	int plan_index = -1;
+	std::cout << "\nTotal paths: " << _primitives.getLength() << std::endl;
 	while (success == false){
 		plan_index++;
+		if (plan_index >= _primitives.getLength()){
+		    return;
+	    }
 		success = checkPath(_primitives.getPath(plan_index, common::BASE));
 		std::cout << "Checked path number: " << plan_index << " and got  " << success << std::endl;
 		_vis.publishPath(_primitives.getPath(plan_index, common::BASE), std::chrono::milliseconds(5));
 		_vis.publishErrorPoint(0, 0, std::chrono::milliseconds(5));
 		_vis.publishLaserPoint(0, 0, std::chrono::milliseconds(5));
+		
 	}
 	
 	/*  Using the extra bin width so this isn't needed, 
@@ -172,11 +177,12 @@ void HeuristicPlanner::runIteration(){
 
 	// Convert global poses to be in local reference frame
 	
+    getLocalTargetPosition();
 
 	// If already close to the target position, or there is no target position, randomly navigate
 	int redZone = 0.5;
-	if (sqrt(pow(nextPosition.x,2) + pow(nextPosition.y,2)) < redZone){
-		std::cout << "[HP->runIter] TOO CLOSE TO THE ENDPOINT! Within " << sqrt(pow(nextPosition.x,2) + pow(nextPosition.y,2)) << "m. Danger zone is: " << redZone << "m." << std::endl;
+	if (sqrt(pow(local_target_pose.x,2) + pow(local_target_pose.y,2)) < redZone){
+		std::cout << "[HP->runIter] TOO CLOSE TO THE ENDPOINT! Within " << sqrt(pow(local_target_pose.x,2) + pow(local_target_pose.y,2)) << "m. Danger zone is: " << redZone << "m." << std::endl;
 		std::cout << "[HP->runIter] Jumping over to RandomPlanner now!\n" << std::endl;
 		PrimitivePlanner::runIteration();
 		return;
@@ -185,8 +191,9 @@ void HeuristicPlanner::runIteration(){
 	// If a new path comes in, turn to face it
 	if ((currentTargetPosition.x != nextPosition.x) || (currentTargetPosition.y != nextPosition.y)){
 		currentTargetPosition = nextPosition;
+		getLocalTargetPosition();
 		//turn to face it
-		float target_angle = atan2(nextPosition.y, nextPosition.x);
+		float target_angle = atan2(local_target_pose.y, local_target_pose.x);
 		std::cout << "[HP->runIter] Target angle to the new path: " << target_angle << std::endl;
 		if (target_angle < Pi){
 			common::BasicMotion on_spot_aim{0, 0.3, (int)(1000*target_angle/0.3)};
@@ -204,11 +211,11 @@ void HeuristicPlanner::runIteration(){
 		}
 		return;
 	}
-
+    
     int planned_path = -1;
 	int num_on_spots = 2;
 	//int num_on_spots = getNumberOnSpots();
-	std::cout << "\nNum paths to check: " << _primitives.getLength() << std::endl;
+	std::cout << "\n" << std::endl;
     pathOptions optionsArray[_primitives.getLength()-num_on_spots];
     for (int plan_index = 0; plan_index < _primitives.getLength()-num_on_spots; plan_index++) {
 		bool success = checkPath(_primitives.getPath(plan_index, common::BASE));
@@ -218,7 +225,7 @@ void HeuristicPlanner::runIteration(){
         float y = temp_path.poses[temp_path.poses.size()-1].pose.position.y;
 
         // Expecting next_position struct style with .x and .y fields
-        float euclid_dist = sqrt(pow(currentTargetPosition.x-x,2) + pow(currentTargetPosition.y-y,2));
+        float euclid_dist = sqrt(pow(local_target_pose.x-x,2) + pow(local_target_pose.y-y,2));
         //float euclid_dist = 0;  // while I wait for input
 
         optionsArray[plan_index] = {plan_index, success, euclid_dist};	
@@ -227,9 +234,9 @@ void HeuristicPlanner::runIteration(){
 	}
 
 
-	    for (int i = 0; i < _primitives.getLength()-num_on_spots; i++) {
-		std::cout << "Vector presort"<< optionsArray[i].index << ", success: " << optionsArray[i].valid << ", dist: " << optionsArray[i].euclid_dist << endl;
-	}
+	    //for (int i = 0; i < _primitives.getLength()-num_on_spots; i++) {
+		//std::cout << "Vector presort"<< optionsArray[i].index << ", success: " << optionsArray[i].valid << ", dist: " << optionsArray[i].euclid_dist << endl;
+	//}
 
 
     // Sort the potential paths by euclidean distance (increasing order) from the next_position
@@ -293,6 +300,8 @@ bool HeuristicPlanner::leftOrRightWhileStuck(){
 		Returns 0 for left, and 1 for right
 	*/
 
+    return 0;   // Always turn left - make sure it won't get stuck in a corner
+    
 	int laserSize = (_scan->angle_max -_scan->angle_min)/_scan->angle_increment;
 	float left_distances = 0;
 	float right_distances = 0;
@@ -444,20 +453,36 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 		int index = (angle - (_scan->angle_min))/(_scan->angle_increment);
 		int laserSize = (_scan->angle_max -_scan->angle_min)/_scan->angle_increment;
 		int scan_width = (scan_angle)/_scan->angle_increment;
-	
-		for(int i = index-scan_width; i <= index+scan_width; i++){
+		
+		//std::cout << "we have " << _scan->ranges.size() << std::endl;
+		//std::cout << "scan width: " << scan_width << ". laserSize: " << laserSize << std::endl;
+		
+	    
+	    for(int i = index-scan_width; i <= index+scan_width; i++){
+			if(0 <= i <= laserSize){
+				if(tangent > _scan->ranges[i]){
+					return true;	
+				}
+			}
+        }
+		/*for(int i = index-scan_width; i <= index+scan_width; i++){
+		    std::cout << _scan->ranges[i] << " ";
 			if(i >= 0 && i < laserSize){
 				//if(tangent > (_scan->ranges[i]-0.3) || std::isnan(_scan->ranges[i])){
 				if(std::isnan(_scan->ranges[i]) || tangent > (_scan->ranges[i])-0.3){					
 					_vis.publishErrorPoint(x_pos, y_pos, std::chrono::milliseconds(1));
-					float angle = i * _scan->angle_increment + _scan->angle_min;
-					_vis.publishLaserPoint(_scan->ranges[i], angle, std::chrono::milliseconds(1));
-					//std::cout << "Found issue at positin [" << x_pos << "," << y_pos << "], index [" << i << "] with range [" << _scan->ranges[i] << "], angle [" << angle << "]" << std::endl;
+					float test_angle = i * _scan->angle_increment + _scan->angle_min;
+					_vis.publishLaserPoint(_scan->ranges[i], test_angle, std::chrono::milliseconds(1));
+					
+					std::cout << _scan->ranges[i+1] << " "<< _scan->ranges[i+2] << " "<< _scan->ranges[i+3] << " "<< _scan->ranges[i+4] << " "<< _scan->ranges[i+5] << " "<< _scan->ranges[i+6] << " "<< _scan->ranges[i+7] << " ";
+					std::cout << endl;
+					
+					std::cout << "Found issue at positin [" << x_pos << "," << y_pos << "], index [" << i << "] with range [" << _scan->ranges[i] << "], angle [" << test_angle << "]" << std::endl;
 					//std::cout << "Maximum laserSize: " << laserSize << std::endl;
-					return true;	
+					return true; 	
 				}
 			}
-		}
+		} */
 	}
 	return false;
 }
@@ -503,18 +528,25 @@ bool PrimitivePlanner::checkPath(nav_msgs::Path path){
 	*/
 
 	int pose_points = path.poses.size();
+	
+    std::cout << "Checking " << pose_points << " points along the path" << endl;
+    
 	for (int i = 0; i < pose_points; i++){
 		float x = path.poses[i].pose.position.x;
 		float y = path.poses[i].pose.position.y;
 		float scan_angle = scanWidthAngle(path, x, y);
+		//std::cout << "(" <<x << "," <<y <<")" << endl;
+		//std::cout << "i:" << i << ". scanAngle: " << scan_angle << endl;
 		//float scan_angle = 2;
 		if (checkObstacle(x, y, scan_angle)){
-			//std::cout << "invalid path" << std::endl;
+		    std::cout << "(" <<x << "," <<y <<")" << endl;
+		    std::cout << "i:" << i << ". scanAngle: " << scan_angle << endl;
+			std::cout << "invalid path" << std::endl;
 			return 0;
 		}
 	}
 
-	//std::cout << "valid path" << std::endl;
+	std::cout << "valid path" << std::endl;
 	return 1;
 }
 
@@ -567,6 +599,7 @@ float WeightedPlanner::checkPath(nav_msgs::Path path){
     float min_angle = 0;
     float max_angle = 50;
     int pose_points = path.poses.size();
+    
 
 	for (int i = 1; i < pose_points; i++){
 		float x = path.poses[i].pose.position.x;

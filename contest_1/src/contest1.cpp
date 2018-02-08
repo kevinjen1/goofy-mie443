@@ -133,7 +133,7 @@ int main(int argc, char **argv)
 	}
 
 	if(curr_scan){
-		common::filterLaserScan(curr_scan, 5);
+		//common::filterLaserScan(curr_scan, 5);
 		random_planner.updateLaserScan(curr_scan);
 		random_planner.runIteration();
 	}
