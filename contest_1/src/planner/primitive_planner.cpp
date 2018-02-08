@@ -90,7 +90,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_plan.clear();
 					_path.poses.clear();
 					_new_plan = true;
-					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
+					common::BasicMotion recovery_turn_right{0, -0.3, 6000};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -467,7 +467,7 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 	    
 	    for(int i = index-scan_width; i <= index+scan_width; i++){
 			if(i >= 0 && i < laserSize){
-				if(tangent > _scan->ranges[i]){
+				if(tangent > _scan->ranges[i] || std::isnan(_scan->ranges[i])){
 					return true;	
 				}
 			}
