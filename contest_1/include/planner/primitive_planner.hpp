@@ -18,7 +18,8 @@ class PrimitivePlanner{
 public:
 	PrimitivePlanner(PrimitiveRepresentation primitives):
 		_primitives(primitives),
-		_new_plan(false){
+		_new_plan(false),
+		_recovery(false){
 		_path.header.frame_id = "camera_depth_frame";
 		nextPosition.x = 0;
 		nextPosition.y = 0;
@@ -45,6 +46,9 @@ public:
 	int laserSize = 0, laserOffset = 0, desiredAngle = 5;
 	float robotRadius = 0.2;	// in m
 	geometry_msgs::Pose2D nextPosition;
+	geometry_msgs::Pose2D current_pose;
+	geometry_msgs::Pose2D currentTargetPosition;
+	geometry_msgs::Pose2D local_target_pose;
 
 protected:
 	bool checkObstacle(float x_pos, float y_pos, float scan_angle);
@@ -64,6 +68,7 @@ private:
 	geometry_msgs::Twist _vel;
 	common::BasicMotion _curr_motion;
 	MotionList::iterator _motion_index;
+	bool _recovery;
 	std::chrono::steady_clock::time_point _end_motion_time;
 };
 
@@ -82,8 +87,8 @@ public:
 
     static bool boolComparison(pathOptions i, pathOptions j);
 	int getNumberOnSpots();
-	
-	geometry_msgs::Pose2D currentTargetPosition;
+	bool leftOrRightWhileStuck();
+	void getLocalTargetPosition();
 };
 
 class WeightedPlanner: public PrimitivePlanner{

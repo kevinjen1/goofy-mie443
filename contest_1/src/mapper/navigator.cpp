@@ -84,7 +84,8 @@ public:
 		geometry_msgs::Pose2D localCoord = convertToLocal(coord, robPos);
 
 		//publish coordinate
-		pub.publish(localCoord);
+		//pub.publish(localCoord);
+		pub.publish(coord);
 		publishToRviz(coord);
 	}
 	void callbackOdom(const nav_msgs::Odometry odom)
