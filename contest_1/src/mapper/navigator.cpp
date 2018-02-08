@@ -9,6 +9,7 @@
 #include <visualization_msgs/Marker.h>
 #include "mapper/navigator.hpp"
 #include <stack>
+#include <list>
 
 /*
  * This should be a subscriber to mapper,
@@ -73,7 +74,7 @@ public:
 		int col = diffX/grid.info.resolution;
 
 		geometry_msgs::Pose2D coord = getCoordinateRayCasting(grid, slope, row, col, robPos);
-//		geometry_msgs::Pose2D coord = getCoordinateDFS(grid, slope, row, col, robotPos);
+//		geometry_msgs::Pose2D coord = getCoordinateBFS(grid, slope, row, col, robPos);
 
 		// couldn't retrieve an unknown location
 		if (isZero(coord.x) && isZero(coord.y)) {
@@ -438,6 +439,7 @@ geometry_msgs::Pose2D getCoordinateDFS(nav_msgs::OccupancyGrid grid, Slope slope
 		// Check if found an unknown
 		if (v.data == -1)
 		{
+			ROS_INFO_STREAM("found uknown");
 			coord.x = grid.info.origin.position.x + (v.index.col * grid.info.resolution);
 			coord.y = grid.info.origin.position.y + (v.index.row * grid.info.resolution);
 			break;
@@ -458,6 +460,55 @@ geometry_msgs::Pose2D getCoordinateDFS(nav_msgs::OccupancyGrid grid, Slope slope
 				stack.push(matrix[neighborIndex.row][neighborIndex.col]);
 		}
 	}
+	ROS_INFO_STREAM("point picked: " << coord.x << ", " << coord.y);
+
+	return coord;
+}
+
+geometry_msgs::Pose2D getCoordinateBFS(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol, geometry_msgs::Pose2D t)
+{
+	list<gridDFSElement> queue;
+
+	vector<vector<gridDFSElement>> matrix = getMatrixFromGridDFS(grid, slope);
+
+	gridDFSElement v = matrix[robotRow][robotCol];
+
+	queue.push_back(v);
+
+	geometry_msgs::Pose2D coord;
+	// Set coord to 0
+	coord.x = 0.0f;
+	coord.y = 0.0f;
+
+	while (!queue.empty())
+	{
+		v = queue.front();
+
+		// Check if found an unknown
+		if (v.data == -1)
+		{
+			ROS_INFO_STREAM("found uknown");
+			coord.x = grid.info.origin.position.x + (v.index.col * grid.info.resolution);
+			coord.y = grid.info.origin.position.y + (v.index.row * grid.info.resolution);
+			break;
+		}
+
+		queue.pop_front();
+
+		if (matrix[v.index.row][v.index.col].isDiscovered)
+			continue;
+
+		matrix[v.index.row][v.index.col].isDiscovered = true;
+
+		gridIndex neighborIndex;
+		for (auto it = v.adjList.begin(); it != v.adjList.end(); ++it)
+		{
+			neighborIndex = *it;
+			if (!matrix[neighborIndex.row][neighborIndex.col].isDiscovered && matrix[neighborIndex.row][neighborIndex.col].data < 50)
+				queue.push_back(matrix[neighborIndex.row][neighborIndex.col]);
+		}
+	}
+	ROS_INFO_STREAM("point picked: " << coord.x << ", " << coord.y);
 
 	return coord;
 }

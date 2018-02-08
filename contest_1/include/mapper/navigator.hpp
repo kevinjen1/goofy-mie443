@@ -39,6 +39,8 @@ geometry_msgs::Pose2D convertToLocal(geometry_msgs::Pose2D coord, geometry_msgs:
 
 // Depth search functions
 geometry_msgs::Pose2D getCoordinateDFS(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol, geometry_msgs::Pose2D robotPos);
+geometry_msgs::Pose2D getCoordinateBFS(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol, geometry_msgs::Pose2D robotPos);
+
 vector<vector<gridDFSElement>> getMatrixFromGridDFS(nav_msgs::OccupancyGrid grid, Slope slope);
 vector<gridIndex> fillAdjList(vector<vector<gridDFSElement>> matrix, int i, int j, Slope slope, int height, int width);
 void pushBackNegX(vector<gridIndex> &v, int i, int j);
