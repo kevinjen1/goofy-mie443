@@ -190,6 +190,9 @@ void HeuristicPlanner::runIteration(){
 
 	// If a new path comes in, turn to face it
 	if ((currentTargetPosition.x != nextPosition.x) || (currentTargetPosition.y != nextPosition.y)){
+		std::cout << "\n=======================" << endl;
+		std::cout << "[HP->runIter] NEW POINT" << endl;
+		std::cout << "=======================" << endl;
 		currentTargetPosition = nextPosition;
 		getLocalTargetPosition();
 		//turn to face it
@@ -199,15 +202,14 @@ void HeuristicPlanner::runIteration(){
 			common::BasicMotion on_spot_aim{0, 0.3, (int)(1000*target_angle/0.3)};
 			_plan.push_back(on_spot_aim);
 			_new_plan = true;
-			std::cout << "[HP->runIter] New target point detected at (" << currentTargetPosition.x << ", " << currentTargetPosition.y << ")" << std::endl; 
-			std::cout << "Turning left (0.3) for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
+			std::cout << "[HP->runIter] New global target point detected at (" << currentTargetPosition.x << ", " << currentTargetPosition.y << ")" << std::endl; 
+			std::cout << "[HP->runIter] Turning left (0.3) for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
 		} else {
 			common::BasicMotion on_spot_aim{0, -0.3, (int)(1000*target_angle/0.3)};
 			_plan.push_back(on_spot_aim);
 			_new_plan = true;
-			_new_plan = true;
 			std::cout << "[HP->runIter] New target point detected at (" << currentTargetPosition.x << ", " << currentTargetPosition.y << ")" << std::endl; 
-			std::cout << "Turning right (-0.3) for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
+			std::cout << "[HP->runIter] Turning right (-0.3) for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
 		}
 		return;
 	}
@@ -230,6 +232,7 @@ void HeuristicPlanner::runIteration(){
 
         optionsArray[plan_index] = {plan_index, success, euclid_dist};	
 		std::cout << "[HP->runIter] Checking path " << plan_index << std::endl;
+		std::cout << "\tto (" << local_target_pose.x << ", " << local_target_pose.y << ")" << std::endl;
 		std::cout << "\tsuccess: " << success << ", path end point: (" << x << ", " << y << "), euclid_dist: " << euclid_dist << std::endl;	
 	}
 
@@ -252,7 +255,7 @@ void HeuristicPlanner::runIteration(){
             planned_path = optionsVector[i].index;
             //std::cout << "Checked path number: " << planned_path << std::endl;
     		_vis.publishPath(_primitives.getPath(planned_path, common::BASE), std::chrono::milliseconds(500));
-			std::cout << "[HP->runIter] Chose path: " << i << " => success: " << optionsVector[i].valid << ", euclid_dist: " << optionsVector[i].euclid_dist << std::endl;
+			std::cout << "[HP->runIter] Chose path: " << optionsVector[i].index << " => success: " << optionsVector[i].valid << ", euclid_dist: " << optionsVector[i].euclid_dist << std::endl;
             break;
         }
     }
@@ -285,11 +288,15 @@ void HeuristicPlanner::getLocalTargetPosition(){
 		R = [cos_theta	-sin_theta		=> R_inv = [cos_theta	sin_theta
 			 sin_theta	cos_theta]				    -sin_theta	cos_theta]
 	*/	
-	float delta_x = (currentTargetPosition.x - current_pose.x);
-	float delta_y = (currentTargetPosition.y - current_pose.y);
-	local_target_pose.theta = atan2(delta_y, delta_x) + current_pose.theta;
-	local_target_pose.x = delta_x*cos(local_target_pose.theta) + delta_y*sin(local_target_pose.theta);
-	local_target_pose.y = -delta_x*sin(local_target_pose.theta) + delta_y*cos(local_target_pose.theta);
+	
+	double deltaX = currentTargetPosition.x - current_pose.x;
+	double deltaY = currentTargetPosition.y - current_pose.y;
+
+	local_target_pose.x = deltaX*cos(current_pose.theta) + deltaY*sin(current_pose.theta);
+	local_target_pose.y = -deltaX*sin(current_pose.theta) + deltaY*cos(current_pose.theta);
+	
+	std::cout << "[HP->localTarget] Global target point: (" << currentTargetPosition.x << ", " << currentTargetPosition.y << ", " << currentTargetPosition.theta << ")" << std::endl;
+	std::cout << "[HP->localTarget] Current global pose: (" << current_pose.x << ", " << current_pose.y << ", " << current_pose.theta << ")" << std::endl;
 	std::cout << "[HP->localTarget] Local point: (" << local_target_pose.x << ", " << local_target_pose.y << ", " << local_target_pose.theta << ")" << std::endl;
 }
 
@@ -459,7 +466,7 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 		
 	    
 	    for(int i = index-scan_width; i <= index+scan_width; i++){
-			if(0 <= i <= laserSize){
+			if(i >= 0 && i < laserSize){
 				if(tangent > _scan->ranges[i]){
 					return true;	
 				}
@@ -529,7 +536,7 @@ bool PrimitivePlanner::checkPath(nav_msgs::Path path){
 
 	int pose_points = path.poses.size();
 	
-    std::cout << "Checking " << pose_points << " points along the path" << endl;
+    //std::cout << "Checking " << pose_points << " points along the path" << endl;
     
 	for (int i = 0; i < pose_points; i++){
 		float x = path.poses[i].pose.position.x;
@@ -539,14 +546,14 @@ bool PrimitivePlanner::checkPath(nav_msgs::Path path){
 		//std::cout << "i:" << i << ". scanAngle: " << scan_angle << endl;
 		//float scan_angle = 2;
 		if (checkObstacle(x, y, scan_angle)){
-		    std::cout << "(" <<x << "," <<y <<")" << endl;
-		    std::cout << "i:" << i << ". scanAngle: " << scan_angle << endl;
-			std::cout << "invalid path" << std::endl;
+		    //std::cout << "(" <<x << "," <<y <<")" << endl;
+		    //std::cout << "i:" << i << ". scanAngle: " << scan_angle << endl;
+			//std::cout << "invalid path" << std::endl;
 			return 0;
 		}
 	}
 
-	std::cout << "valid path" << std::endl;
+	//std::cout << "valid path" << std::endl;
 	return 1;
 }
 

@@ -119,8 +119,8 @@ int main(int argc, char **argv)
 	//Setup Planner
 	planner::PrimitiveRepresentation primitives(robot, motions);
 	//planner::WeightedPlanner random_planner(primitives);
-	//planner::HeuristicPlanner random_planner(primitives);
-	planner::PrimitivePlanner random_planner(primitives);
+	planner::HeuristicPlanner random_planner(primitives);
+	//planner::PrimitivePlanner random_planner(primitives);
 	common::Visualizer vis;
 
 	geometry_msgs::Twist stop;
