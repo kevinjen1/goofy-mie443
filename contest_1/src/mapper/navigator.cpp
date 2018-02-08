@@ -73,8 +73,8 @@ public:
 		int row = diffY/grid.info.resolution;
 		int col = diffX/grid.info.resolution;
 
-//		geometry_msgs::Pose2D coord = getCoordinateRayCasting(grid, slope, row, col, robPos);
-		geometry_msgs::Pose2D coord = getCoordinateBFS(grid, slope, row, col, robPos);
+		geometry_msgs::Pose2D coord = getCoordinateRayCasting(grid, slope, row, col, robPos);
+//		geometry_msgs::Pose2D coord = getCoordinateBFS(grid, slope, row, col, robPos);
 
 		// couldn't retrieve an unknown location
 		if (isZero(coord.x) && isZero(coord.y)) {
