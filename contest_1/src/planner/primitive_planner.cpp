@@ -40,7 +40,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
+					common::BasicMotion recovery_turn_right{0, -0.3, 1000};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -58,7 +58,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
+					common::BasicMotion recovery_turn_right{0, -0.3, 1000};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -75,7 +75,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_left{0, 0.3, 3000};
+					common::BasicMotion recovery_turn_left{0, 0.3, 1000};
 					_plan.push_back(recovery_turn_left);
 					_recovery = true;
 					return true;
@@ -90,7 +90,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_plan.clear();
 					_path.poses.clear();
 					_new_plan = true;
-					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
+					common::BasicMotion recovery_turn_right{0, -0.3, 1000};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -428,7 +428,6 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 	// take the (x_pos,y_pos) and calculate the angle and tangent.
 	float angle = atan2(y_pos,x_pos);
 	float tangent = sqrt((y_pos)*(y_pos) + (x_pos)*(x_pos));
-	bool obstacle = false;
 	
 	if (_scan->angle_max < angle || _scan->angle_min > angle){		
 		// outside of the viewing angle is not an obstacle		
@@ -447,9 +446,9 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 		int scan_width = (scan_angle)/_scan->angle_increment;
 	
 		for(int i = index-scan_width; i <= index+scan_width; i++){
-			if(i > 0 && i < laserSize){
+			if(i >= 0 && i < laserSize){
 				//if(tangent > (_scan->ranges[i]-0.3) || std::isnan(_scan->ranges[i])){
-				if(tangent > (_scan->ranges[i]) || std::isnan(_scan->ranges[i])){					
+				if(std::isnan(_scan->ranges[i]) || tangent > (_scan->ranges[i])-0.3){					
 					_vis.publishErrorPoint(x_pos, y_pos, std::chrono::milliseconds(1));
 					float angle = i * _scan->angle_increment + _scan->angle_min;
 					_vis.publishLaserPoint(_scan->ranges[i], angle, std::chrono::milliseconds(1));
@@ -460,7 +459,7 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 			}
 		}
 	}
-	return obstacle;
+	return false;
 }
 
 int PrimitivePlanner::ifObstacle(){
@@ -503,7 +502,6 @@ bool PrimitivePlanner::checkPath(nav_msgs::Path path){
 	Outputs bool indicating if an object lies along the path
 	*/
 
-	int hit_points = 0;
 	int pose_points = path.poses.size();
 	for (int i = 0; i < pose_points; i++){
 		float x = path.poses[i].pose.position.x;
@@ -511,31 +509,34 @@ bool PrimitivePlanner::checkPath(nav_msgs::Path path){
 		float scan_angle = scanWidthAngle(path, x, y);
 		//float scan_angle = 2;
 		if (checkObstacle(x, y, scan_angle)){
-			std::cout << "invalid path" << std::endl;
+			//std::cout << "invalid path" << std::endl;
 			return 0;
 		}
 	}
 
-	std::cout << "valid path" << std::endl;
+	//std::cout << "valid path" << std::endl;
 	return 1;
 }
 
+
 float WeightedPlanner::scanWidthAngle(float curr_x, float curr_y, float x, float y){
-	/*  This is a helper function for checkPath, to be passed to checkObstacle
+	  /*This is a helper function for checkPath, to be passed to checkObstacle
 		The idea is to find the angle between the robot's current position, and the point being checked
 		This is to help tally up the min/max angle bounds for diving paths into laser bin ranges
-	*/	
+		*/
+    std::cout << "SHOULD NEVER COME HERE" << endl;
 	double curr_position[2] = {curr_x, curr_y};
 	return atan2(curr_position[1]-y, curr_position[0]-x);
 }
 
 float WeightedPlanner::getDistance(float max_angle, float min_angle){
-	/* 
+	 /*
         Returns:
             -1 if invalid path (out of FOV or obstacles hit)
             Otherwise returns sum of all buckets in range
-	*/	
+		*/
 	
+	std::cout << "SHOULD NEVER COME HERE" << endl;
 	// Check if the position is in your view.
 	if (_scan->angle_max < max_angle || _scan->angle_min > min_angle){		
 		return -1;
@@ -561,6 +562,8 @@ float WeightedPlanner::checkPath(nav_msgs::Path path){
             Otherwise returns sum of all buckets in range
     */
 
+    std::cout << "SHOULD NEVER COME HERE" << endl;
+    
     float min_angle = 0;
     float max_angle = 50;
     int pose_points = path.poses.size();

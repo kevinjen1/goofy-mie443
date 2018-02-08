@@ -104,8 +104,8 @@ int main(int argc, char **argv)
 	common::BasicMotion straight{0.2, 0, 4000};
 	//common::BasicMotion mild_right{0.15, -0.1, 4000};
 	//common::BasicMotion mild_left{0.15, 0.1, 4000};
-	common::BasicMotion turn_left{0.15,0.25, 4000};
-	common::BasicMotion turn_right{0.15,-0.25, 4000};
+	common::BasicMotion turn_left{0.15,0.3, 4000};
+	common::BasicMotion turn_right{0.15,-0.3, 4000};
 	common::BasicMotion on_spot_right{0, -0.3, 2000};
 	common::BasicMotion on_spot_left{0, 0.3, 2000};
 
