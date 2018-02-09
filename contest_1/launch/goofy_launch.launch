@@ -1,0 +1,24 @@
+<launch>
+   
+  <!-- 
+    This launches 5 nodes independently, minimal.launch (which brings up the robot itself), gmapping_demo.launch (which launches gmapping), goofMapper, goofNavigator and contest1
+
+    Since everything is launched in the same window, the terminal output of minimal.launch and gmapping_demo.launch is surpresssed.  
+    
+    To unsurpress the output, or to surpress outputs of any other node, add/remove the output="screen" from the node that needs to be surpressed/unsurpressed.
+    
+    RVIZ is not launched with this launch file    
+  -->
+
+  <!-- TurtleBot Bringup -->
+  <node pkg="turtlebot_bringup" type="minimal.launch" name="turtlebot_base" />
+  <node pkg="turtlebot_navigation" type="gmapping_demo.launch" name="gmapping"/>
+
+  <!-- Launch Mapper and Navigator -->
+  <node pkg="mie443_contest1" type="goofMapper" name="mapper" output="screen"/>
+  <node pkg="mie443_contest1" type="goofNavigator" name="navigator" output="screen" />
+
+  <!-- Launch Contest 1 -->
+  <node pkg="mie443_contest1" type="contest1" name="main" output="screen"/>
+
+</launch>
