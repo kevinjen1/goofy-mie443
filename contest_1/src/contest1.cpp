@@ -108,8 +108,8 @@ int main(int argc, char **argv)
 	//common::BasicMotion mild_left{0.15, 0.1, 4000};
 	common::BasicMotion turn_left{0.15,0.15, 4000};
 	common::BasicMotion turn_right{0.15,-0.15, 4000};
-	common::BasicMotion turn_sharp_left{0.15, 0.3, 3000};
-	common::BasicMotion turn_sharp_right{0.15, -0.3, 3000};
+	common::BasicMotion turn_sharp_left{0.15, 0.22, 3000};
+	common::BasicMotion turn_sharp_right{0.15, -0.22, 3000};
 	common::BasicMotion on_spot_right{0, -0.3, 2000};
 	common::BasicMotion on_spot_left{0, 0.3, 2000};
 
@@ -137,6 +137,7 @@ int main(int argc, char **argv)
 
 	while (!curr_scan){
 		ros::spinOnce();
+		std::cout << "DONE 360 SPIN" << std::endl;
 	}
 
 	if(curr_scan){

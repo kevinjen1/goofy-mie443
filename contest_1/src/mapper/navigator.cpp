@@ -24,6 +24,7 @@ namespace mapper{
 ros::Time lastChecked;
 nav_msgs::OccupancyGrid lastGrid;
 bool isGridInitialized = false;
+int refreshInterval = 30;
 
 
 class FindCoord {
@@ -180,7 +181,7 @@ public:
 			return;
 		}
 
-		if (duration.toSec() > 5) {
+		if (duration.toSec() > refreshInterval) {
 			ROS_INFO_STREAM("HIIIIIIIIII");
 			callbackMap(lastGrid);
 //			ROS_INFO_STREAM("I don't know why i'm getting seg fault");

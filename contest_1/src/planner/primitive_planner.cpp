@@ -129,10 +129,12 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 }
 
 void PrimitivePlanner::addSpin(){
+	std::cout << "STARTED 360 SPIN" << std::endl;
 	common::BasicMotion rotate{0, 0.3, (int)((2*Pi*1000)/0.3)};
 	_plan.push_back(rotate);
 	_recovery = false;
 	_new_plan = true;
+	std::cout << "Exiting spinonce fcn" << std::endl;
 }
 
 void PrimitivePlanner::runIteration(){
@@ -195,6 +197,7 @@ void HeuristicPlanner::runIteration(){
 		//turn to face it
 		float target_angle = atan2(local_target_pose.y, local_target_pose.x);
 		std::cout << "[HP->runIter] Target angle to the new path: " << target_angle << std::endl;
+		/*
 		if (target_angle < Pi){
 			common::BasicMotion on_spot_aim{0, 0.3, (int)(1000*target_angle/0.3)};
 			_plan.push_back(on_spot_aim);
@@ -208,6 +211,16 @@ void HeuristicPlanner::runIteration(){
 			std::cout << "[HP->runIter] New target point detected at (" << currentTargetPosition.x << ", " << currentTargetPosition.y << ")" << std::endl; 
 			std::cout << "[HP->runIter] Turning right (-0.3) for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
 		}
+		*/
+		if (target_angle < Pi){
+		    target_angle += Pi;
+		}
+		common::BasicMotion on_spot_aim{0, -0.3, (int)(1000*target_angle/0.3)};
+		_plan.push_back(on_spot_aim);
+		_new_plan = true;
+		std::cout << "[HP->runIter] New target point detected at (" << currentTargetPosition.x << ", " << currentTargetPosition.y << ")" << std::endl; 
+		std::cout << "[HP->runIter] Turning right (-0.3) for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
+		
 		return;
 	}
 	
@@ -477,7 +490,7 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 	    
 	    for(int i = index-scan_width; i <= index+scan_width; i++){
 			if(i >= 0 && i < laserSize){
-				if(tangent > (_scan->ranges[i] - 0.5) || std::isnan(_scan->ranges[i])){
+				if(tangent > (_scan->ranges[i] - 0.3) || std::isnan(_scan->ranges[i])){
 					return true;	
 				}
 			}
