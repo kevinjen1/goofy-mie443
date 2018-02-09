@@ -10,6 +10,7 @@ namespace mapper{
 struct Slope {
 	double rise;
 	double run;
+	double angle;
 };
 struct gridIndex {
 	int row;

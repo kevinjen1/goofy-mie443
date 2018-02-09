@@ -20,7 +20,7 @@
 namespace goofy{
 namespace mapper{
 
-vector<geometry_msgs::Pose2D> checkedPts;
+//vector<geometry_msgs::Pose2D> checkedPts;
 ros::Time lastChecked;
 nav_msgs::OccupancyGrid lastGrid;
 bool isGridInitialized = false;
@@ -31,7 +31,7 @@ public:
 	FindCoord() {
 		pub = n.advertise<geometry_msgs::Pose2D>("goofCoord",1);
 		subMap = n.subscribe("goofMap", 1, &FindCoord::callbackMap, this);
-		subOdom = n.subscribe("odom", 1, &FindCoord::callbackOdom, this);
+//		subOdom = n.subscribe("odom", 1, &FindCoord::callbackOdom, this);
 		marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
 		timer = n.createTimer(ros::Duration(5), &FindCoord::timerCallback, this);
 
@@ -192,7 +192,7 @@ private:
 	ros::NodeHandle n;
 	ros::Publisher pub;
 	ros::Subscriber subMap;
-	ros::Subscriber subOdom;
+//	ros::Subscriber subOdom;
 	ros::Publisher marker_pub;
 
 	tf::TransformListener listener;
@@ -224,22 +224,28 @@ Slope getClosestAxisToHeading(double theta)
 {
 	// Find closest coordinate axis to heading: theta
 	// Run index 0, Rise index 1
-	double x = cos(theta);
-	double y = sin(theta);
-
-	double xAbs = abs(cos(theta));
-	double yAbs = abs(sin(theta));
+//	double x = cos(theta);
+//	double y = sin(theta);
+//
+//	double xAbs = abs(cos(theta));
+//	double yAbs = abs(sin(theta));
+//
+//	Slope slope;
+//
+//	if (xAbs >= yAbs)
+//	{
+//		x > 0 ? slope.run = 1: slope.run = -1;
+//	}
+//	else
+//	{
+//		y > 0 ? slope.rise = 1: slope.rise = -1;
+//	}
+//
+//	return slope;
 
 	Slope slope;
-
-	if (xAbs >= yAbs)
-	{
-		x > 0 ? slope.run = 1: slope.run = -1;
-	}
-	else
-	{
-		y > 0 ? slope.rise = 1: slope.rise = -1;
-	}
+	slope.run = cos(theta);
+	slope.rise = sin(theta);
 
 	return slope;
 }
@@ -264,13 +270,13 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 	double tenDegrees = 0.1745;
 	int angleChange = 0;
 	int cellState = 0;
-	double angle = 0;
+	double deltaAngle = 0;
 
-	checkedPts.clear();
+//	checkedPts.clear();
 
 	ROS_INFO_STREAM("starting");
 
-	while (angle < PI) {
+	while (deltaAngle < PI) {
 		double step = 0.5;
 		while (true) {
 			row = robotRow + (rise * step);
@@ -293,29 +299,33 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 		}
 //		ROS_INFO_STREAM("MOVING ON");
 
-		angle = getAngle(&angleChange);
-		ROS_INFO_STREAM("trying angle: " << angle << " - " << convertToDegree(angle));
+		deltaAngle = getAngle(&angleChange);
+		ROS_INFO_STREAM("trying angle: " << deltaAngle << " - " << convertToDegree(deltaAngle));
 
-		ROS_INFO_STREAM("pushing a point: " << checkedPts.size());
-		checkedPts.push_back(getCoordinateFromMap(row, col, grid));
-		ROS_INFO_STREAM("done: " << checkedPts.size());
+//		ROS_INFO_STREAM("pushing a point: " << checkedPts.size());
+//		checkedPts.push_back(getCoordinateFromMap(row, col, grid));
+//		ROS_INFO_STREAM("done: " << checkedPts.size());
 
-		// rotate the heading by 10 degrees
-		if (isZero(slope.run)) {
-			ROS_INFO_STREAM("run is zero");
-			rise = cos(angle) * slope.rise;
-			run = sin(angle);
-		} else if (isZero(slope.rise)) {
-			ROS_INFO_STREAM("rise is zero");
-			run = cos(angle) * slope.run;
-			rise = sin(angle);
-		}
+		run = cos(deltaAngle + slope.angle);
+		rise = sin(deltaAngle + slope.angle);
+
+
+//		// rotate the heading by 10 degrees
+//		if (isZero(slope.run)) {
+//			ROS_INFO_STREAM("run is zero");
+//			rise = cos(deltaAngle) * slope.rise;
+//			run = sin(deltaAngle);
+//		} else if (isZero(slope.rise)) {
+//			ROS_INFO_STREAM("rise is zero");
+//			run = cos(deltaAngle) * slope.run;
+//			rise = sin(deltaAngle);
+//		}
 	}
 
 	geometry_msgs::Pose2D coord;
 
 
-	ROS_INFO_STREAM("angle: " << convertToDegree(angle));
+	ROS_INFO_STREAM("angle: " << convertToDegree(deltaAngle));
 	ROS_INFO_STREAM("originalRunRise: " << slope.run << "/" << slope.rise);
 	ROS_INFO_STREAM("finalRunRise: " << run << "/" << rise);
 	ROS_INFO_STREAM("finalRunRise: " << run << "/" << rise);
