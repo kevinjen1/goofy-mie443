@@ -128,6 +128,13 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 	}
 }
 
+void PrimitivePlanner::addSpin(){
+	common::BasicMotion rotate{0, 0.3, (int)((2*Pi*1000)/0.3)};
+	_plan.push_back(rotate);
+	_recovery = false;
+	_new_plan = true;
+}
+
 void PrimitivePlanner::runIteration(){
 	bool success = false;
 	_recovery = false;

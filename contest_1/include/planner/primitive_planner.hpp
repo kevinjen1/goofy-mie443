@@ -41,6 +41,7 @@ public:
 	}
 
 	bool getVelocity(geometry_msgs::Twist& vel);
+	void addSpin();
 	bool bumperLeft = 0, bumperCenter = 0, bumperRight = 0;
 	double laserRange = 10;
 	int laserSize = 0, laserOffset = 0, desiredAngle = 5;

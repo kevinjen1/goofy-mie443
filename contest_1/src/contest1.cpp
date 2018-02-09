@@ -134,6 +134,7 @@ int main(int argc, char **argv)
 	stop.linear.x = 0;
 	geometry_msgs::Twist vel = stop;
 
+
 	while (!curr_scan){
 		ros::spinOnce();
 	}
@@ -141,7 +142,7 @@ int main(int argc, char **argv)
 	if(curr_scan){
 		common::filterLaserScan(curr_scan, 50);
 		random_planner.updateLaserScan(curr_scan);
-		random_planner.runIteration();
+		random_planner.addSpin();
 	}
 
 	while(ros::ok()){
