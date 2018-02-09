@@ -20,6 +20,12 @@
 namespace goofy{
 namespace mapper{
 
+vector<geometry_msgs::Pose2D> checkedPts;
+ros::Time lastChecked;
+nav_msgs::OccupancyGrid lastGrid;
+bool isGridInitialized = false;
+
+
 class FindCoord {
 public:
 	FindCoord() {
@@ -27,6 +33,7 @@ public:
 		subMap = n.subscribe("goofMap", 1, &FindCoord::callbackMap, this);
 		subOdom = n.subscribe("odom", 1, &FindCoord::callbackOdom, this);
 		marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 10);
+		timer = n.createTimer(ros::Duration(5), &FindCoord::timerCallback, this);
 
 		// Set robot's initial pose
 		robotPos.x = 0.0f;
@@ -51,6 +58,10 @@ public:
 		// need a position
 		// have an A* search, without going the way we came
 		// need to have a list of past places
+
+		lastChecked = ros::Time::now();
+		lastGrid = grid;
+		isGridInitialized = true;
 
 		// get current position from odometry
 		double currentX, currentY;
@@ -129,6 +140,17 @@ public:
 		points.color.g = 1.0f;
 		points.color.a = 1.0;
 
+//		ROS_INFO_STREAM("Num: "<<checkedPts.size());
+
+//		for (int i=0; i<checkedPts.size(); i++) {
+//			geometry_msgs::Point p;
+//			p.x = checkedPts[i].x;
+//			p.y = checkedPts[i].y;
+//			p.z = 0;
+//
+//			points.points.push_back(p);
+//		}
+
 		geometry_msgs::Point p;
 		p.x = coord.x;
 		p.y = coord.y;
@@ -139,6 +161,22 @@ public:
 		marker_pub.publish(points);
 	}
 
+	void timerCallback(const ros::TimerEvent& event) {
+//		ROS_INFO_STREAM("in timer");
+
+		ros::Duration duration = ros::Time::now() - lastChecked;
+		if (!isGridInitialized) {
+//			ROS_INFO_STREAM("exiting timer");
+			return;
+		}
+
+		if (duration.toSec() > 20) {
+			callbackMap(lastGrid);
+//			ROS_INFO_STREAM("I don't know why i'm getting seg fault");
+		}
+//		ROS_INFO_STREAM("I am here for timer");
+	}
+
 private:
 	ros::NodeHandle n;
 	ros::Publisher pub;
@@ -146,10 +184,14 @@ private:
 	ros::Subscriber subOdom;
 	ros::Publisher marker_pub;
 
+	ros::Timer timer;
+
 //	tf::TransformListener listener;
 
 	geometry_msgs::Pose2D robotPos;
 };
+
+
 
 vector<vector<int>> getMatrixFromGrid(nav_msgs::OccupancyGrid grid) {
 	int width = grid.info.width;
@@ -211,8 +253,12 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 	int cellState = 0;
 	double angle = 0;
 
+	checkedPts.clear();
+
+	ROS_INFO_STREAM("starting");
+
 	while (angle < PI) {
-		int step = 1;
+		double step = 0.5;
 		while (true) {
 			row = robotRow + (rise * step);
 			col = robotCol + (run * step);
@@ -225,15 +271,21 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 			if (cellState > 50 || cellState < 0) {
 				break;
 			}
-			step++;
+			step += 0.5;
 		}
 		// found an unknown location
 		if (cellState == -1) {
+//			ROS_INFO_STREAM("FOUND AN UNKNOWN LOCATION");
 			break;
 		}
+//		ROS_INFO_STREAM("MOVING ON");
 
 		angle = getAngle(&angleChange);
 		ROS_INFO_STREAM("trying angle: " << angle << " - " << convertToDegree(angle));
+
+		ROS_INFO_STREAM("pushing a point: " << checkedPts.size());
+		checkedPts.push_back(getCoordinateFromMap(row, col, grid));
+		ROS_INFO_STREAM("done: " << checkedPts.size());
 
 		// rotate the heading by 10 degrees
 		if (isZero(slope.run)) {
@@ -263,10 +315,17 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 		return coord;
 	}
 
-	coord.x = grid.info.origin.position.x + (col * grid.info.resolution);
-	coord.y = grid.info.origin.position.y + (row * grid.info.resolution);
+	coord = getCoordinateFromMap(row, col, grid);
 
 	ROS_INFO_STREAM("PickedPos: " << coord.x << "," << coord.y);
+
+	return coord;
+}
+
+geometry_msgs::Pose2D getCoordinateFromMap(int row, int col, nav_msgs::OccupancyGrid grid) {
+	geometry_msgs::Pose2D coord;
+	coord.x = grid.info.origin.position.x + (col * grid.info.resolution);
+	coord.y = grid.info.origin.position.y + (row * grid.info.resolution);
 
 	return coord;
 }

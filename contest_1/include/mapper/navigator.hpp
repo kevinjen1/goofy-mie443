@@ -36,6 +36,7 @@ double getAngle(int* angleChange);
 bool isZero(double value);
 int convertToDegree(double rad);
 geometry_msgs::Pose2D convertToLocal(geometry_msgs::Pose2D coord, geometry_msgs::Pose2D robPos);
+geometry_msgs::Pose2D getCoordinateFromMap(int row, int col, nav_msgs::OccupancyGrid grid);
 
 // Depth search functions
 geometry_msgs::Pose2D getCoordinateDFS(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol, geometry_msgs::Pose2D robotPos);
