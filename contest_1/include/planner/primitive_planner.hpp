@@ -89,6 +89,8 @@ public:
 	int getNumberOnSpots();
 	bool leftOrRightWhileStuck();
 	void getLocalTargetPosition();
+	
+	bool randomFlag = false;
 };
 
 class WeightedPlanner: public PrimitivePlanner{

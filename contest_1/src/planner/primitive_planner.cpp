@@ -176,17 +176,6 @@ void HeuristicPlanner::runIteration(){
     //      2) Sort each valid (success==true) path by distance to end point in increasing order
 
 	// Convert global poses to be in local reference frame
-	
-    getLocalTargetPosition();
-
-	// If already close to the target position, or there is no target position, randomly navigate
-	int redZone = 0.5;
-	if (sqrt(pow(local_target_pose.x,2) + pow(local_target_pose.y,2)) < redZone){
-		std::cout << "[HP->runIter] TOO CLOSE TO THE ENDPOINT! Within " << sqrt(pow(local_target_pose.x,2) + pow(local_target_pose.y,2)) << "m. Danger zone is: " << redZone << "m." << std::endl;
-		std::cout << "[HP->runIter] Jumping over to RandomPlanner now!\n" << std::endl;
-		PrimitivePlanner::runIteration();
-		return;
-	}
 
 	// If a new path comes in, turn to face it
 	if ((currentTargetPosition.x != nextPosition.x) || (currentTargetPosition.y != nextPosition.y)){
@@ -194,6 +183,7 @@ void HeuristicPlanner::runIteration(){
 		std::cout << "[HP->runIter] NEW POINT" << endl;
 		std::cout << "=======================" << endl;
 		currentTargetPosition = nextPosition;
+		randomFlag = false;
 		getLocalTargetPosition();
 		//turn to face it
 		float target_angle = atan2(local_target_pose.y, local_target_pose.x);
@@ -211,6 +201,18 @@ void HeuristicPlanner::runIteration(){
 			std::cout << "[HP->runIter] New target point detected at (" << currentTargetPosition.x << ", " << currentTargetPosition.y << ")" << std::endl; 
 			std::cout << "[HP->runIter] Turning right (-0.3) for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
 		}
+		return;
+	}
+	
+	getLocalTargetPosition();
+
+	// If already close to the target position, or there is no target position, randomly navigate
+	int redZone = 1;
+	if (randomFlag || (sqrt(pow(local_target_pose.x,2) + pow(local_target_pose.y,2)) < redZone)){
+		std::cout << "[HP->runIter] TOO CLOSE TO THE ENDPOINT! Within " << sqrt(pow(local_target_pose.x,2) + pow(local_target_pose.y,2)) << "m. Danger zone is: " << redZone << "m." << std::endl;
+		std::cout << "[HP->runIter] Jumping over to RandomPlanner now!\n" << std::endl;
+		randomFlag = true;
+		PrimitivePlanner::runIteration();
 		return;
 	}
     
