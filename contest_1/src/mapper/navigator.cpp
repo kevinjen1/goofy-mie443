@@ -5,7 +5,7 @@
 #include <geometry_msgs/Point.h>
 #include <nav_msgs/Odometry.h>
 #include <tf/tf.h>
-//#include <tf/transform_listener.h>
+#include <tf/transform_listener.h>
 #include <visualization_msgs/Marker.h>
 #include "mapper/navigator.hpp"
 #include <stack>
@@ -41,19 +41,17 @@ public:
 		robotPos.theta = 0.0f;
 	}
 	void callbackMap(const nav_msgs::OccupancyGrid grid) {
-//		tf::TransformListener listener;
-//		tf::StampedTransform transform;
-//		try{
-//		  listener.lookupTransform("base_link", "map",
-//								   ros::Time(0), transform);
-//		  ROS_INFO_STREAM("Got the transform");
-//		}
-//		catch (tf::TransformException ex){
-//		  ROS_ERROR("%s",ex.what());
-//		  ros::Duration(1.0).sleep();
-//		}
-//		ROS_INFO_STREAM("transform pos: "<< transform.getOrigin().x() << ", " << transform.getOrigin().y());
-//		ROS_INFO_STREAM("robot pos: "<< robotPos.x << ", "<< robotPos.y);
+		tf::StampedTransform transform;
+		try{
+		  listener.lookupTransform("/map", "/base_link",
+								   ros::Time(0), transform);
+		  ROS_INFO_STREAM("Got the transform");
+		}
+		catch (tf::TransformException ex){
+		  ROS_ERROR("%s",ex.what());
+		  ros::Duration(1.0).sleep();
+		}
+		ROS_INFO_STREAM("transform pos: "<< transform.getOrigin().x() << ", " << transform.getOrigin().y());
 
 		// need a position
 		// have an A* search, without going the way we came
@@ -69,7 +67,19 @@ public:
 		// need to get odom. probably from a service
 		geometry_msgs::Pose2D origin;
 		geometry_msgs::Pose2D robPos;
-		robPos = robotPos;
+		//robPos = robotPos;
+		robPos.x = transform.getOrigin().x();
+		robPos.y = transform.getOrigin().y();
+
+		geometry_msgs::Quaternion quat;
+		quat.x = transform.getRotation().x();
+		quat.y = transform.getRotation().y();
+		quat.z = transform.getRotation().z();
+		quat.w = transform.getRotation().w();
+
+		robPos.theta = common::quat2yaw(quat);
+
+		ROS_INFO_STREAM("robot pos: "<< robotPos.x << ", "<< robotPos.y << ", " << robotPos.theta);
 
 		origin.x = grid.info.origin.position.x;
 		origin.y = grid.info.origin.position.y;
@@ -162,7 +172,7 @@ public:
 	}
 
 	void timerCallback(const ros::TimerEvent& event) {
-//		ROS_INFO_STREAM("in timer");
+		ROS_INFO_STREAM("in timer");
 
 		ros::Duration duration = ros::Time::now() - lastChecked;
 		if (!isGridInitialized) {
@@ -170,7 +180,8 @@ public:
 			return;
 		}
 
-		if (duration.toSec() > 20) {
+		if (duration.toSec() > 5) {
+			ROS_INFO_STREAM("HIIIIIIIIII");
 			callbackMap(lastGrid);
 //			ROS_INFO_STREAM("I don't know why i'm getting seg fault");
 		}
@@ -183,6 +194,8 @@ private:
 	ros::Subscriber subMap;
 	ros::Subscriber subOdom;
 	ros::Publisher marker_pub;
+
+	tf::TransformListener listener;
 
 	ros::Timer timer;
 

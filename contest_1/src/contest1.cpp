@@ -12,7 +12,7 @@
 #include"mapper/mapper.hpp"
 #include"planner/primitive_planner.hpp"
 #include"common/common.hpp"
-
+#include <tf/transform_listener.h>
 using namespace std;
 using namespace goofy;
 
@@ -73,15 +73,15 @@ void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
 	return;
 }
 
-void callbackOdom(const nav_msgs::Odometry odom)
-{
-	// Find robot 2D pose from odometry
-	// Position (x,y)
-	currPose.x = odom.pose.pose.position.x;
-	currPose.y = odom.pose.pose.position.y;
-
-	currPose.theta = goofy::common::quat2yaw(odom.pose.pose.orientation);
-}
+//void callbackOdom(const nav_msgs::Odometry odom)
+//{
+//	// Find robot 2D pose from odometry
+//	// Position (x,y)
+//	currPose.x = odom.pose.pose.position.x;
+//	currPose.y = odom.pose.pose.position.y;
+//
+//	currPose.theta = goofy::common::quat2yaw(odom.pose.pose.orientation);
+//}
 
 int main(int argc, char **argv)
 {
@@ -95,7 +95,9 @@ int main(int argc, char **argv)
 	ros::Publisher vel_pub = nh.advertise<geometry_msgs::Twist>("cmd_vel_mux/input/teleop", 1);
 
 	ros::Subscriber next_coord_sub = nh.subscribe("goofCoord", 1, &getNextPoint);
-	ros::Subscriber sub_odom = nh.subscribe("odom", 1, &callbackOdom);
+	//ros::Subscriber sub_odom = nh.subscribe("odom", 1, &callbackOdom);
+
+	tf::TransformListener listener;
 
 	//Setup Robot
 	common::RobotModel robot(0.5,0.5,0.5);
@@ -104,8 +106,10 @@ int main(int argc, char **argv)
 	common::BasicMotion straight{0.2, 0, 4000};
 	//common::BasicMotion mild_right{0.15, -0.1, 4000};
 	//common::BasicMotion mild_left{0.15, 0.1, 4000};
-	common::BasicMotion turn_left{0.15,0.3, 4000};
-	common::BasicMotion turn_right{0.15,-0.3, 4000};
+	common::BasicMotion turn_left{0.15,0.15, 4000};
+	common::BasicMotion turn_right{0.15,-0.15, 4000};
+	common::BasicMotion turn_sharp_left{0.15, 0.3, 3000};
+	common::BasicMotion turn_sharp_right{0.15, -0.3, 3000};
 	common::BasicMotion on_spot_right{0, -0.3, 2000};
 	common::BasicMotion on_spot_left{0, 0.3, 2000};
 
@@ -113,6 +117,8 @@ int main(int argc, char **argv)
 	motions.push_back(straight);
 	motions.push_back(turn_left);
 	motions.push_back(turn_right);
+	motions.push_back(turn_sharp_left);
+	motions.push_back(turn_sharp_right);
 	motions.push_back(on_spot_right);
 	motions.push_back(on_spot_left);
 
@@ -143,6 +149,29 @@ int main(int argc, char **argv)
 		//.....**E-STOP DO NOT TOUCH**.......
 		eStop.block();
 		//...................................
+
+		tf::StampedTransform transform;
+		try{
+		  listener.lookupTransform("/map", "/base_link",
+								   ros::Time(0), transform);
+		  //ROS_INFO_STREAM("Got the transform");
+		}
+		catch (tf::TransformException ex){
+		  ROS_ERROR("%s",ex.what());
+		  ros::Duration(1.0).sleep();
+		}
+		//ROS_INFO_STREAM("transform pos: "<< transform.getOrigin().x() << ", " << transform.getOrigin().y());
+
+		currPose.x = transform.getOrigin().x();
+		currPose.y = transform.getOrigin().y();
+
+		geometry_msgs::Quaternion quat;
+		quat.x = transform.getRotation().x();
+		quat.y = transform.getRotation().y();
+		quat.z = transform.getRotation().z();
+		quat.w = transform.getRotation().w();
+
+		currPose.theta = common::quat2yaw(quat);
 
 
 		// Update bumper values in random_planner
