@@ -228,7 +228,7 @@ void HeuristicPlanner::runIteration(){
 
 	// If already close to the target position, or there is no target position, randomly navigate
 	std::cout << "Endpoint distance: " << sqrt(pow(local_target_pose.x,2) + pow(local_target_pose.y,2)) << std::endl;
-	float redZone = 0.5;
+	float redZone = 1;
 	if (randomFlag || (sqrt(pow(local_target_pose.x,2) + pow(local_target_pose.y,2)) < redZone)){
 		std::cout << "[HP->runIter] TOO CLOSE TO THE ENDPOINT! Within " << sqrt(pow(local_target_pose.x,2) + pow(local_target_pose.y,2)) << "m. Danger zone is: " << redZone << "m." << std::endl;
 		std::cout << "[HP->runIter] Jumping over to RandomPlanner now!\n" << std::endl;
@@ -490,7 +490,7 @@ bool PrimitivePlanner::checkObstacle(float x_pos, float y_pos, float scan_angle)
 	    
 	    for(int i = index-scan_width; i <= index+scan_width; i++){
 			if(i >= 0 && i < laserSize){
-				if(tangent > (_scan->ranges[i] - 0.3) || std::isnan(_scan->ranges[i])){
+				if(tangent > (_scan->ranges[i] - 0.3)){
 					return true;	
 				}
 			}

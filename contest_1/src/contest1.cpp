@@ -141,7 +141,7 @@ int main(int argc, char **argv)
 	}
 
 	if(curr_scan){
-		common::filterLaserScan(curr_scan, 50);
+		//common::filterLaserScan(curr_scan, 50);
 		random_planner.updateLaserScan(curr_scan);
 		random_planner.addSpin();
 	}
@@ -185,7 +185,7 @@ int main(int argc, char **argv)
 
 		// Update laser values in random_planner
 		if(curr_scan) {
-			common::filterLaserScan(curr_scan, 50);
+			//common::filterLaserScan(curr_scan, 50);
 			random_planner.updateLaserScan(curr_scan);
 		}
 
@@ -194,7 +194,7 @@ int main(int argc, char **argv)
 		vis.publishPath(path, std::chrono::milliseconds(10));
 		if (!random_planner.getVelocity(vel) && curr_scan){
 			vel_pub.publish(stop); //need to publish a zero velocity here!
-			common::filterLaserScan(curr_scan, 50);
+			//common::filterLaserScan(curr_scan, 50);
 			random_planner.updateLaserScan(curr_scan);
 			random_planner.runIteration();
 			std::cout << "Getting new plan!" << std::endl;
