@@ -30,7 +30,7 @@ struct gridDFSElement {
 	vector<gridIndex> adjList;
 };
 
-geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol, geometry_msgs::Pose2D robotPos);
+geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol, geometry_msgs::Pose2D robotPos, vector<geometry_msgs::Pose2D> *publishedPts);
 vector<vector<int>> getMatrixFromGrid(nav_msgs::OccupancyGrid grid);
 Slope getClosestAxisToHeading(double theta);
 double getAngle(int* angleChange);
@@ -38,6 +38,7 @@ bool isZero(double value);
 int convertToDegree(double rad);
 geometry_msgs::Pose2D convertToLocal(geometry_msgs::Pose2D coord, geometry_msgs::Pose2D robPos);
 geometry_msgs::Pose2D getCoordinateFromMap(int row, int col, nav_msgs::OccupancyGrid grid);
+float getDistance(geometry_msgs::Pose2D pt1, geometry_msgs::Pose2D pt2);
 
 // Depth search functions
 geometry_msgs::Pose2D getCoordinateDFS(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol, geometry_msgs::Pose2D robotPos);

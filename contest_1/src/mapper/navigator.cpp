@@ -20,11 +20,11 @@
 namespace goofy{
 namespace mapper{
 
-//vector<geometry_msgs::Pose2D> checkedPts;
 ros::Time lastChecked;
 nav_msgs::OccupancyGrid lastGrid;
 bool isGridInitialized = false;
 int refreshInterval = 30;
+const double MIN_DISTANCE_PUBLISH = 0.5;
 
 
 class FindCoord {
@@ -68,7 +68,7 @@ public:
 		// need to get odom. probably from a service
 		geometry_msgs::Pose2D origin;
 		geometry_msgs::Pose2D robPos;
-		//robPos = robotPos;
+//		robPos = robotPos;
 		robPos.x = transform.getOrigin().x();
 		robPos.y = transform.getOrigin().y();
 
@@ -95,7 +95,7 @@ public:
 		int row = diffY/grid.info.resolution;
 		int col = diffX/grid.info.resolution;
 
-		geometry_msgs::Pose2D coord = getCoordinateRayCasting(grid, slope, row, col, robPos);
+		geometry_msgs::Pose2D coord = getCoordinateRayCasting(grid, slope, row, col, robPos, &publishedPts);
 //		geometry_msgs::Pose2D coord = getCoordinateBFS(grid, slope, row, col, robPos);
 
 		// couldn't retrieve an unknown location
@@ -173,7 +173,7 @@ public:
 	}
 
 	void timerCallback(const ros::TimerEvent& event) {
-		ROS_INFO_STREAM("in timer");
+//		ROS_INFO_STREAM("in timer");
 
 		ros::Duration duration = ros::Time::now() - lastChecked;
 		if (!isGridInitialized) {
@@ -200,9 +200,8 @@ private:
 
 	ros::Timer timer;
 
-//	tf::TransformListener listener;
-
 	geometry_msgs::Pose2D robotPos;
+	vector<geometry_msgs::Pose2D> publishedPts;
 };
 
 
@@ -254,7 +253,7 @@ Slope getClosestAxisToHeading(double theta)
 /**
  * Get an unknown coordinate of the map to explore
  */
-geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol, geometry_msgs::Pose2D robotPos) {
+geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slope slope, int robotRow, int robotCol, geometry_msgs::Pose2D robotPos, vector<geometry_msgs::Pose2D> *publishedPts) {
 
 	vector<vector<int>> matrix = getMatrixFromGrid(grid);
 
@@ -273,9 +272,8 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 	int cellState = 0;
 	double deltaAngle = 0;
 
-//	checkedPts.clear();
-
-	ROS_INFO_STREAM("starting");
+//	ROS_INFO_STREAM("starting");
+	geometry_msgs::Pose2D coord;
 
 	while (deltaAngle < PI) {
 		double step = 0.5;
@@ -296,7 +294,40 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 		// found an unknown location
 		if (cellState == -1) {
 //			ROS_INFO_STREAM("FOUND AN UNKNOWN LOCATION");
-			break;
+
+			// get the coordinate
+			coord = getCoordinateFromMap(row, col, grid);
+			int publishedSize = (*publishedPts).size();
+//			ROS_INFO_STREAM("Published size: " << publishedSize);
+			bool isClosePoint = false;
+
+			// make sure it's not close to the last two picked points
+			if (publishedSize > 0) {
+				geometry_msgs::Pose2D lastPt = (*publishedPts)[publishedSize - 1];
+				float dist = getDistance(coord, lastPt);
+//				ROS_INFO_STREAM("dist1:" << dist);
+				if (dist < MIN_DISTANCE_PUBLISH) {
+					ROS_INFO_STREAM("POINT CLOSE to last point: " << dist);
+					coord.x = 0;
+					coord.y = 0;
+					isClosePoint = true;
+				}
+			}
+			if (publishedSize > 1) {
+				geometry_msgs::Pose2D lastPt = (*publishedPts)[publishedSize - 2];
+				float dist = getDistance(coord, lastPt);
+//				ROS_INFO_STREAM("dist2:" << dist);
+				if (dist < MIN_DISTANCE_PUBLISH) {
+					ROS_INFO_STREAM("POINT CLOSE to second last point: " << dist);
+					coord.x = 0;
+					coord.y = 0;
+					isClosePoint = true;
+				}
+			}
+			if (!isClosePoint) {
+				// found a point
+				break;
+			}
 		}
 //		ROS_INFO_STREAM("MOVING ON");
 
@@ -323,27 +354,28 @@ geometry_msgs::Pose2D getCoordinateRayCasting(nav_msgs::OccupancyGrid grid, Slop
 //		}
 	}
 
-	geometry_msgs::Pose2D coord;
-
-
 	ROS_INFO_STREAM("angle: " << convertToDegree(deltaAngle));
-	ROS_INFO_STREAM("originalRunRise: " << slope.run << "/" << slope.rise);
-	ROS_INFO_STREAM("finalRunRise: " << run << "/" << rise);
-	ROS_INFO_STREAM("finalRunRise: " << run << "/" << rise);
+//	ROS_INFO_STREAM("originalRunRise: " << slope.run << "/" << slope.rise);
+//	ROS_INFO_STREAM("finalRunRise: " << run << "/" << rise);
 	ROS_INFO_STREAM("RobotPos: " << robotPos.x << "," << robotPos.y);
 
 
 	// didn't find a cell to discover
-	if (cellState >= 0) {
+	if (cellState >= 0 || (isZero(coord.x) && isZero(coord.y))) {
 		ROS_INFO_STREAM("COULD NOT FIND COORD");
 		return coord;
 	}
 
-	coord = getCoordinateFromMap(row, col, grid);
-
 	ROS_INFO_STREAM("PickedPos: " << coord.x << "," << coord.y);
+//	ROS_INFO_STREAM("sizeBefore:" << (*publishedPts).size());
+	(*publishedPts).push_back(coord);
+//	ROS_INFO_STREAM("sizeAfter:" << (*publishedPts).size());
 
 	return coord;
+}
+
+float getDistance(geometry_msgs::Pose2D pt1, geometry_msgs::Pose2D pt2) {
+	return sqrt(pow((pt1.x - pt2.x), 2) + pow((pt1.y - pt2.y),2) );
 }
 
 geometry_msgs::Pose2D getCoordinateFromMap(int row, int col, nav_msgs::OccupancyGrid grid) {
