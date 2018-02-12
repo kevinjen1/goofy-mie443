@@ -40,7 +40,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_right{0, -0.5, 1500};
+					common::BasicMotion recovery_turn_right{0, -0.5, 2000};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -58,7 +58,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_right{0, -0.5, 1500};
+					common::BasicMotion recovery_turn_right{0,  -0.5 + (rand_num > 0.5), 2000};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -73,7 +73,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_plan.clear();
 					_path.poses.clear();
 					_new_plan = true;
-					common::BasicMotion back{-0.1, 0, 1000};
+					common::BasicMotion back{-0.1, 0, 2000};
 					_plan.push_back(back);
 					common::BasicMotion recovery_turn_left{0, 0.5, 1500};
 					_plan.push_back(recovery_turn_left);
@@ -90,7 +90,8 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_plan.clear();
 					_path.poses.clear();
 					_new_plan = true;
-					common::BasicMotion recovery_turn_right{0, -0.5, 500};
+					std::cout << "Radn num:  " << rand_num << std::endl;
+					common::BasicMotion recovery_turn_right{0, -0.5 + (rand_num > 0.5) , 500};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -279,7 +280,7 @@ void HeuristicPlanner::runIteration(){
             //std::cout << "Checked path number: " << planned_path << std::endl;
     		_vis.publishPath(_primitives.getPath(planned_path, common::BASE), std::chrono::milliseconds(10));
 			std::cout << "[HP->runIter] Chose path: " << optionsVector[i].index << " => success: " << optionsVector[i].valid << ", euclid_dist: " << optionsVector[i].euclid_dist << std::endl;
-			rand_num = (double) rand()/RAND_MAX;
+			
 			break;
         }
     }
@@ -331,6 +332,7 @@ bool HeuristicPlanner::leftOrRightWhileStuck(){
 		Returns 0 for left, and 1 for right
 	*/
 
+    std::cout << "Radn num:  " << rand_num << std::endl;
 	return (rand_num > 0.5);
 
     return 0;   // Always turn left - make sure it won't get stuck in a corner

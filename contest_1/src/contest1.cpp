@@ -16,6 +16,7 @@
 using namespace std;
 using namespace goofy;
 
+double rand_num = 1;
 bool bumperL = 0, bumperC = 0, bumperR = 0;
 double lRange = 10;
 int lSize = 0, lOffset = 0, dAngle = 5;
@@ -43,6 +44,12 @@ void bumperCallback(const kobuki_msgs::BumperEvent::ConstPtr& msg){
 
 void getNextPoint(geometry_msgs::Pose2D nextPose){
 	nextPoint = nextPose;
+}
+
+void timerCallback(const ros::TimerEvent& event) {
+//		ROS_INFO_STREAM("in timer");
+
+	rand_num *= -1;
 }
 
 void laserCallback(const sensor_msgs::LaserScan::ConstPtr& msg){
@@ -96,6 +103,8 @@ int main(int argc, char **argv)
 
 	ros::Subscriber next_coord_sub = nh.subscribe("goofCoord", 1, &getNextPoint);
 	//ros::Subscriber sub_odom = nh.subscribe("odom", 1, &callbackOdom);
+	
+	ros::Timer timer = nh.createTimer(ros::Duration(20), &timerCallback);
 
 	tf::TransformListener listener;
 
@@ -177,6 +186,7 @@ int main(int argc, char **argv)
 
 
 		// Update bumper values in random_planner
+		random_planner.rand_num = rand_num;
 		random_planner.bumperLeft = bumperL;
 		random_planner.bumperCenter = bumperC;
 		random_planner.bumperRight = bumperR;

@@ -50,6 +50,7 @@ public:
 	geometry_msgs::Pose2D current_pose;
 	geometry_msgs::Pose2D currentTargetPosition;
 	geometry_msgs::Pose2D local_target_pose;
+	double rand_num = 0;
 
 protected:
 	bool checkObstacle(float x_pos, float y_pos, float scan_angle);
@@ -92,7 +93,6 @@ public:
 	void getLocalTargetPosition();
 	
 	bool randomFlag = false;
-	double rand_num = 0;
 };
 
 class WeightedPlanner: public PrimitivePlanner{
