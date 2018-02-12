@@ -279,7 +279,8 @@ void HeuristicPlanner::runIteration(){
             //std::cout << "Checked path number: " << planned_path << std::endl;
     		_vis.publishPath(_primitives.getPath(planned_path, common::BASE), std::chrono::milliseconds(10));
 			std::cout << "[HP->runIter] Chose path: " << optionsVector[i].index << " => success: " << optionsVector[i].valid << ", euclid_dist: " << optionsVector[i].euclid_dist << std::endl;
-            break;
+			rand_num = (double) rand()/RAND_MAX;
+			break;
         }
     }
 
@@ -329,6 +330,8 @@ bool HeuristicPlanner::leftOrRightWhileStuck(){
 		Pick the one with the max value (more room to move)
 		Returns 0 for left, and 1 for right
 	*/
+
+	return (rand_num > 0.5);
 
     return 0;   // Always turn left - make sure it won't get stuck in a corner
     

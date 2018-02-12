@@ -92,6 +92,7 @@ public:
 	void getLocalTargetPosition();
 	
 	bool randomFlag = false;
+	double rand_num = 0;
 };
 
 class WeightedPlanner: public PrimitivePlanner{
