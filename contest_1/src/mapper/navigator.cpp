@@ -23,7 +23,7 @@ namespace mapper{
 ros::Time lastChecked;
 nav_msgs::OccupancyGrid lastGrid;
 bool isGridInitialized = false;
-int refreshInterval = 30;
+int refreshInterval = 40;
 const double MIN_DISTANCE_PUBLISH = 0.5;
 
 

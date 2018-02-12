@@ -40,7 +40,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
+					common::BasicMotion recovery_turn_right{0, -0.5, 1500};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -58,7 +58,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_right{0, -0.3, 3000};
+					common::BasicMotion recovery_turn_right{0, -0.5, 1500};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -75,7 +75,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_new_plan = true;
 					common::BasicMotion back{-0.1, 0, 1000};
 					_plan.push_back(back);
-					common::BasicMotion recovery_turn_left{0, 0.3, 3000};
+					common::BasicMotion recovery_turn_left{0, 0.5, 1500};
 					_plan.push_back(recovery_turn_left);
 					_recovery = true;
 					return true;
@@ -90,7 +90,7 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 					_plan.clear();
 					_path.poses.clear();
 					_new_plan = true;
-					common::BasicMotion recovery_turn_right{0, -0.3, 6000};
+					common::BasicMotion recovery_turn_right{0, -0.5, 500};
 					_plan.push_back(recovery_turn_right);
 					_recovery = true;
 					return true;
@@ -130,9 +130,9 @@ bool PrimitivePlanner::getVelocity(geometry_msgs::Twist& vel){
 
 void PrimitivePlanner::addSpin(){
 	std::cout << "STARTED 360 SPIN" << std::endl;
-	common::BasicMotion rotate{0, 0.3, (int)((2*Pi*1000)/0.3)};
+	common::BasicMotion rotate{0, 0.5, (int)((2*Pi*2000)/0.5)};
 	_plan.push_back(rotate);
-	_recovery = false;
+	_recovery = true;
 	_new_plan = true;
 	std::cout << "Exiting spinonce fcn" << std::endl;
 }
@@ -215,13 +215,13 @@ void HeuristicPlanner::runIteration(){
 		if (target_angle < Pi){
 		    target_angle += Pi;
 		}
-		common::BasicMotion on_spot_aim{0, -0.3, (int)(1000*target_angle/0.3)};
-		_plan.push_back(on_spot_aim);
+		//common::BasicMotion on_spot_aim{0, -0.5, (int)(1000*target_angle/0.5)};
+		//_plan.push_back(on_spot_aim);
 		_new_plan = true;
 		std::cout << "[HP->runIter] New target point detected at (" << currentTargetPosition.x << ", " << currentTargetPosition.y << ")" << std::endl; 
-		std::cout << "[HP->runIter] Turning right (-0.3) for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
+		//std::cout << "[HP->runIter] Turning right (-0.3) for " << (int)(target_angle/0.3) << "s to face the angle: " << target_angle << std::endl;
 		
-		return;
+		//return;
 	}
 	
 	getLocalTargetPosition();
@@ -277,7 +277,7 @@ void HeuristicPlanner::runIteration(){
         if (optionsVector[i].valid){
             planned_path = optionsVector[i].index;
             //std::cout << "Checked path number: " << planned_path << std::endl;
-    		_vis.publishPath(_primitives.getPath(planned_path, common::BASE), std::chrono::milliseconds(500));
+    		_vis.publishPath(_primitives.getPath(planned_path, common::BASE), std::chrono::milliseconds(10));
 			std::cout << "[HP->runIter] Chose path: " << optionsVector[i].index << " => success: " << optionsVector[i].valid << ", euclid_dist: " << optionsVector[i].euclid_dist << std::endl;
             break;
         }
@@ -398,7 +398,7 @@ void WeightedPlanner::runIteration(){
 		//}
 		float outcome = checkPath(_primitives.getPath(i, common::BASE));    
         //std::cout << "Checked path number: " << i << std::endl;   
-		_vis.publishPath(_primitives.getPath(i, common::BASE), std::chrono::milliseconds(1000));
+		_vis.publishPath(_primitives.getPath(i, common::BASE), std::chrono::milliseconds(10));
         if (outcome >= max_outcome){
             max_path = i;
         }	
