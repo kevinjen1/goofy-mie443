@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<opencv_storage>
+	<!-- coordinate locations {x (m), y (m), phi (rads) - descending} -->
+	<coordinate1>
+	1.857
+	0.153
+	0.9873
+	</coordinate1>
+
+	<coordinate2>
+	1.9744
+	0.4719
+	-0.1584
+	</coordinate2>
+
+	<coordinate3>
+	0.4078
+	0.9061
+	2.9841
+	</coordinate3>
+
+	<coordinate4>
+	0.4458
+	-0.069
+	1.32333
+	</coordinate4>
+
+	<coordinate5>
+	0.8928
+	-0.234
+	-1.932
+	</coordinate5>
+
+	<!-- Image paths - the image path is relative to the contest file path -->
+	<images>
+	"/pics/tag1.jpg"
+	"/pics/tag2.jpg"
+	"/pics/tag3.jpg"
+	</images>
+</opencv_storage>
