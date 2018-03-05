@@ -84,9 +84,18 @@ int main(int argc, char** argv){
 		ros::spinOnce();
   		//.....**E-STOP DO NOT TOUCH**.......
    		eStop.block();
-    		//...................................
+    	//...................................
 
-    		//fill with your code
+    	//fill with your code
+
+   		// figure out the coordinates of the robot's desired position, given coordinates of boxes
+   		// then pass them to moveToGoal
+   		bool isMovedToPosition = false;
+   		//isMovedToPosition = moveToGoal()
+   		if (isMovedToPosition) {
+   			ros::Duration(2).sleep(); // wait to ensure robot has settled
+   			int foundPic = findPic(imgTransport, imgs_track);
+   		}
 		
 	}
 	return 0;
