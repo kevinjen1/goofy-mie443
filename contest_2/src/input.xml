@@ -2,33 +2,33 @@
 <opencv_storage>
 	<!-- coordinate locations {x (m), y (m), phi (rads) - descending} -->
 	<coordinate1>
-	1.857
-	0.153
-	0.9873
+	-0.992
+	0.685
+	-0.474
 	</coordinate1>
 
 	<coordinate2>
-	1.9744
-	0.4719
-	-0.1584
+	-2.564
+	-0.497
+	0.165
 	</coordinate2>
 
 	<coordinate3>
-	0.4078
-	0.9061
-	2.9841
+	-2.571
+	1.398
+	-1.953
 	</coordinate3>
 
 	<coordinate4>
-	0.4458
-	-0.069
-	1.32333
+	-1.039
+	1.716
+	1.732
 	</coordinate4>
 
 	<coordinate5>
-	0.8928
-	-0.234
-	-1.932
+	-3.718
+	2.711
+	-0.73
 	</coordinate5>
 
 	<!-- Image paths - the image path is relative to the contest file path -->

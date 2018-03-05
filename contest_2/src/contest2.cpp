@@ -17,36 +17,6 @@ void poseCallback(const geometry_msgs::PoseWithCovarianceStamped& msg){
     	y = msg.pose.pose.position.y;
 }
 
-int main(int argc, char** argv){
-	ros::init(argc, argv, "map_navigation_node");
-	ros::NodeHandle n;
-	ros::spinOnce();
-  	teleController eStop;
-
-	ros::Subscriber amclSub = n.subscribe("/amcl_pose", 1, poseCallback);
-	
-	vector<vector<float> > coord;
-	vector<cv::Mat> imgs_track;	
-	if(!init(coord, imgs_track)) return 0;
-
-	for(int i = 0; i < coord.size(); ++i){
-		cout << i << " x: " << coord[i][0] << " y: " << coord[i][1] << " z: " << coord[i][2] << endl;
-	}
-
-	imageTransporter imgTransport("camera/image/", sensor_msgs::image_encodings::BGR8); // For Kinect
-
-	while(ros::ok()){
-		ros::spinOnce();
-  		//.....**E-STOP DO NOT TOUCH**.......
-   		eStop.block();
-    		//...................................
-
-    		//fill with your code
-		
-	}
-	return 0;
-}
-
 //-------------------------move robot function---------------
 bool moveToGoal(float xGoal, float yGoal, float phiGoal){
 
@@ -89,4 +59,35 @@ bool moveToGoal(float xGoal, float yGoal, float phiGoal){
 		return false;
 	}
 
+}
+
+int main(int argc, char** argv){
+	ros::init(argc, argv, "map_navigation_node");
+	ros::NodeHandle n;
+	ros::spinOnce();
+  	teleController eStop;
+
+	ros::Subscriber amclSub = n.subscribe("/amcl_pose", 1, poseCallback);
+	
+	vector<vector<float> > coord;
+	vector<cv::Mat> imgs_track;	
+	if(!init(coord, imgs_track)) return 0;
+
+	for(int i = 0; i < coord.size(); ++i){
+		cout << i << " x: " << coord[i][0] << " y: " << coord[i][1] << " z: " << coord[i][2] << endl;
+	}
+
+	// imageTransporter imgTransport("camera/image/", sensor_msgs::image_encodings::BGR8); // For Webcam
+	imageTransporter imgTransport("camera/rgb/image_raw", sensor_msgs::image_encodings::BGR8); //For Kinect
+
+	while(ros::ok()){
+		ros::spinOnce();
+  		//.....**E-STOP DO NOT TOUCH**.......
+   		eStop.block();
+    		//...................................
+
+    		//fill with your code
+		
+	}
+	return 0;
 }

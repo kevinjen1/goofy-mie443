@@ -15,6 +15,9 @@ imageTransporter::imageTransporter(std::string topic, std::string type){
 	type_ = type;
 
 	imgSub = it_->subscribe(topic, 1, &imageTransporter::imageCallback, this);
+
+	while(!img.data)
+		ros::spinOnce();
 }
 
 imageTransporter::~imageTransporter(){
