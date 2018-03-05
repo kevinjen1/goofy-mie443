@@ -17,11 +17,6 @@ public:
 	int logo;
 };
 
-Cereal::Cereal (int one, int two) {
-	coord = one;
-	logo = two;
-}
-
 class Status {
 public:
 	Status (int, bool);
@@ -29,9 +24,7 @@ public:
 	bool success;
 };
 
-Status::Status(int one, bool two) {
-	coord = one;
-	success = two;
-}
+bool getNextCoord(int* coordIndex, int count, vector<Status> mission);
+
 
 #endif

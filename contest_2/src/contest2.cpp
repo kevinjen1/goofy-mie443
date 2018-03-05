@@ -58,7 +58,37 @@ bool moveToGoal(float xGoal, float yGoal, float phiGoal){
 		ROS_INFO("The robot failed to reach the destination");
 		return false;
 	}
+}
 
+Cereal::Cereal (int one, int two) {
+	coord = one;
+	logo = two;
+}
+
+Status::Status(int one, bool two) {
+	coord = one;
+	success = two;
+}
+
+/**
+ * Change the variable 'coordIndex' to point an explored position
+ * Returns true if unexplored position was found. Otherwise false
+ */
+bool getNextCoord(int* coordIndex, int count, vector<Status> mission) {
+	int startingIndex = *coordIndex;
+	int index = startingIndex;
+
+	do {
+		index = (index+1)%count;
+	} while (index != startingIndex || !mission[index].success);
+
+	if (index == startingIndex) {
+		if (mission[index].success) {
+			return false; // successfully completed all missions
+		}
+	}
+	*coordIndex = index;
+	return true;
 }
 
 int main(int argc, char** argv){
@@ -96,21 +126,29 @@ int main(int argc, char** argv){
 
     	//fill with your code
 
-   		// figure out the coordinates of the robot's desired position, given coordinates of boxes
-   		// then pass them to moveToGoal
    		bool isMovedToPosition = false;
-   		// DO SOMETHING WITH coord[coordIndex]
+   		// figure out the coordinates of the robot's desired position, given coordinates of boxes (coord[coordIndex])
+   		// then pass them to moveToGoal
    		//isMovedToPosition = moveToGoal()
+
    		if (isMovedToPosition) {
    			ros::Duration(2).sleep(); // wait to ensure robot has settled
    			int foundPic = findPic(imgTransport, imgs_track);
    			if (foundPic >= 0) {
    				mappedPics.push_back(Cereal (coordIndex, foundPic));
+   				mission[coordIndex].success = true;
    			}
    		} else {
    			//figure out something
    		}
-   		coordIndex = (coordIndex+1)%count;
+   		bool isMoreToGo = getNextCoord(&coordIndex, count, mission);
+
+   		if (!isMoreToGo) {
+   			// display logo for each coordinate
+   			// go back to beginning. Sing a lullaby. Do a victory dance.
+   			break;
+   		}
+
 	}
 	return 0;
 }
