@@ -71,14 +71,22 @@ int main(int argc, char** argv){
 	
 	vector<vector<float> > coord;
 	vector<cv::Mat> imgs_track;	
+	vector<Cereal> mappedPics;
+	vector<Status> mission;
+
 	if(!init(coord, imgs_track)) return 0;
 
-	for(int i = 0; i < coord.size(); ++i){
+	int count = coord.size();
+
+	for(int i = 0; i < count; ++i){
 		cout << i << " x: " << coord[i][0] << " y: " << coord[i][1] << " z: " << coord[i][2] << endl;
+		mission.push_back(Status(i,false));
 	}
 
 	// imageTransporter imgTransport("camera/image/", sensor_msgs::image_encodings::BGR8); // For Webcam
 	imageTransporter imgTransport("camera/rgb/image_raw", sensor_msgs::image_encodings::BGR8); //For Kinect
+
+	int coordIndex = 0;
 
 	while(ros::ok()){
 		ros::spinOnce();
@@ -91,12 +99,18 @@ int main(int argc, char** argv){
    		// figure out the coordinates of the robot's desired position, given coordinates of boxes
    		// then pass them to moveToGoal
    		bool isMovedToPosition = false;
+   		// DO SOMETHING WITH coord[coordIndex]
    		//isMovedToPosition = moveToGoal()
    		if (isMovedToPosition) {
    			ros::Duration(2).sleep(); // wait to ensure robot has settled
    			int foundPic = findPic(imgTransport, imgs_track);
+   			if (foundPic >= 0) {
+   				mappedPics.push_back(Cereal (coordIndex, foundPic));
+   			}
+   		} else {
+   			//figure out something
    		}
-		
+   		coordIndex = (coordIndex+1)%count;
 	}
 	return 0;
 }
