@@ -5,6 +5,9 @@
 
 #include <eStop.h>
 
+using namespace cv;
+using namespace cv::xfeatures2d;
+
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
 static const float DIST = 0.8;
@@ -157,14 +160,67 @@ int main(int argc, char** argv){
 		    std::cout << "Got to position" << std::endl;
    			//ros::Duration(2).sleep(); // wait to ensure robot has settled
    			//int fPic = findPic(imgTransport, imgs_track);
-   			cv::Mat video = imgTransport.getImg();  
+   			cv::Mat video = imgTransport.getImg();
+   			int foundPic = 0;
    			if(!video.empty()){
+   			    //fill with your code
+
+          		//-- Step 1 & 2: Detect the keypoints and calculate descriptors using SURF Detector
+          		int minHessian = 400;
+          		Ptr<SURF> detector = SURF::create(minHessian);
+          		vector<KeyPoint> keypoints_object, keypoints_scene;
+          		Mat descriptors_object, descriptors_scene;
+
+          		Mat img_object = imgs_track[0];
+          		//Mat img_scene = video;
+          		int numOfMatches [imgs_track.size()];
+
+          		for (int im = 0; im < imgs_track.size(); im++) {
+			        detector->detectAndCompute(img_object, Mat(), keypoints_object, descriptors_object);
+			        detector->detectAndCompute(video, Mat(), keypoints_scene, descriptors_scene);
+
+			        //-- Step 3: Matching descriptor vectors using FLANN matcher
+			        FlannBasedMatcher matcher;
+			        std::vector< DMatch > matches;
+			        matcher.match( descriptors_object, descriptors_scene, matches );
+			        double max_dist = 0; double min_dist = 100;
+
+			        //-- Quick calculation of max and min distances between keypoints
+			        for(int i = 0; i < descriptors_object.rows; i++){
+				        double dist = matches[i].distance;
+				        if( dist < min_dist ) min_dist = dist;
+				        if( dist > max_dist ) max_dist = dist;
+			        }
+			        //std::cout << "-- Max dist : " << max_dist << std::endl;
+			        //std::cout << "-- Min dist : " << min_dist << std::endl;
+
+			        //-- Draw only "good" matches (i.e. whose distance is less than 3*min_dist )
+			        std::vector< DMatch > good_matches;
+			        for( int i = 0; i < descriptors_object.rows; i++){
+				        if (matches[i].distance < 3*min_dist){
+					        good_matches.push_back( matches[i]);
+				        }
+			        }
+			        numOfMatches[im] = good_matches.size();
+          		}
+
+          		int bestMatch = 0;
+          		for (int i=0; i<imgs_track.size(); i++) {
+          			if (numOfMatches[i] > bestMatch) {
+          				foundPic = i+1;
+          				bestMatch = numOfMatches[i];
+          			}
+          		}
+          		
+          		std::cout << "NumOfMatches: " << bestMatch << std::endl;
+          		std::cout << "Pic is:" << foundPic << std::endl;
+
    			    std::cout << "releasting video" << endl;
    			    video.release();
    			} else {
    			    std::cout << "video is empty" << endl;
    			}
-   			int fPic = 2;
+   			int fPic = foundPic;
    			std::cout << "exited function" << std::endl;
    			if (fPic >= 0) {
    			    std::cout << "Got picture" << std::endl;
