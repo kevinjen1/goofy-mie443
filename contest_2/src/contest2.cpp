@@ -7,7 +7,8 @@
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
-static const int DIST = 0.4;
+static const float DIST = 0.8;
+static const float PI = 3.14;
 
 float x;
 float y;
@@ -79,10 +80,13 @@ Status::Status(int one, bool two) {
 bool getNextCoord(int* coordIndex, int count, vector<Status> mission) {
 	int startingIndex = *coordIndex;
 	int index = startingIndex;
+	
+	std::cout << "count:" << count << std::endl;
 
 	do {
 		index = (index+1)%count;
-	} while (index != startingIndex || !mission[index].success);
+		std::cout << "indexUpdate:" << index << std::endl;
+	} while (index != startingIndex || mission[index].success);
 
 	if (index == startingIndex) {
 		if (mission[index].success) {
@@ -127,36 +131,69 @@ int main(int argc, char** argv){
     	//...................................
 
     	//fill with your code
-
+        std::cout << "Starting while loop" << std::endl;
    		bool isMovedToPosition = false;
    		// figure out the coordinates of the robot's desired position, given coordinates of boxes (coord[coordIndex])
    		// then pass them to moveToGoal
 
    		vector<float> currCoord = coord[coordIndex];
    		float curr_x = currCoord[0] + DIST * std::cos(currCoord[2]);
+   		
+   		//std::cout << std::cos(currCoord[2]) << std::endl;
+   		//std::cout << std::sin(currCoord[2]) << std::endl;
+   		//std::cout << DIST << std::endl;
+   		
+   		//std::cout << currCoord[0] << std::endl;
+   		
    		float curr_y = currCoord[1] + DIST * std::sin(currCoord[2]);
 
    		std::cout << "Sending position x: " << curr_x << " y: " << curr_y << " angle: " << currCoord[2] << std::endl;
 
-   		isMovedToPosition = moveToGoal(curr_x, curr_y, currCoord[2]);
+   		isMovedToPosition = moveToGoal(curr_x, curr_y, currCoord[2] - PI);
+   		
+   		std::cout << "Exited move to goal" << std::endl;
 
    		if (isMovedToPosition) {
-   			ros::Duration(2).sleep(); // wait to ensure robot has settled
-   			int foundPic = findPic(imgTransport, imgs_track);
-   			if (foundPic >= 0) {
-   				mappedPics.push_back(Cereal (coordIndex, foundPic));
-   				mission[coordIndex].success = true;
+		    std::cout << "Got to position" << std::endl;
+   			//ros::Duration(2).sleep(); // wait to ensure robot has settled
+   			//int fPic = findPic(imgTransport, imgs_track);
+   			cv::Mat video = imgTransport.getImg();  
+   			if(!video.empty()){
+   			    std::cout << "releasting video" << endl;
+   			    video.release();
+   			} else {
+   			    std::cout << "video is empty" << endl;
+   			}
+   			int fPic = 2;
+   			std::cout << "exited function" << std::endl;
+   			if (fPic >= 0) {
+   			    std::cout << "Got picture" << std::endl;
+   				//mappedPics.push_back(Cereal (coordIndex, foundPic));
+   				//mission[coordIndex].success = true;
+   				//std::cout << "Pic is:" << fPic << std::endl;
    			}
    		} else {
+   		    std::cout << "Can't get to position" << std::endl;
    			//figure out something
    		}
-   		bool isMoreToGo = getNextCoord(&coordIndex, count, mission);
+   		//bool isMoreToGo = getNextCoord(&coordIndex, count, mission);
+   		coordIndex++;
+   		bool isMoreToGo = false;
+   		if (coordIndex < count) {
+   		    isMoreToGo = true;
+   		}
+   		
+   		std::cout << "newCoordIndex:" << coordIndex << std::endl;
+   		std::cout << "isMoreToGo: " << isMoreToGo << std::endl;
 
    		if (!isMoreToGo) {
+   		    std::cout << "I'm done everything!" << std::endl;
    			// display logo for each coordinate
    			// go back to beginning. Sing a lullaby. Do a victory dance.
    			break;
    		}
+   		std::cout << "I'm going to the next point" << std::endl;
+   		//ros::Duration(2).sleep(); // wait to ensure robot has settled
 
 	}
 	return 0;
