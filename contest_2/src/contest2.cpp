@@ -7,6 +7,8 @@
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
+static const int DIST = 0.4;
+
 float x;
 float y;
 float phi;
@@ -129,7 +131,14 @@ int main(int argc, char** argv){
    		bool isMovedToPosition = false;
    		// figure out the coordinates of the robot's desired position, given coordinates of boxes (coord[coordIndex])
    		// then pass them to moveToGoal
-   		//isMovedToPosition = moveToGoal()
+
+   		vector<float> currCoord = coord[coordIndex];
+   		float curr_x = currCoord[0] + DIST * std::cos(currCoord[2]);
+   		float curr_y = currCoord[1] + DIST * std::sin(currCoord[2]);
+
+   		std::cout << "Sending position x: " << curr_x << " y: " << curr_y << " angle: " << currCoord[2] << std::endl;
+
+   		isMovedToPosition = moveToGoal(curr_x, curr_y, currCoord[2]);
 
    		if (isMovedToPosition) {
    			ros::Duration(2).sleep(); // wait to ensure robot has settled
