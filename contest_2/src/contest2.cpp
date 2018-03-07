@@ -126,6 +126,8 @@ int main(int argc, char** argv){
 	imageTransporter imgTransport("camera/rgb/image_raw", sensor_msgs::image_encodings::BGR8); //For Kinect
 
 	int coordIndex = 0;
+	
+	int truePic[5] = {1,1,3,2,0};
 
 	while(ros::ok()){
 		ros::spinOnce();
@@ -134,7 +136,7 @@ int main(int argc, char** argv){
     	//...................................
 
     	//fill with your code
-        std::cout << "Starting while loop" << std::endl;
+        //std::cout << "Starting while loop" << std::endl;
    		bool isMovedToPosition = false;
    		// figure out the coordinates of the robot's desired position, given coordinates of boxes (coord[coordIndex])
    		// then pass them to moveToGoal
@@ -150,18 +152,21 @@ int main(int argc, char** argv){
    		
    		float curr_y = currCoord[1] + DIST * std::sin(currCoord[2]);
 
-   		std::cout << "Sending position x: " << curr_x << " y: " << curr_y << " angle: " << currCoord[2] << std::endl;
+   		//std::cout << "Sending position x: " << curr_x << " y: " << curr_y << " angle: " << currCoord[2] << std::endl;
 
    		isMovedToPosition = moveToGoal(curr_x, curr_y, currCoord[2] - PI);
    		
-   		std::cout << "Exited move to goal" << std::endl;
+   		//std::cout << "Exited move to goal" << std::endl;
 
    		if (isMovedToPosition) {
-		    std::cout << "Got to position" << std::endl;
-   			//ros::Duration(2).sleep(); // wait to ensure robot has settled
-   			//int fPic = findPic(imgTransport, imgs_track);
+		    //std::cout << "Got to position" << std::endl;
+   			ros::Duration(2).sleep(); // wait to ensure robot has settled
+   			//int fPic = findPic(imgTransport, imgs_track); NOT USED. COPIED EVERYTHING HERE INSTEAD
    			cv::Mat video = imgTransport.getImg();
    			int foundPic = 0;
+   			
+   			std::cout << "True picture: " << truePic[coordIndex] << std::endl;
+   			
    			if(!video.empty()){
    			    //fill with your code
 
@@ -174,8 +179,10 @@ int main(int argc, char** argv){
           		Mat img_object = imgs_track[0];
           		//Mat img_scene = video;
           		int numOfMatches [imgs_track.size()];
+          		double ratioOfInliers [imgs_track.size()];
 
           		for (int im = 0; im < imgs_track.size(); im++) {
+          		   	std::vector< DMatch > good_matches;
 			        detector->detectAndCompute(img_object, Mat(), keypoints_object, descriptors_object);
 			        detector->detectAndCompute(video, Mat(), keypoints_scene, descriptors_scene);
 
@@ -195,39 +202,56 @@ int main(int argc, char** argv){
 			        //std::cout << "-- Min dist : " << min_dist << std::endl;
 
 			        //-- Draw only "good" matches (i.e. whose distance is less than 3*min_dist )
-			        std::vector< DMatch > good_matches;
+			        //std::vector< DMatch > good_matches;
 			        for( int i = 0; i < descriptors_object.rows; i++){
 				        if (matches[i].distance < 3*min_dist){
 					        good_matches.push_back( matches[i]);
 				        }
 			        }
 			        numOfMatches[im] = good_matches.size();
+			        
+			        //-- Localize the object
+              		std::vector<Point2f> obj;
+              		std::vector<Point2f> scene;
+              		for(int i = 0; i < good_matches.size(); i++){
+			            //-- Get the keypoints from the good matches
+			            obj.push_back( keypoints_object[ good_matches[i].queryIdx ].pt );
+			            scene.push_back( keypoints_scene[ good_matches[i].trainIdx ].pt );
+              		}
+                    Mat mask;
+              		Mat H;
+              		H = findHomography( obj, scene, RANSAC, 3, mask);
+              		cv::Size s = mask.size();
+              		int n = s.height;
+              		int inlierSum = cv::sum(mask)[0];
+              		double inlierRatio = ((double)inlierSum)/n;
+              		ratioOfInliers[im] = inlierRatio;
+              		
+              		std::cout << "matches: " << good_matches.size() << " - inliers:" << inlierSum << std::endl;
+              		std::cout << "ratio: " << inlierRatio << std::endl;
           		}
 
           		int bestMatch = 0;
+          		double bestRatio = 0;
+          		int picRatio = 0;
           		for (int i=0; i<imgs_track.size(); i++) {
           			if (numOfMatches[i] > bestMatch) {
           				foundPic = i+1;
           				bestMatch = numOfMatches[i];
           			}
+          			if (ratioOfInliers[i] > bestRatio) {
+          			    picRatio = i+1;
+          			    bestRatio = ratioOfInliers[i];
+          			}
           		}
           		
-          		std::cout << "NumOfMatches: " << bestMatch << std::endl;
-          		std::cout << "Pic is:" << foundPic << std::endl;
-			/**	
-				Mat img_matches;
- 		drawMatches( img_object, keypoints_object, img_scene, keypoints_scene, good_matches, img_matches, Scalar::all(-1), Scalar::all(-1), vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
+          		std::cout << "pictu gets: " << foundPic << " - NumOfMatches: " << bestMatch << std::endl;
+			    std::cout << "ratio gets: " << picRatio << " - BestRatio: " << bestRatio << std::endl;
+				//Mat img_matches;
+ 		//drawMatches( img_object, keypoints_object, img_scene, keypoints_scene, good_matches, img_matches, Scalar::all(-1), Scalar::all(-1), vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
 
-  		//-- Localize the object
-  		std::vector<Point2f> obj;
-  		std::vector<Point2f> scene;
-  		for(int i = 0; i < good_matches.size(); i++){
-			//-- Get the keypoints from the good matches
-			obj.push_back( keypoints_object[ good_matches[i].queryIdx ].pt );
-			scene.push_back( keypoints_scene[ good_matches[i].trainIdx ].pt );
-  		}
-
-  		Mat H = findHomography( obj, scene, RANSAC );
+  		
+  		/**
   		//-- Get the corners from the image_1 ( the object to be "detected" )
   		std::vector<Point2f> obj_corners(4);
   		obj_corners[0] = cvPoint(0,0); obj_corners[1] = cvPoint( img_object.cols, 0 );
@@ -247,18 +271,18 @@ int main(int argc, char** argv){
   		//-- Show detected matches
   		imshow( "Good Matches & Object detection", img_matches );
 */
-   			    std::cout << "releasting video" << endl;
+   			    //std::cout << "releasting video" << endl;
    			    video.release();
    			} else {
    			    std::cout << "video is empty" << endl;
    			}
    			int fPic = foundPic;
-   			std::cout << "exited function" << std::endl;
+   			//std::cout << "exited function" << std::endl;
    			if (fPic >= 0) {
-   			    std::cout << "Got picture" << std::endl;
-   				//mappedPics.push_back(Cereal (coordIndex, foundPic));
-   				//mission[coordIndex].success = true;
-   				//std::cout << "Pic is:" << fPic << std::endl;
+   			    //std::cout << "Got picture" << std::endl;
+   				//mappedPics.push_back(Cereal (coordIndex, foundPic)); NOT USED
+   				//mission[coordIndex].success = true; NOT USED
+   				//std::cout << "Pic is:" << fPic << std::endl; NOT USED
    			}
    		} else {
    		    std::cout << "Can't get to position" << std::endl;
@@ -271,8 +295,8 @@ int main(int argc, char** argv){
    		    isMoreToGo = true;
    		}
    		
-   		std::cout << "newCoordIndex:" << coordIndex << std::endl;
-   		std::cout << "isMoreToGo: " << isMoreToGo << std::endl;
+   		//std::cout << "newCoordIndex:" << coordIndex << std::endl;
+   		//std::cout << "isMoreToGo: " << isMoreToGo << std::endl;
 
    		if (!isMoreToGo) {
    		    std::cout << "I'm done everything!" << std::endl;
@@ -280,7 +304,7 @@ int main(int argc, char** argv){
    			// go back to beginning. Sing a lullaby. Do a victory dance.
    			break;
    		}
-   		std::cout << "I'm going to the next point" << std::endl;
+   		//std::cout << "I'm going to the next point" << std::endl;
    		//ros::Duration(2).sleep(); // wait to ensure robot has settled
 
 	}
