@@ -27,3 +27,6 @@ target_link_libraries(contest2 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} orocos-kd
 
 add_executable(webcam_publisher src/accessory/my_publisher_video.cpp)
 target_link_libraries(webcam_publisher ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
+
+catkin_add_gtest(test_pic_sim test/test_pic_sim.cpp)
+target_link_libraries(test_pic_sim ${catkin_LIBRARIES})
