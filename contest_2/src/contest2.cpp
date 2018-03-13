@@ -4,6 +4,7 @@
 #include <func_header.h>
 
 #include <eStop.h>
+#include <string>
 
 using namespace cv;
 using namespace cv::xfeatures2d;
@@ -112,6 +113,28 @@ int main(int argc, char** argv){
 	vector<cv::Mat> imgs_track;	
 	vector<Cereal> mappedPics;
 	vector<Status> mission;
+	
+	vector<vector<std::string> > filenames;
+	filenames.resize(5, std::vector<std::string>(3));
+	filenames[0][0] = "./c0_im1.jpg";
+	filenames[0][1] = "./c0_im2.jpg";
+	filenames[0][2] = "./c0_im3.jpg";
+	
+	filenames[1][0] = "./c1_im1.jpg";
+	filenames[1][1] = "./c1_im2.jpg";
+	filenames[1][2] = "./c1_im3.jpg";
+	
+	filenames[2][0] = "./c2_im1.jpg";
+	filenames[2][1] = "./c2_im2.jpg";
+	filenames[2][2] = "./c2_im3.jpg";
+	
+	filenames[3][0] = "./c3_im1.jpg";
+	filenames[3][1] = "./c3_im2.jpg";
+	filenames[3][2] = "./c3_im3.jpg";
+	
+	filenames[4][0] = "./c4_im1.jpg";
+	filenames[4][1] = "./c4_im2.jpg";
+	filenames[4][2] = "./c4_im3.jpg";
 
 	if(!init(coord, imgs_track)) return 0;
 
@@ -125,6 +148,7 @@ int main(int argc, char** argv){
 	// imageTransporter imgTransport("camera/image/", sensor_msgs::image_encodings::BGR8); // For Webcam
 	imageTransporter imgTransport("camera/rgb/image_raw", sensor_msgs::image_encodings::BGR8); //For Kinect
 
+    // THIS SHOULD BE ZERO
 	int coordIndex = 0;
 	
 	int truePic[5] = {1,1,3,2,0};
@@ -164,6 +188,7 @@ int main(int argc, char** argv){
    		if (isMovedToPosition) {
 		    //std::cout << "Got to position" << std::endl;
    			ros::Duration(2).sleep(); // wait to ensure robot has settled
+   			ros::spinOnce();
    			//int fPic = findPic(imgTransport, imgs_track); NOT USED. COPIED EVERYTHING HERE INSTEAD
    			cv::Mat video = imgTransport.getImg();
    			int foundPic = 0;
@@ -234,8 +259,8 @@ int main(int argc, char** argv){
               		double inlierRatio = ((double)inlierSum)/n;
               		ratioOfInliers[im] = inlierRatio;
               		
-              		std::cout << "matches: " << good_matches.size() << " - inliers:" << inlierSum << std::endl;
-              		std::cout << "ratio: " << inlierRatio << std::endl;
+              		//std::cout << "matches: " << good_matches.size() << " - inliers:" << inlierSum << std::endl;
+              		//std::cout << "ratio: " << inlierRatio << std::endl;
               		Mat img_matches;
               		drawMatches( img_object, keypoints_object, video, keypoints_scene, good_matches, img_matches, Scalar::all(-1), Scalar::all(-1), vector<char>(), DrawMatchesFlags::NOT_DRAW_SINGLE_POINTS );
               		
@@ -262,9 +287,9 @@ int main(int argc, char** argv){
               		//-- Show detected matches
               		//imshow( "Good Matches & Object detection", img_matches );
               		
-              		//std::cout << "outputting file: " << filenames[im] << std::endl;
-              		//std::string filename = filenames[im];
-              		//bool checkFile = imwrite(filename, img_matches);
+              		//std::cout << "outputting file: " << filenames[coordIndex][im] << std::endl;
+              		std::string filename = filenames[coordIndex][im];
+              		imwrite(filename, img_matches);
               		//std::cout << "checkFile:" << checkFile << std::endl;
               		
               		//ros::Duration(5).sleep(); // wait to ensure robot has settled
@@ -297,10 +322,59 @@ int main(int argc, char** argv){
                     int area = (maxX - minX) * (maxY - minY);
                     //std::cout << "RECTANGLE " << minX << " " << maxX << " " << minY << " " << maxY << std::endl;
                     std::cout << "area: " << area << std::endl;
-  		
+                    areaOfBoxes[im] = area;
+                    
+                    float topM = -1.0f;
+                  float lowM = -1.0f;
+                  float leftM = -1.0f;
+                  float rightM = -1.0f;
+
+                  bool isHorzParallel = false;
+                  bool isVertParallel = false;
+
+                  // Horz Slope
+                  float runTop = abs(scene_corners[1].x - scene_corners[0].x);
+                  float riseTop = abs(scene_corners[1].y - scene_corners[0].y);
+
+                  if (runTop != 0)
+                  {
+                    topM = riseTop / runTop;
+                  }
+
+                  float runLow = abs(scene_corners[2].x - scene_corners[3].x);
+                  float riseLow = abs(scene_corners[2].y - scene_corners[3].y);
+                  
+                  if (runLow != 0)
+                  {
+                    lowM = riseLow / runLow;
+                  }
+
+                  // Vert Slope - Flip
+                  float runLeft = abs(scene_corners[0].x - scene_corners[3].x);
+                  float riseLeft = abs(scene_corners[0].y - scene_corners[3].y);
+
+                  if (riseLeft != 0)
+                  {
+                    leftM = runLeft / riseLeft;
+                  }
+
+                  float runRight = abs(scene_corners[1].x - scene_corners[2].x);
+                  float riseRight = abs(scene_corners[1].y - scene_corners[2].y);
+                  
+                  if (riseRight != 0)
+                  {
+                    rightM = runRight / riseRight;
+                  }
+
+                  std::cout << "Slopes: Top - " << topM << " Bottom - " << lowM << " Left - " << leftM << " Right - " << rightM << std::endl;
+                  if (topM < 0.5 && lowM < 0.5 && leftM < 0.5 && rightM < 0.5)
+                  {
+                  std::cout << "VALID LOGO" << std::endl;
+                  } 
           		}
 
-          		int bestMatch = 0;
+                int bestMatch = 0;
+          		int picMatch = 0;
           		double bestRatio = 0;
           		int picRatio = 0;
           		double bestArea = 0;
@@ -308,7 +382,7 @@ int main(int argc, char** argv){
           		
           		for (int i=0; i<imgs_track.size(); i++) {
           			if (numOfMatches[i] > bestMatch) {
-          				foundPic = i+1;
+          				bestMatch = i+1;
           				bestMatch = numOfMatches[i];
           			}
           			if (ratioOfInliers[i] > bestRatio) {
@@ -321,11 +395,15 @@ int main(int argc, char** argv){
           			}
           		}
           		
-          		std::cout << "pictu gets: " << foundPic << " - NumOfMatches: " << bestMatch << std::endl;
-			    std::cout << "ratio gets: " << picRatio << " - BestRatio: " << bestRatio << std::endl;
+          		//std::cout << "pictu gets: " << foundPic << " - NumOfMatches: " << bestMatch << std::endl;
+			    //std::cout << "ratio gets: " << picRatio << " - BestRatio: " << bestRatio << std::endl;
 			    std::cout << "green gets: " << picRect << " - BestArea: " << bestArea << std::endl;
+			    
+			    if (bestArea < minArea) {
+			        std::cout << "this is a white sqaure" << std::endl;
+			    }
+				foundPic = picRect;
 				
-
   		
    			    //std::cout << "releasting video" << endl;
    			    video.release();
