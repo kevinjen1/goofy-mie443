@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(mie443_contest2)
 
+set(CMAKE_CXX_STANDARD 11)
+
 find_package(OpenCV 3 REQUIRED)
 
 find_package(catkin REQUIRED COMPONENTS
@@ -35,4 +37,4 @@ add_executable(webcam_publisher src/accessory/my_publisher_video.cpp)
 target_link_libraries(webcam_publisher ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
 catkin_add_gtest(test_pic_sim test/test_pic_sim.cpp)
-target_link_libraries(test_pic_sim ${catkin_LIBRARIES})
+target_link_libraries(test_pic_sim ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
