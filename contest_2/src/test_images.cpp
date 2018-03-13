@@ -4,6 +4,7 @@
 #include <func_header.h>
 
 #include <eStop.h>
+#include <string>
 
 using namespace cv;
 using namespace cv::xfeatures2d;
@@ -23,85 +24,8 @@ void poseCallback(const geometry_msgs::PoseWithCovarianceStamped& msg){
     	y = msg.pose.pose.position.y;
 }
 
-//-------------------------move robot function---------------
-bool moveToGoal(float xGoal, float yGoal, float phiGoal){
-
-	//define a client for to send goal requests to the move_base server through a SimpleActionClient
-	actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> ac("move_base", true);
-
-	//wait for the action server to come up
-	while(!ac.waitForServer(ros::Duration(5.0))){
-		ROS_INFO("Waiting for the move_base action server to come up");
-	}
-
-	move_base_msgs::MoveBaseGoal goal;
-
-	//set up the frame parameters
-	goal.target_pose.header.frame_id = "map";
-	goal.target_pose.header.stamp = ros::Time::now();
-
-	/* moving towards the goal*/
-    	geometry_msgs::Quaternion phi = tf::createQuaternionMsgFromYaw(phiGoal);
-
-	goal.target_pose.pose.position.x =  xGoal;
-	goal.target_pose.pose.position.y =  yGoal;
-	goal.target_pose.pose.position.z =  0.0;
-	goal.target_pose.pose.orientation.x = 0.0;
-	goal.target_pose.pose.orientation.y = 0.0;
-	goal.target_pose.pose.orientation.z = phi.z;
-	goal.target_pose.pose.orientation.w = phi.w;
-
-	ROS_INFO("Sending goal location ...");
-	ac.sendGoal(goal);
-
-	ac.waitForResult();
-
-	if(ac.getState() == actionlib::SimpleClientGoalState::SUCCEEDED){
-		ROS_INFO("You have reached the destination");
-		return true;
-	}
-	else{
-		ROS_INFO("The robot failed to reach the destination");
-		return false;
-	}
-}
-
-Cereal::Cereal (int one, int two) {
-	coord = one;
-	logo = two;
-}
-
-Status::Status(int one, bool two) {
-	coord = one;
-	success = two;
-}
-
-/**
- * Change the variable 'coordIndex' to point an explored position
- * Returns true if unexplored position was found. Otherwise false
- */
-bool getNextCoord(int* coordIndex, int count, vector<Status> mission) {
-	int startingIndex = *coordIndex;
-	int index = startingIndex;
-	
-	std::cout << "count:" << count << std::endl;
-
-	do {
-		index = (index+1)%count;
-		std::cout << "indexUpdate:" << index << std::endl;
-	} while (index != startingIndex || mission[index].success);
-
-	if (index == startingIndex) {
-		if (mission[index].success) {
-			return false; // successfully completed all missions
-		}
-	}
-	*coordIndex = index;
-	return true;
-}
-
 int main(int argc, char** argv){
-	ros::init(argc, argv, "map_navigation_node");
+	ros::init(argc, argv, "image_node");
 	ros::NodeHandle n;
 	ros::spinOnce();
   	teleController eStop;
@@ -110,8 +34,6 @@ int main(int argc, char** argv){
 	
 	vector<vector<float> > coord;
 	vector<cv::Mat> imgs_track;	
-	vector<Cereal> mappedPics;
-	vector<Status> mission;
 
 	if(!init(coord, imgs_track)) return 0;
 
@@ -119,7 +41,6 @@ int main(int argc, char** argv){
 
 	for(int i = 0; i < count; ++i){
 		cout << i << " x: " << coord[i][0] << " y: " << coord[i][1] << " z: " << coord[i][2] << endl;
-		mission.push_back(Status(i,false));
 	}
 
 	// imageTransporter imgTransport("camera/image/", sensor_msgs::image_encodings::BGR8); // For Webcam
@@ -131,6 +52,19 @@ int main(int argc, char** argv){
 	vector<vector<int> > Pic;
 	Pic.push_back(vector<int> (5));
 	int iter = 0;
+	vector<std::string> filenames;
+	filenames.push_back("./file1.jpg");
+	filenames.push_back("./file2.jpg");
+	filenames.push_back("./file3.jpg");
+	filenames.push_back("./file4.jpg");
+	filenames.push_back("./file5.jpg");
+	
+	vector<std::string> croppedfilenames;
+	croppedfilenames.push_back("./filecrop1.jpg");
+	croppedfilenames.push_back("./filecrop2.jpg");
+	croppedfilenames.push_back("./filecrop3.jpg");
+	croppedfilenames.push_back("./filecrop4.jpg");
+	croppedfilenames.push_back("./filecrop5.jpg");
 
 	while(ros::ok()){
 		ros::spinOnce();
@@ -138,28 +72,8 @@ int main(int argc, char** argv){
    		eStop.block();
     	//...................................
 
-    	//fill with your code
-        //std::cout << "Starting while loop" << std::endl;
-   		bool isMovedToPosition = false;
-   		// figure out the coordinates of the robot's desired position, given coordinates of boxes (coord[coordIndex])
-   		// then pass them to moveToGoal
-
-   		vector<float> currCoord = coord[coordIndex];
-   		float curr_x = currCoord[0] + DIST * std::cos(currCoord[2]);
+   		bool isMovedToPosition = true;
    		
-   		//std::cout << std::cos(currCoord[2]) << std::endl;
-   		//std::cout << std::sin(currCoord[2]) << std::endl;
-   		//std::cout << DIST << std::endl;
-   		
-   		//std::cout << currCoord[0] << std::endl;
-   		
-   		float curr_y = currCoord[1] + DIST * std::sin(currCoord[2]);
-
-   		//std::cout << "Sending position x: " << curr_x << " y: " << curr_y << " angle: " << currCoord[2] << std::endl;
-
-   		isMovedToPosition = moveToGoal(curr_x, curr_y, currCoord[2] - PI);
-   		
-   		//std::cout << "Exited move to goal" << std::endl;
 
    		if (isMovedToPosition) {
 		    //std::cout << "Got to position" << std::endl;
@@ -183,8 +97,6 @@ int main(int argc, char** argv){
           		//Mat img_scene = video;
           		int numOfMatches [imgs_track.size()];
           		double ratioOfInliers [imgs_track.size()];
-          		double areaOfBoxes [imgs_track.size()];
-          		double minArea = 1000;
           		
 
           		for (int im = 0; im < imgs_track.size(); im++) {
@@ -255,27 +167,24 @@ int main(int argc, char** argv){
               		scene_corners[3] + Point2f( img_object.cols, 0), Scalar( 0, 255, 0), 4 );
               		line( img_matches, scene_corners[3] + Point2f( img_object.cols, 0),
               		scene_corners[0] + Point2f( img_object.cols, 0), Scalar( 0, 255, 0), 4 );
-              		//-- Show detected matches
-              		// imshow( "Good Matches & Object detection", img_matches );
               		
               		
+              		std::cout << "outputting file: " << filenames[im] << std::endl;
               		//-- Show detected matches
               		//imshow( "Good Matches & Object detection", img_matches );
-              		
-              		//std::cout << "outputting file: " << filenames[im] << std::endl;
-              		//std::string filename = filenames[im];
-              		//bool checkFile = imwrite(filename, img_matches);
-              		//std::cout << "checkFile:" << checkFile << std::endl;
+              		std::string filename = filenames[im];
+              		bool checkFile = imwrite(filename, img_matches);
+              		std::cout << "checkFile:" << checkFile << std::endl;
               		
               		//ros::Duration(5).sleep(); // wait to ensure robot has settled
               		
               		// Histogram Comparison - Prepare Video Image
-                    int minX = video.cols;
-                    int maxX = 0;
-                    int minY = video.rows;
-                    int maxY = 0;
-                    for (int i = 0; i < scene_corners.size(); i++)
-                    {
+                  int minX = video.cols;
+                  int maxX = 0;
+                  int minY = video.rows;
+                  int maxY = 0;
+                  for (int i = 0; i < scene_corners.size(); i++)
+                  {
                     if (scene_corners[i].x > maxX)
                     {
                       maxX = scene_corners[i].x;
@@ -292,20 +201,60 @@ int main(int argc, char** argv){
                     {
                       minY = scene_corners[i].y;
                     }
-                    }
+                  }
+                  
+                  int area = (maxX - minX) * (maxY - minY);
+                   std::cout << "RECTANGLE " << minX << " " << maxX << " " << minY << " " << maxY << std::endl;
+                   std::cout << "AREA: " << area << std::endl;
+                   /*if (maxX > minX && maxY > minY)
+                   {
+                  Rect myROI(minX, minY, maxX, maxY);
+                  Mat croppedVideo = video(myROI);
 
-                    int area = (maxX - minX) * (maxY - minY);
-                    //std::cout << "RECTANGLE " << minX << " " << maxX << " " << minY << " " << maxY << std::endl;
-                    std::cout << "area: " << area << std::endl;
+
+                    std::cout << "outputting file: " << croppedfilenames[im] << std::endl;
+              		//-- Show detected matches
+              		std::string cropfilename = croppedfilenames[im];
+              		bool checkCropFile = imwrite(cropfilename, croppedVideo);
+              		std::cout << "checkFile:" << checkCropFile << std::endl;
+                  // Histogram Comparison - Prepare Histograms
+                  Mat hsv_video;
+                  Mat hsv_logo;
+
+                  //cvtColor( croppedVideo, hsv_video, CV_BGR2HSV );
+                  //cvtColor( img_object, hsv_logo, CV_BGR2HSV );
+
+                  int h_bins = 50;
+                  int s_bins = 60;
+                  int histSize[] = {h_bins, s_bins};
+                  float h_range[] = {0, 180};
+                  float s_range[] = {0, 256};
+                  const float * ranges[] = {h_range, s_range};
+                  int channels[] = {0, 1};
+                  MatND histLogo;
+                  MatND histVideo;
+
+                  calcHist( &croppedVideo, 1, channels, Mat(), histVideo, 2, histSize, ranges, true, false );
+                  normalize( histVideo, histVideo, 0, 1, NORM_MINMAX, -1, Mat() );
+
+                  calcHist( &img_object, 1, channels, Mat(), histLogo, 2, histSize, ranges, true, false );
+                  normalize( histLogo, histLogo, 0, 1, NORM_MINMAX, -1, Mat() );
+
+                  for( int i = 0; i < 4; i++ )
+                     { 
+                      int compare_method = i;
+                      double comparePerfect = cv::compareHist(histVideo, histLogo, compare_method);
+                      double compareHist = cv::compareHist( histVideo, histLogo, compare_method );
+                      
+                      std::cout << "Method: " << i << " Perfect: " << comparePerfect << " Video vs Logo: " << compareHist << std::endl; 
+                    }
+                    }*/
   		
           		}
 
           		int bestMatch = 0;
           		double bestRatio = 0;
           		int picRatio = 0;
-          		double bestArea = 0;
-          		int picRect = 0;
-          		
           		for (int i=0; i<imgs_track.size(); i++) {
           			if (numOfMatches[i] > bestMatch) {
           				foundPic = i+1;
@@ -315,15 +264,10 @@ int main(int argc, char** argv){
           			    picRatio = i+1;
           			    bestRatio = ratioOfInliers[i];
           			}
-          			if (areaOfBoxes[i] > bestArea) {
-          			    picRect = i+1;
-          			    bestArea = areaOfBoxes[i];
-          			}
           		}
           		
           		std::cout << "pictu gets: " << foundPic << " - NumOfMatches: " << bestMatch << std::endl;
 			    std::cout << "ratio gets: " << picRatio << " - BestRatio: " << bestRatio << std::endl;
-			    std::cout << "green gets: " << picRect << " - BestArea: " << bestArea << std::endl;
 				
 
   		
@@ -340,6 +284,7 @@ int main(int argc, char** argv){
    				//mission[coordIndex].success = true; NOT USED
    				//std::cout << "Pic is:" << fPic << std::endl; NOT USED
    			}
+   			
    		} else {
    		    std::cout << "Can't get to position" << std::endl;
    			//figure out something
@@ -353,7 +298,11 @@ int main(int argc, char** argv){
    		
    		//std::cout << "newCoordIndex:" << coordIndex << std::endl;
    		//std::cout << "isMoreToGo: " << isMoreToGo << std::endl;
-
+   		
+   		// THIS MAKES IT RUN ONCE
+   		break;
+   		
+   		
    		if (!isMoreToGo) {
    		    std::cout << "I'm done everything!" << std::endl;
 			int check[4] = {0,0,0,0};

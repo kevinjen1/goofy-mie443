@@ -25,6 +25,12 @@ add_executable(contest2 src/contest2.cpp
 
 target_link_libraries(contest2 ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} orocos-kdl)
 
+add_executable(test_images src/test_images.cpp
+			src/img_proc.cpp
+			src/accessory/init.cpp
+			src/accessory/imageTransporter.cpp)
+target_link_libraries(test_images ${catkin_LIBRARIES} ${OpenCV_LIBRARIES} orocos-kdl)
+
 add_executable(webcam_publisher src/accessory/my_publisher_video.cpp)
 target_link_libraries(webcam_publisher ${catkin_LIBRARIES} ${OpenCV_LIBRARIES})
 
