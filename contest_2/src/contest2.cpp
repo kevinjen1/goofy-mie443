@@ -128,6 +128,9 @@ int main(int argc, char** argv){
 	int coordIndex = 0;
 	
 	int truePic[5] = {1,1,3,2,0};
+	vector<vector<int> > Pic;
+	Pic.push_back(vector<int> (5));
+	int iter = 1;
 
 	while(ros::ok()){
 		ros::spinOnce();
@@ -176,12 +179,13 @@ int main(int argc, char** argv){
           		vector<KeyPoint> keypoints_object, keypoints_scene;
           		Mat descriptors_object, descriptors_scene;
 
-          		Mat img_object = imgs_track[0];
+          		
           		//Mat img_scene = video;
           		int numOfMatches [imgs_track.size()];
           		double ratioOfInliers [imgs_track.size()];
 
           		for (int im = 0; im < imgs_track.size(); im++) {
+					Mat img_object = imgs_track[im];
           		   	std::vector< DMatch > good_matches;
 			        detector->detectAndCompute(img_object, Mat(), keypoints_object, descriptors_object);
 			        detector->detectAndCompute(video, Mat(), keypoints_scene, descriptors_scene);
@@ -276,11 +280,11 @@ int main(int argc, char** argv){
    			} else {
    			    std::cout << "video is empty" << endl;
    			}
-   			int fPic = foundPic;
    			//std::cout << "exited function" << std::endl;
-   			if (fPic >= 0) {
+   			if (foundPic >= 0) {
+				Pic[iter][coordIndex] = foundPic;
    			    //std::cout << "Got picture" << std::endl;
-   				//mappedPics.push_back(Cereal (coordIndex, foundPic)); NOT USED
+   				//mappedPics.push_back(Cereal (coordIndex, foundPic));
    				//mission[coordIndex].success = true; NOT USED
    				//std::cout << "Pic is:" << fPic << std::endl; NOT USED
    			}
@@ -300,9 +304,24 @@ int main(int argc, char** argv){
 
    		if (!isMoreToGo) {
    		    std::cout << "I'm done everything!" << std::endl;
+			int check[4] = {0,0,0,0};
+			for(int b=0; b<count; b++) {
+				std::cout << "Coordinate: " << (b+1) << " logo: " << Pic[iter][b] << std::endl;
+				check[Pic[iter][b]]++;
+			}
+			// The robot has found a valid configuration
+			if(check[0]>0 && check[1]>0 && check[2]>0 && check[3] == 1) {
+					break;
+			}
+			// The robot has not found a valid configuration, do another run
+			else {
+				iter++;
+				Pic.push_back(vector<int> (5));
+				coordIndex = 0;
+			}
    			// display logo for each coordinate
    			// go back to beginning. Sing a lullaby. Do a victory dance.
-   			break;
+   			
    		}
    		//std::cout << "I'm going to the next point" << std::endl;
    		//ros::Duration(2).sleep(); // wait to ensure robot has settled
