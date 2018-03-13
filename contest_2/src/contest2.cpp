@@ -164,6 +164,13 @@ int main(int argc, char** argv){
 	Pic.push_back(vector<int> (5));
 	int iter = 0;
 
+    ros::spinOnce();
+    vector<float> beginCoord;
+    beginCoord.push_back(x);
+    beginCoord.push_back(y);
+    beginCoord.push_back(phi);
+    
+
 	while(ros::ok()){
 		ros::spinOnce();
   		//.....**E-STOP DO NOT TOUCH**.......
@@ -446,12 +453,16 @@ int main(int argc, char** argv){
    		if (!isMoreToGo) {
    		    std::cout << "I'm done everything!" << std::endl;
 			int check[4] = {0,0,0,0};
+			
+			
 			for(int b=0; b<count; b++) {
-				std::cout << "Coordinate: " << (b+1) << " logo: " << Pic[iter][b] << " - " << logoNames[Pic[iter][b]] << std::endl;
+			    std::cout << "Coordinate " << b << ": (" << coord[b][0] << ", " << coord[b][1] << ", " << coord[b][2] << ")" << std::endl;
+				std::cout << " -- logo: " << Pic[iter][b] << " - " << logoNames[Pic[iter][b]] << std::endl;
 				check[Pic[iter][b]]++;
 			}
 			// The robot has found a valid configuration
 			if(check[0]>0 && check[1]>0 && check[2]>0 && check[3] == 1) {
+					moveToGoal(beginCoord[0], beginCoord[1], beginCoord[2]);
 					break;
 			}
 			// The robot has not found a valid configuration, do another run
