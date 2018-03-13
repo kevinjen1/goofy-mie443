@@ -66,6 +66,8 @@ bool moveToGoal(float xGoal, float yGoal, float phiGoal){
 	}
 }
 
+
+
 Cereal::Cereal (int one, int two) {
 	coord = one;
 	logo = two;
@@ -328,4 +330,14 @@ int main(int argc, char** argv){
 
 	}
 	return 0;
+}
+
+float getArea(std::vector<Point2f> points){
+	float area = 0;
+	for (std::vector<Point2f>::iterator i = points.begin(); i != points.end(); i++){
+		area += -(*i).y * (*(i+1)).x + (*i).x * (*(i+1)).y;
+	}
+	area += -(*(points.end())).y * (*(points.begin())).x + (*(points.end())).x * (*(points.begin())).y;
+	area = 0.5 * std::abs(area);
+	return area;
 }
