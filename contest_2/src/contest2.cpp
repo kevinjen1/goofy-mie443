@@ -137,6 +137,12 @@ int main(int argc, char** argv){
 	filenames[4][0] = "./c4_im1.jpg";
 	filenames[4][1] = "./c4_im2.jpg";
 	filenames[4][2] = "./c4_im3.jpg";
+	
+	vector<std::string> logoNames;
+	logoNames.push_back("Blank");
+	logoNames.push_back("Raisin Bran");
+	logoNames.push_back("Cinnamon Toast Crunch");
+	logoNames.push_back("Rice Krispies");
 
 	if(!init(coord, imgs_track)) return 0;
 
@@ -441,7 +447,7 @@ int main(int argc, char** argv){
    		    std::cout << "I'm done everything!" << std::endl;
 			int check[4] = {0,0,0,0};
 			for(int b=0; b<count; b++) {
-				std::cout << "Coordinate: " << (b+1) << " logo: " << Pic[iter][b] << std::endl;
+				std::cout << "Coordinate: " << (b+1) << " logo: " << Pic[iter][b] << " - " << logoNames[Pic[iter][b]] << std::endl;
 				check[Pic[iter][b]]++;
 			}
 			// The robot has found a valid configuration
