@@ -82,7 +82,7 @@ int findPic(imageTransporter imgTransport, vector<cv::Mat> imgs_track){
   	return foundPic;
 }
 
-float getArea(std::vector<Point2f> points){
+float getAreaGoofy(std::vector<Point2f> points){
 	float area = 0;
 	for (std::vector<Point2f>::iterator i = points.begin(); i != points.end()-1; i++){
 		area += -(*i).y * (*(i+1)).x + (*i).x * (*(i+1)).y;

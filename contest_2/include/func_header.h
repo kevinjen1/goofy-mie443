@@ -26,6 +26,6 @@ public:
 
 bool getNextCoord(int* coordIndex, int count, vector<Status> mission);
 
-float getArea(std::vector<cv::Point2f> points);
+float getAreaGoofy(std::vector<cv::Point2f> points);
 
 #endif

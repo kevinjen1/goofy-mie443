@@ -321,7 +321,9 @@ int main(int argc, char** argv){
                     }
                     }
 
-                    int area = (maxX - minX) * (maxY - minY);
+                    
+                    float area = getAreaGoofy(scene_corners);
+                    //int area = (maxX - minX) * (maxY - minY);
                     //std::cout << "RECTANGLE " << minX << " " << maxX << " " << minY << " " << maxY << std::endl;
                     std::cout << "area: " << area << std::endl;
                     areaOfBoxes[im] = area;
@@ -403,6 +405,7 @@ int main(int argc, char** argv){
 			    
 			    if (bestArea < minArea) {
 			        std::cout << "this is a white sqaure" << std::endl;
+			        picRect = 0;
 			    }
 				foundPic = picRect;
 				
