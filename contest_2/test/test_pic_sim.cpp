@@ -4,6 +4,8 @@
 #include<thread>
 
 
+#include <func_header.h>
+
 TEST(PrimitiveTests, PathGeneration){
 	ROS_INFO("hello there");
 }

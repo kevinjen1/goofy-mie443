@@ -9,7 +9,7 @@
 using namespace goofy;
 
 TEST(PrimitiveTests, PathGeneration){
-	ROS_INFO("hello there");
+	ROS_INFO("hello hello");
 
 }
 
