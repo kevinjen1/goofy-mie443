@@ -364,8 +364,10 @@ int main(int argc, char** argv){
 					//std::cout << "Slopes: Top - " << topM << " Bottom - " << lowM << " Left - " << leftM << " Right - " << rightM << std::endl;
 					if (topM < 0.5 && lowM < 0.5 && leftM < 0.5 && rightM < 0.5) {
 					  validSlopes.push_back(true); //this one is good
+					  std::cout << "valid slope" << std::endl;
 					} else {
 					  validSlopes.push_back(false); //this one is not
+					  std::cout << "bad slope" << std::endl;
 					}
           		}
 
@@ -433,8 +435,9 @@ int main(int argc, char** argv){
 				std::cout << std::endl;
 
 			}
+			std::cout << check[0] << " "  << check[1] << " "  << check[2] << " "  << check[3] << " " << std::endl;
 			// The robot has found a valid configuration
-			if(check[0]>0 && check[1]>0 && check[2]>0 && check[3] == 1) {
+			if(check[0] == 1 && check[1]>0 && check[2]>0 && check[3] >0) {
 				moveToGoal(beginCoord[0], beginCoord[1], beginCoord[2]);
 				break;
 			}
@@ -443,7 +446,6 @@ int main(int argc, char** argv){
 				iter++;
 				Pic.push_back(vector<int> (5));
 				coordIndex = 0;
-				DIST -= 0.1;
 			}
    			
    		}
