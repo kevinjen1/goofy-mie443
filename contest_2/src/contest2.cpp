@@ -11,7 +11,7 @@ using namespace cv::xfeatures2d;
 
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
 
-static const float DIST = 0.7;
+float DIST = 0.7;
 static const float PI = 3.14;
 
 float x;
@@ -221,15 +221,14 @@ int main(int argc, char** argv){
 
           		
           		//Mat img_scene = video;
-          		int numOfMatches [imgs_track.size()];
-          		double ratioOfInliers [imgs_track.size()];
+//          		int numOfMatches [imgs_track.size()];
+//          		double ratioOfInliers [imgs_track.size()];
           		double areaOfBoxes [imgs_track.size()];
           		double minArea = 1000;
           		
                 std::vector<bool> validSlopes;
           		for (int im = 0; im < imgs_track.size(); im++) {
 					Mat img_object = imgs_track[im];
-          		   	std::vector< DMatch > good_matches;
 			        detector->detectAndCompute(img_object, Mat(), keypoints_object, descriptors_object);
 			        detector->detectAndCompute(video, Mat(), keypoints_scene, descriptors_scene);
 
@@ -245,17 +244,15 @@ int main(int argc, char** argv){
 				        if( dist < min_dist ) min_dist = dist;
 				        if( dist > max_dist ) max_dist = dist;
 			        }
-			        //std::cout << "-- Max dist : " << max_dist << std::endl;
-			        //std::cout << "-- Min dist : " << min_dist << std::endl;
 
 			        //-- Draw only "good" matches (i.e. whose distance is less than 3*min_dist )
-			        //std::vector< DMatch > good_matches;
+			        std::vector< DMatch > good_matches;
 			        for( int i = 0; i < descriptors_object.rows; i++){
 				        if (matches[i].distance < 3*min_dist){
 					        good_matches.push_back( matches[i]);
 				        }
 			        }
-			        numOfMatches[im] = good_matches.size();
+//			        numOfMatches[im] = good_matches.size();
 			        
 			        //-- Localize the object
               		std::vector<Point2f> obj;
@@ -270,9 +267,9 @@ int main(int argc, char** argv){
               		H = findHomography( obj, scene, RANSAC, 3, mask);
               		cv::Size s = mask.size();
               		int n = s.height;
-              		int inlierSum = cv::sum(mask)[0];
-              		double inlierRatio = ((double)inlierSum)/n;
-              		ratioOfInliers[im] = inlierRatio;
+              		//int inlierSum = cv::sum(mask)[0];
+              		//double inlierRatio = ((double)inlierSum)/n;
+              		//ratioOfInliers[im] = inlierRatio;
               		
               		//std::cout << "matches: " << good_matches.size() << " - inliers:" << inlierSum << std::endl;
               		//std::cout << "ratio: " << inlierRatio << std::endl;
@@ -295,45 +292,30 @@ int main(int argc, char** argv){
               		scene_corners[3] + Point2f( img_object.cols, 0), Scalar( 0, 255, 0), 4 );
               		line( img_matches, scene_corners[3] + Point2f( img_object.cols, 0),
               		scene_corners[0] + Point2f( img_object.cols, 0), Scalar( 0, 255, 0), 4 );
-              		//-- Show detected matches
-              		// imshow( "Good Matches & Object detection", img_matches );
-              		
-              		
-              		//-- Show detected matches
-              		//imshow( "Good Matches & Object detection", img_matches );
               		
               		//std::cout << "outputting file: " << filenames[coordIndex][im] << std::endl;
               		std::string filename = filenames[coordIndex][im];
               		imwrite(filename, img_matches);
-              		//std::cout << "checkFile:" << checkFile << std::endl;
-              		
-              		//ros::Duration(5).sleep(); // wait to ensure robot has settled
               		
               		// Histogram Comparison - Prepare Video Image
                     int minX = video.cols;
                     int maxX = 0;
                     int minY = video.rows;
                     int maxY = 0;
-                    for (int i = 0; i < scene_corners.size(); i++)
-                    {
-                    if (scene_corners[i].x > maxX)
-                    {
-                      maxX = scene_corners[i].x;
+                    for (int i = 0; i < scene_corners.size(); i++){
+						if (scene_corners[i].x > maxX) {
+						  maxX = scene_corners[i].x;
+						}
+						if (scene_corners[i].x < minX) {
+						  minX = scene_corners[i].x;
+						}
+						if (scene_corners[i].y > maxY) {
+						  maxY = scene_corners[i].y;
+						}
+						if (scene_corners[i].y < minY) {
+						  minY = scene_corners[i].y;
+						}
                     }
-                    if (scene_corners[i].x < minX)
-                    {
-                      minX = scene_corners[i].x;
-                    }
-                    if (scene_corners[i].y > maxY)
-                    {
-                      maxY = scene_corners[i].y;
-                    }
-                    if (scene_corners[i].y < minY)
-                    {
-                      minY = scene_corners[i].y;
-                    }
-                    }
-
                     
                     float area = getAreaGoofy(scene_corners);
                     //int area = (maxX - minX) * (maxY - minY);
@@ -342,72 +324,67 @@ int main(int argc, char** argv){
                     areaOfBoxes[im] = area;
                     
                     float topM = -1.0f;
-                  float lowM = -1.0f;
-                  float leftM = -1.0f;
-                  float rightM = -1.0f;
+					float lowM = -1.0f;
+					float leftM = -1.0f;
+					float rightM = -1.0f;
 
-                  bool isHorzParallel = false;
-                  bool isVertParallel = false;
+					bool isHorzParallel = false;
+					bool isVertParallel = false;
 
-                  // Horz Slope
-                  float runTop = abs(scene_corners[1].x - scene_corners[0].x);
-                  float riseTop = abs(scene_corners[1].y - scene_corners[0].y);
+					// Horz Slope
+					float runTop = abs(scene_corners[1].x - scene_corners[0].x);
+					float riseTop = abs(scene_corners[1].y - scene_corners[0].y);
 
-                  if (runTop != 0)
-                  {
-                    topM = riseTop / runTop;
-                  }
+					if (runTop != 0) {
+						topM = riseTop / runTop;
+					}
 
-                  float runLow = abs(scene_corners[2].x - scene_corners[3].x);
-                  float riseLow = abs(scene_corners[2].y - scene_corners[3].y);
-                  
-                  if (runLow != 0)
-                  {
-                    lowM = riseLow / runLow;
-                  }
+					float runLow = abs(scene_corners[2].x - scene_corners[3].x);
+					float riseLow = abs(scene_corners[2].y - scene_corners[3].y);
 
-                  // Vert Slope - Flip
-                  float runLeft = abs(scene_corners[0].x - scene_corners[3].x);
-                  float riseLeft = abs(scene_corners[0].y - scene_corners[3].y);
+					if (runLow != 0) {
+						lowM = riseLow / runLow;
+					}
 
-                  if (riseLeft != 0)
-                  {
-                    leftM = runLeft / riseLeft;
-                  }
+					// Vert Slope - Flip
+					float runLeft = abs(scene_corners[0].x - scene_corners[3].x);
+					float riseLeft = abs(scene_corners[0].y - scene_corners[3].y);
 
-                  float runRight = abs(scene_corners[1].x - scene_corners[2].x);
-                  float riseRight = abs(scene_corners[1].y - scene_corners[2].y);
-                  
-                  if (riseRight != 0)
-                  {
-                    rightM = runRight / riseRight;
-                  }
+					if (riseLeft != 0) {
+						leftM = runLeft / riseLeft;
+					}
 
-                  std::cout << "Slopes: Top - " << topM << " Bottom - " << lowM << " Left - " << leftM << " Right - " << rightM << std::endl;
-                  if (topM < 0.5 && lowM < 0.5 && leftM < 0.5 && rightM < 0.5)
-                  {
-                	  validSlopes.push_back(true); //this one is good
-                  } else {
-                	  validSlopes.push_back(false); //this one is not
-                  }
+					float runRight = abs(scene_corners[1].x - scene_corners[2].x);
+					float riseRight = abs(scene_corners[1].y - scene_corners[2].y);
+
+					if (riseRight != 0) {
+						rightM = runRight / riseRight;
+					}
+
+					//std::cout << "Slopes: Top - " << topM << " Bottom - " << lowM << " Left - " << leftM << " Right - " << rightM << std::endl;
+					if (topM < 0.5 && lowM < 0.5 && leftM < 0.5 && rightM < 0.5) {
+					  validSlopes.push_back(true); //this one is good
+					} else {
+					  validSlopes.push_back(false); //this one is not
+					}
           		}
 
-                int bestMatch = 0;
-          		int picMatch = 0;
-          		double bestRatio = 0;
-          		int picRatio = 0;
+                //int bestMatch = 0;
+          		//int picMatch = 0;
+          		//double bestRatio = 0;
+          		//int picRatio = 0;
           		double bestArea = 0;
           		int picRect = 0;
           		
           		for (int i=0; i<imgs_track.size(); i++) {
-          			if (numOfMatches[i] > bestMatch) {
-          				bestMatch = i+1;
-          				bestMatch = numOfMatches[i];
-          			}
-          			if (ratioOfInliers[i] > bestRatio) {
-          			    picRatio = i+1;
-          			    bestRatio = ratioOfInliers[i];
-          			}
+          			//if (numOfMatches[i] > bestMatch) {
+          			//	bestMatch = i+1;
+          			//	bestMatch = numOfMatches[i];
+          			//}
+          			//if (ratioOfInliers[i] > bestRatio) {
+          			//    picRatio = i+1;
+          			//    bestRatio = ratioOfInliers[i];
+          			//}
           			if (areaOfBoxes[i] > bestArea && validSlopes[i] == true) {
           			    picRect = i+1;
           			    bestArea = areaOfBoxes[i];
@@ -423,34 +400,22 @@ int main(int argc, char** argv){
 			        picRect = 0;
 			    }
 				foundPic = picRect;
-				
-  		
-   			    //std::cout << "releasting video" << endl;
+
    			    video.release();
    			} else {
    			    std::cout << "video is empty" << endl;
    			}
-   			//std::cout << "exited function" << std::endl;
    			if (foundPic >= 0) {
 				Pic[iter][coordIndex] = foundPic;
-   			    //std::cout << "Got picture" << std::endl;
-   				//mappedPics.push_back(Cereal (coordIndex, foundPic));
-   				//mission[coordIndex].success = true; NOT USED
-   				//std::cout << "Pic is:" << fPic << std::endl; NOT USED
    			}
    		} else {
    		    std::cout << "Can't get to position" << std::endl;
-   			//figure out something
    		}
-   		//bool isMoreToGo = getNextCoord(&coordIndex, count, mission);
    		coordIndex++;
    		bool isMoreToGo = false;
    		if (coordIndex < count) {
    		    isMoreToGo = true;
    		}
-   		
-   		//std::cout << "newCoordIndex:" << coordIndex << std::endl;
-   		//std::cout << "isMoreToGo: " << isMoreToGo << std::endl;
 
    		if (!isMoreToGo) {
    		    std::cout << "I'm done everything!" << std::endl;
@@ -458,28 +423,30 @@ int main(int argc, char** argv){
 			
 			
 			for(int b=0; b<count; b++) {
-			    std::cout << "Coordinate " << b << ": (" << coord[b][0] << ", " << coord[b][1] << ", " << coord[b][2] << ")" << std::endl;
-				std::cout << " -- logo: " << Pic[iter][b] << " - " << logoNames[Pic[iter][b]] << std::endl;
+			    //std::cout << "Coordinate " << b << ": (" << coord[b][0] << ", " << coord[b][1] << ", " << coord[b][2] << ")" << std::endl;
+				//std::cout << " -- logo: " << Pic[iter][b] << " - " << logoNames[Pic[iter][b]] << std::endl;
+				std::cout << "Location " << (b+1) << ": " << logoNames[Pic[iter][b]];
 				check[Pic[iter][b]]++;
+				if (check[Pic[iter][b]] == 2) {
+					std::cout << " (duplicate)";
+				}
+				std::cout << std::endl;
+
 			}
 			// The robot has found a valid configuration
 			if(check[0]>0 && check[1]>0 && check[2]>0 && check[3] == 1) {
-					moveToGoal(beginCoord[0], beginCoord[1], beginCoord[2]);
-					break;
+				moveToGoal(beginCoord[0], beginCoord[1], beginCoord[2]);
+				break;
 			}
 			// The robot has not found a valid configuration, do another run
 			else {
 				iter++;
 				Pic.push_back(vector<int> (5));
 				coordIndex = 0;
+				DIST -= 0.1;
 			}
-   			// display logo for each coordinate
-   			// go back to beginning. Sing a lullaby. Do a victory dance.
    			
    		}
-   		//std::cout << "I'm going to the next point" << std::endl;
-   		//ros::Duration(2).sleep(); // wait to ensure robot has settled
-
 	}
 	return 0;
 }
