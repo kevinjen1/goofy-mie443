@@ -226,7 +226,7 @@ int main(int argc, char** argv){
           		double areaOfBoxes [imgs_track.size()];
           		double minArea = 1000;
           		
-
+                std::vector<bool> validSlopes;
           		for (int im = 0; im < imgs_track.size(); im++) {
 					Mat img_object = imgs_track[im];
           		   	std::vector< DMatch > good_matches;
@@ -386,8 +386,10 @@ int main(int argc, char** argv){
                   std::cout << "Slopes: Top - " << topM << " Bottom - " << lowM << " Left - " << leftM << " Right - " << rightM << std::endl;
                   if (topM < 0.5 && lowM < 0.5 && leftM < 0.5 && rightM < 0.5)
                   {
-                  std::cout << "VALID LOGO" << std::endl;
-                  } 
+                	  validSlopes.push_back(true); //this one is good
+                  } else {
+                	  validSlopes.push_back(false); //this one is not
+                  }
           		}
 
                 int bestMatch = 0;
@@ -406,7 +408,7 @@ int main(int argc, char** argv){
           			    picRatio = i+1;
           			    bestRatio = ratioOfInliers[i];
           			}
-          			if (areaOfBoxes[i] > bestArea) {
+          			if (areaOfBoxes[i] > bestArea && validSlopes[i] == true) {
           			    picRect = i+1;
           			    bestArea = areaOfBoxes[i];
           			}
