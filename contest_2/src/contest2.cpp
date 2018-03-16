@@ -361,7 +361,7 @@ int main(int argc, char** argv){
 						rightM = runRight / riseRight;
 					}
 
-					//std::cout << "Slopes: Top - " << topM << " Bottom - " << lowM << " Left - " << leftM << " Right - " << rightM << std::endl;
+					std::cout << "Slopes: Top - " << topM << " Bottom - " << lowM << " Left - " << leftM << " Right - " << rightM << std::endl;
 					if (topM < 0.5 && lowM < 0.5 && leftM < 0.5 && rightM < 0.5) {
 					  validSlopes.push_back(true); //this one is good
 					  std::cout << "valid slope" << std::endl;
