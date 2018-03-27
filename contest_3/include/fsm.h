@@ -14,7 +14,7 @@
 
 enum State {
 	Static,
-	Discovey,
+	Discovery,
 	Following,
 	Obstacle,
 	Lost,

@@ -1,6 +1,7 @@
 #include <header.h>
 #include <ros/package.h>
 #include <imageTransporter.hpp>
+#include "fsm.h"
 
 using namespace std;
 
@@ -48,22 +49,33 @@ int main(int argc, char **argv)
 	sc.playWave(path_to_sounds + "sound.wav");
 	ros::Duration(0.5).sleep();
 
+	FSM fsm;
+
 	while(ros::ok()){
 		ros::spinOnce();
 		//.....**E-STOP DO NOT TOUCH**.......
 		//eStop.block();
 		//...................................
 
-		if(world_state == 0){
-			//fill with your code
-			//vel_pub.publish(vel);
-			vel_pub.publish(follow_cmd);
+		//add state transitions based on callbacks here
 
-		}else if(world_state == 1){
-			/*
-			...
-			...
-			*/
+
+		//manage motions from here
+		switch (fsm.getCurrentState()){
+		case (State::Discovery):{
+			vel_pub.publish(follow_cmd);
+			break;
+		}
+		case (State::Following):{
+			vel_pub.publish(follow_cmd);
+			break;
+		}
+		case (State::Obstacle):{
+			break;
+		}
+		default: {
+			break;
+		}
 		}
 	}
 
