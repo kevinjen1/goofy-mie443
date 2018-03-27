@@ -2,6 +2,7 @@
 #include <ros/package.h>
 #include <imageTransporter.hpp>
 #include <opencv2/opencv.hpp>
+#include "fsm.h"
 
 using namespace std;
 using namespace cv;
@@ -89,23 +90,32 @@ int main(int argc, char **argv)
   destroyAllWindows(); */
   // GRACE -- VIDEO AND SOUND
 
+	FSM fsm;
+
 	while(ros::ok()){
 		ros::spinOnce();
 		//.....**E-STOP DO NOT TOUCH**.......
 		//eStop.block();
 		//...................................
 
-        std::cout << follow_cmd << std::endl;                               
-		if(world_state == 0){
-			//fill with your code
-			//vel_pub.publish(vel);
-			vel_pub.publish(follow_cmd);
+		//add state transitions based on callbacks here
 
-		}else if(world_state == 1){
-			/*
-			...
-			...
-			*/
+		//manage motions from here
+		switch (fsm.getCurrentState()){
+		case (Discovery):{
+			vel_pub.publish(follow_cmd);
+			break;
+		}
+		case (Following):{
+			vel_pub.publish(follow_cmd);
+			break;
+		}
+		case (Obstacle):{
+			break;
+		}
+		default: {
+			break;
+		}
 		}
 	}
 
