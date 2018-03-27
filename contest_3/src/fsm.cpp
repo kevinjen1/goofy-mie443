@@ -7,7 +7,7 @@
 
 #include "fsm.h"
 
-FSM::FSM(State state, std::map<Event, std::vector<Transition> > eventMap, std::map<State, std::string> stateEmotion) {
+FSM::FSM(State state, std::map<Event, std::map<State, State> > eventMap, std::map<State, std::string> stateEmotion) {
 	this->currentState = currentState;
 	this->eventMap = eventMap;
 	this->stateEmotion = stateEmotion;
@@ -23,7 +23,14 @@ ros::Time FSM::getLastTransitionTime() {
 
 
 bool FSM::transition(Event event) {
-	return false;
+	try {
+		std::map<State, State> transition = this->eventMap.at(event);
+		State newState = transition.at(this->currentState);
+		this->jumpToState(newState);
+		return true;
+	}catch(const std::exception&e ) {
+		return false;
+	}
 }
 
 void jumpToState(enum State) {
