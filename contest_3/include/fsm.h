@@ -39,7 +39,7 @@ class FSM {
 private:
 	State currentState;
 	ros::Time lastTransition;
-	std::map<Event, Transition[]> eventMap;
+	std::map<Event, std::vector<Transition> > eventMap;
 	std::map<State, std::string> stateEmotion;
 
 public:

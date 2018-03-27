@@ -7,7 +7,9 @@
 
 #include "fsm.h"
 
-
+State FSM::getCurrentState(){
+	return Static;
+}
 
 
 

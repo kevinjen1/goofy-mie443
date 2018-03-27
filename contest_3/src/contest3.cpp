@@ -62,15 +62,15 @@ int main(int argc, char **argv)
 
 		//manage motions from here
 		switch (fsm.getCurrentState()){
-		case (State::Discovery):{
+		case (Discovery):{
 			vel_pub.publish(follow_cmd);
 			break;
 		}
-		case (State::Following):{
+		case (Following):{
 			vel_pub.publish(follow_cmd);
 			break;
 		}
-		case (State::Obstacle):{
+		case (Obstacle):{
 			break;
 		}
 		default: {
