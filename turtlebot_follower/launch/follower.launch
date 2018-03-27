@@ -6,7 +6,7 @@
   <group unless="$(arg simulation)"> <!-- Real robot -->
     <include file="$(find turtlebot_follower)/launch/includes/velocity_smoother.launch.xml">
       <arg name="nodelet_manager"  value="/mobile_base_nodelet_manager"/>
-      <arg name="navigation_topic" value="/cmd_vel_mux/input/navi"/>
+      <arg name="navigation_topic" value="/follower_velocity_smoother/smooth_cmd_vel"/>
     </include>
 
     <include file="$(find turtlebot_bringup)/launch/3dsensor.launch">
@@ -25,7 +25,7 @@
 
     <include file="$(find turtlebot_follower)/launch/includes/velocity_smoother.launch.xml">
       <arg name="nodelet_manager"  value="camera/camera_nodelet_manager"/>
-      <arg name="navigation_topic" value="cmd_vel_mux/input/navi"/>
+      <arg name="navigation_topic" value="/follower_velocity_smoother/smooth_cmd_vel"/>
     </include>
   </group>
 
@@ -55,4 +55,5 @@
   </node>
   <!-- Launch the script which will toggle turtlebot following on and off based on a joystick button. default: on -->
   <node name="switch" pkg="turtlebot_follower" type="switch.py"/>
+  <!--node name="contest_3_node" pkg="turtlebot_follower" type="../../contest_3/src/contest3.cpp"/-->
 </launch>
