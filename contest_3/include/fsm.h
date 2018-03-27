@@ -30,19 +30,15 @@ enum Event {
 	Timeout
 };
 
-struct Transition {
-	State oldState;
-	State endState;
-};
-
 class FSM {
 private:
 	State currentState;
 	ros::Time lastTransition;
-	std::map<Event, std::vector<Transition> > eventMap;
+	std::map<Event, std::map<State, State> > eventMap;
 	std::map<State, std::string> stateEmotion;
 
 public:
+	FSM(State state, std::map<Event, std::map<State,State> > eventMap, std::map<State, std::string> stateEmotion);
 	bool transition(enum Event);
 	State getCurrentState();
 	void jumpToState(enum State);
