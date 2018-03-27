@@ -27,7 +27,7 @@ enum Event {
 	Grounded,
 	FollowerPositive,
 	FollowerNegative,
-	GoStatic
+	Timeout
 };
 
 struct Transition {
