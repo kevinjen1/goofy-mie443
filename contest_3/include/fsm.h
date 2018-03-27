@@ -43,6 +43,7 @@ private:
 	std::map<State, std::string> stateEmotion;
 
 public:
+	FSM(State state, std::map<Event, std::vector<Transition> > eventMap, std::map<State, std::string> stateEmotion);
 	bool transition(enum Event);
 	State getCurrentState();
 	void jumpToState(enum State);
