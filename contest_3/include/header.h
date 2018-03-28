@@ -7,6 +7,7 @@
 #include <sensor_msgs/image_encodings.h>
 
 #include <std_msgs/String.h>
+#include <std_msgs/Bool.h>
 #include <vector>
 #include <stdio.h>
 #include <cmath>

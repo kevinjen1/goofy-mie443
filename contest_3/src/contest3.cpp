@@ -8,10 +8,18 @@ using namespace std;
 using namespace cv;
 
 geometry_msgs::Twist follow_cmd;
+int follow_cmd_status;
 int world_state;
 
 void followerCB(const geometry_msgs::Twist msg){
     follow_cmd = msg;
+}
+
+void followerStatusCB(const std_msgs::Bool::ConstPtr& msg){
+    // 1 if the object to follow was detected
+    // 0 otherwise (too far, or not enough centroid points)
+    if (msg->data) { follow_cmd_status = 1;}
+    else { follow_cmd_status = 0;}
 }
 
 void bumperCB(const geometry_msgs::Twist msg){
@@ -34,6 +42,7 @@ int main(int argc, char **argv)
 
 	//subscribers
 	ros::Subscriber follower = nh.subscribe("follower_velocity_smoother/smooth_cmd_vel", 10, &followerCB);
+	//ros::Subscriber follower_status = nh.subscribe("follower_found_status", 10, &followerStatusCB);
 	ros::Subscriber bumper = nh.subscribe("mobile_base/events/bumper", 10, &bumperCB);
 
 	imageTransporter rgbTransport("camera/image/", sensor_msgs::image_encodings::BGR8); //--for Webcam
@@ -99,6 +108,16 @@ int main(int argc, char **argv)
 		//...................................
 
 		//add state transitions based on callbacks here
+
+		/*
+		// Check follower output to see if it lost sight of the person.
+		// Not sure where in the workflow you want this, so leaving it here and commented out for now
+		if (follow_cmd_status) {
+		   // Change states
+		   // Might require some logic in terms of "if last x were 0, then call it quits"
+		}
+		
+		*/
 
 		//manage motions from here
 		switch (fsm.getCurrentState()){

@@ -2,6 +2,7 @@
   The turtlebot people (or whatever) follower nodelet.
  -->
 <launch>
+  <!--include file="$(find package_name)/directory/another.launch"/-->
   <arg name="simulation" default="false"/>
   <group unless="$(arg simulation)"> <!-- Real robot -->
     <include file="$(find turtlebot_follower)/launch/includes/velocity_smoother.launch.xml">

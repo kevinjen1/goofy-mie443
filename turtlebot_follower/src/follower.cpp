@@ -34,6 +34,7 @@
 #include <sensor_msgs/Image.h>
 #include <visualization_msgs/Marker.h>
 #include <turtlebot_msgs/SetFollowState.h>
+#include <std_msgs/Bool.h>
 
 #include "dynamic_reconfigure/server.h"
 #include "turtlebot_follower/FollowerConfig.h"
@@ -107,6 +108,7 @@ private:
     private_nh.getParam("x_scale", x_scale_);
     private_nh.getParam("enabled", enabled_);
 
+    status_pub_ = nh.advertise<std_msgs::Bool> ("follower_found_status", 1);
     cmdpub_ = private_nh.advertise<geometry_msgs::Twist> ("cmd_vel", 1);
     markerpub_ = private_nh.advertise<visualization_msgs::Marker>("marker",1);
     bboxpub_ = private_nh.advertise<visualization_msgs::Marker>("bbox",1);
@@ -189,6 +191,7 @@ private:
 
     //If there are points, find the centroid and calculate the command goal.
     //If there are no points, simply publish a stop goal.
+    std_msgs::Bool status_pub_msg;
     if (n>4000)
     {
       x /= n;
@@ -197,6 +200,8 @@ private:
         ROS_INFO_THROTTLE(1, "Centroid too far away %f, stopping the robot", z);
         if (enabled_)
         {
+          status_pub_msg.data = false;
+          status_pub_.publish(status_pub_msg);
           cmdpub_.publish(geometry_msgs::TwistPtr(new geometry_msgs::Twist()));
         }
         return;
@@ -211,6 +216,8 @@ private:
         cmd->linear.x = (z - goal_z_) * z_scale_;
         cmd->angular.z = -x * x_scale_;
         cmdpub_.publish(cmd);
+        status_pub_msg.data = true;
+        status_pub_.publish(status_pub_msg);
       }
     }
     else
@@ -221,6 +228,8 @@ private:
       if (enabled_)
       {
         cmdpub_.publish(geometry_msgs::TwistPtr(new geometry_msgs::Twist()));
+        status_pub_msg.data = false;
+        status_pub_.publish(status_pub_msg);
       }
     }
 
@@ -308,6 +317,7 @@ private:
     bboxpub_.publish( marker );
   }
 
+  ros::Publisher status_pub_;
   ros::Subscriber sub_;
   ros::Publisher cmdpub_;
   ros::Publisher markerpub_;
