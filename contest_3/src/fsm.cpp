@@ -26,12 +26,13 @@ bool FSM::transition(Event event) {
 	try {
 		std::map<State, State> transition = this->eventMap.at(event);
 		State newState = transition.at(this->currentState);
-		this->jumpToState(newState);
+		jumpToState(newState);
 		return true;
 	}catch(const std::exception&e ) {
 		return false;
 	}
 }
 
-void jumpToState(enum State) {
+void FSM::jumpToState(enum State) {
+	return;
 }

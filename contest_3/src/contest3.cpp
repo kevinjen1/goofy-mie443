@@ -127,7 +127,7 @@ int main(int argc, char **argv)
 		}
 		auto loc = state_timeout.find(fsm.getCurrentState());
 		if (loc != state_timeout.end()){
-			if (ros::Time::now() - fsm.getLastTransitionTime > (*loc).second){
+			if (ros::Time::now() - fsm.getLastTransitionTime() > (*loc).second){
 				fsm.transition(Timeout);
 			}
 		}
