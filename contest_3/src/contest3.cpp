@@ -1,15 +1,25 @@
 #include <header.h>
 #include <ros/package.h>
 #include <imageTransporter.hpp>
+#include <opencv2/opencv.hpp>
 #include "fsm.h"
 
 using namespace std;
+using namespace cv;
 
 geometry_msgs::Twist follow_cmd;
+int follow_cmd_status;
 int world_state;
 
 void followerCB(const geometry_msgs::Twist msg){
     follow_cmd = msg;
+}
+
+void followerStatusCB(const std_msgs::Bool::ConstPtr& msg){
+    // 1 if the object to follow was detected
+    // 0 otherwise (too far, or not enough centroid points)
+    if (msg->data) { follow_cmd_status = 1;}
+    else { follow_cmd_status = 0;}
 }
 
 void bumperCB(const geometry_msgs::Twist msg){
@@ -24,6 +34,7 @@ int main(int argc, char **argv)
 	ros::NodeHandle nh;
 	sound_play::SoundClient sc;
 	string path_to_sounds = ros::package::getPath("mie443_contest3") + "/sounds/";
+	string path_to_videos = ros::package::getPath("mie443_contest3") + "/videos/";
 	teleController eStop;
 
 	//publishers
@@ -31,6 +42,7 @@ int main(int argc, char **argv)
 
 	//subscribers
 	ros::Subscriber follower = nh.subscribe("follower_velocity_smoother/smooth_cmd_vel", 10, &followerCB);
+	//ros::Subscriber follower_status = nh.subscribe("follower_found_status", 10, &followerStatusCB);
 	ros::Subscriber bumper = nh.subscribe("mobile_base/events/bumper", 10, &bumperCB);
 
 	imageTransporter rgbTransport("camera/image/", sensor_msgs::image_encodings::BGR8); //--for Webcam
@@ -48,6 +60,44 @@ int main(int argc, char **argv)
 
 	sc.playWave(path_to_sounds + "sound.wav");
 	ros::Duration(0.5).sleep();
+	
+	//-- GRACE - VIEDO + SOUND
+	/*
+	sc.playWave(path_to_sounds + "shocked3.wav");
+	
+	VideoCapture cap(path_to_videos + "shocked3.mp4"); 
+    
+  // Check if camera opened successfully
+  if(!cap.isOpened()){
+    cout << "Error opening video stream or file" << endl;
+    return -1;
+  }
+  //sc.playWave(path_to_sounds + "shocked3.wav");
+  while(1){
+ 
+    Mat frame;
+    // Capture frame-by-frame
+    cap >> frame;
+  
+    // If the frame is empty, break immediately
+    if (frame.empty())
+      break;
+ 
+    // Display the resulting frame
+    imshow( "Frame", frame );
+ 
+    // Press  ESC on keyboard to exit
+    char c=(char)waitKey(25);
+    if(c==27)
+      break;
+  }
+  
+  // When everything done, release the video capture object
+  cap.release();
+ 
+  // Closes all the frames
+  destroyAllWindows(); */
+  // GRACE -- VIDEO AND SOUND
 
 	//map between states and names
 	std::map<State, std::string> state_emotion;
@@ -110,6 +160,15 @@ int main(int argc, char **argv)
 
 		//add state transitions based on callbacks here
 
+		/*
+		// Check follower output to see if it lost sight of the person.
+		// Not sure where in the workflow you want this, so leaving it here and commented out for now
+		if (follow_cmd_status) {
+		   // Change states
+		   // Might require some logic in terms of "if last x were 0, then call it quits"
+		}
+		
+		*/
 
 		//manage motions from here
 		switch (fsm.getCurrentState()){
