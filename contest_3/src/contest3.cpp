@@ -140,7 +140,7 @@ int main(int argc, char **argv)
 	//map between states and timeouts
 	std::map<State, ros::Duration> state_timeout;
 	state_timeout.insert(std::pair<State, ros::Duration>(State::Discovery, ros::Duration(1)));
-	state_timeout.insert(std::pair<State, ros::Duration>(State::Obstacle, ros::Duration(4)));
+	state_timeout.insert(std::pair<State, ros::Duration>(State::Obstacle, ros::Duration(5)));
 	state_timeout.insert(std::pair<State, ros::Duration>(State::Lost, ros::Duration(4)));
 
 	while(ros::ok()){
@@ -164,6 +164,14 @@ int main(int argc, char **argv)
 		//manage motions from here
 		switch (fsm.getCurrentState()){
 			case State::Static: {
+				geometry_msgs::Twist motion;
+				motion.linear.x = 0;
+				motion.linear.y = 0;
+				motion.linear.z = 0;
+				motion.angular.x = 0;
+				motion.angular.y = 0;
+				motion.angular.z = 0;
+				vel_pub.publish(motion);
 				break;
 			}
 			case State::Discovery: {
@@ -175,12 +183,77 @@ int main(int argc, char **argv)
 				break;
 			}
 			case State::Obstacle: {
+				// try to have a range of motion, where it stops, backs up and tries to go again
+				ros::Duration rosDuration = ros::Time::now() - fsm.getLastTransitionTime();
+				double duration = rosDuration.toSec();
+				if (duration < 500){
+					geometry_msgs::Twist motion;
+					motion.linear.x = 0;
+					motion.linear.y = 0;
+					motion.linear.z = 0;
+					motion.angular.x = 0;
+					motion.angular.y = 0;
+					motion.angular.z = 0;
+				} else if (duration < 1500) {
+					geometry_msgs::Twist motion;
+					motion.linear.x = -0.5;
+					motion.linear.y = 0;
+					motion.linear.z = 0;
+					motion.angular.x = 0;
+					motion.angular.y = 0;
+					motion.angular.z = 0;
+				} else if (duration < 2500) {
+					geometry_msgs::Twist motion;
+					motion.linear.x = 0.5;
+					motion.linear.y = 0;
+					motion.linear.z = 0;
+					motion.angular.x = 0;
+					motion.angular.y = 0;
+					motion.angular.z = 0;
+				} else if (duration < 3500) {
+					geometry_msgs::Twist motion;
+					motion.linear.x = -0.8;
+					motion.linear.y = 0;
+					motion.linear.z = 0;
+					motion.angular.x = 0;
+					motion.angular.y = 0;
+					motion.angular.z = 0;
+				} else if (duration < 4500) {
+					geometry_msgs::Twist motion;
+					motion.linear.x = 0.8;
+					motion.linear.y = 0;
+					motion.linear.z = 0;
+					motion.angular.x = 0;
+					motion.angular.y = 0;
+					motion.angular.z = 0;
+				} else if (duration < 5500) {
+					geometry_msgs::Twist motion;
+					motion.linear.x = 0;
+					motion.linear.y = 0;
+					motion.linear.z = 0;
+					motion.angular.x = 0;
+					motion.angular.y = 0;
+					motion.angular.z = 0;
+				}
+
 				break;
 			}
 			case State::Lost: {
+				// happy, turn in place
+				geometry_msgs::Twist motion;
+				motion.angular.z = 0.1;
+				vel_pub.publish(motion);
 				break;
 			}
 			case State::Hanging: {
+				// wants to escape. keep turning in place
+				geometry_msgs::Twist motion;
+				motion.linear.x = 0;
+				motion.linear.y = 0;
+				motion.linear.z = 0;
+				motion.angular.x = 0;
+				motion.angular.y = 0;
+				motion.angular.z = 0.5;
 				break;
 			}
 			default: {
