@@ -50,7 +50,7 @@ int VideoPlayer::PlayVideo(string filename)
         if (frame.empty())
           break;
 
-        std::cout << "Displaying frame" << std::endl;
+        //std::cout << "Displaying frame" << std::endl;
 
         // Display the resulting frame
         cv_bridge::CvImage image_message;
@@ -59,7 +59,7 @@ int VideoPlayer::PlayVideo(string filename)
         image_message.header.stamp = ros::Time::now();
         _image_pub.publish(image_message.toImageMsg());
 
-        std::cout << "Got frame" << std::endl;
+        //std::cout << "Got frame" << std::endl;
 
         // Press  ESC on keyboard to exit
         char c=(char)waitKey(25);
@@ -74,7 +74,7 @@ int VideoPlayer::PlayVideo(string filename)
         	std::cout << "Thread terminating before video ends" << std::endl;
         	break;
         } else {
-            std::cout << "Playing video: " << i << std::endl;
+            //std::cout << "Playing video: " << i << std::endl;
         }
         i += 1;
         this_thread::sleep_for(std::chrono::milliseconds(42));
