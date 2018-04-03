@@ -2,14 +2,17 @@
 #include <ros/package.h>
 #include <imageTransporter.hpp>
 #include <opencv2/opencv.hpp>
+#include <kobuki_msgs/BumperEvent.h>
+#include <kobuki_msgs/CliffEvent.h>
 #include "fsm.h"
 
 using namespace std;
 using namespace cv;
 
 geometry_msgs::Twist follow_cmd;
-int follow_cmd_status;
+bool follow_cmd_status;
 int world_state;
+FSM fsm;
 
 void followerCB(const geometry_msgs::Twist msg){
     follow_cmd = msg;
@@ -18,12 +21,37 @@ void followerCB(const geometry_msgs::Twist msg){
 void followerStatusCB(const std_msgs::Bool::ConstPtr& msg){
     // 1 if the object to follow was detected
     // 0 otherwise (too far, or not enough centroid points)
-    if (msg->data) { follow_cmd_status = 1;}
-    else { follow_cmd_status = 0;}
+    if (msg->data) {
+    	follow_cmd_status = true;
+    	if (fsm.getCurrentState() == State::Static) {
+    		fsm.transition(Event::FollowerPositive);
+    	}
+    } else {
+    	follow_cmd_status = false;
+    	if (fsm.getCurrentState() == State::Following) {
+    		fsm.transition(Event::FollowerNegative);
+    	}
+    }
 }
 
-void bumperCB(const geometry_msgs::Twist msg){
-    //Fill with code
+void bumperCB(const kobuki_msgs::BumperEvent::ConstPtr& msg) {
+	if (msg->state == kobuki_msgs::BumperEvent::PRESSED) {
+		if (fsm.getCurrentState() == State::Obstacle) {
+			fsm.transition(Event::Bumper);
+		}
+	}
+}
+
+void cliffCB(const kobuki_msgs::CliffEvent::ConstPtr& msg) {
+	if (fsm.getCurrentState() == State::Hanging) {
+		if (msg->state == kobuki_msgs::CliffEvent::FLOOR) {
+			fsm.transition(Event::Grounded);
+		}
+	} else {
+		if (msg->state == kobuki_msgs::CliffEvent::CLIFF) {
+			fsm.transition(Event::Cliff);
+		}
+	}
 }
 
 //-------------------------------------------------------------
@@ -42,8 +70,9 @@ int main(int argc, char **argv)
 
 	//subscribers
 	ros::Subscriber follower = nh.subscribe("follower_velocity_smoother/smooth_cmd_vel", 10, &followerCB);
-	//ros::Subscriber follower_status = nh.subscribe("follower_found_status", 10, &followerStatusCB);
+	ros::Subscriber follower_status = nh.subscribe("follower_found_status", 10, &followerStatusCB);
 	ros::Subscriber bumper = nh.subscribe("mobile_base/events/bumper", 10, &bumperCB);
+	ros::Subscriber cliff = nh.subscribe("mobile_base/events/cliff", 10, &cliffCB);
 
 	imageTransporter rgbTransport("camera/image/", sensor_msgs::image_encodings::BGR8); //--for Webcam
 	//imageTransporter rgbTransport("camera/rgb/image_raw", sensor_msgs::image_encodings::BGR8); //--for turtlebot Camera
@@ -60,53 +89,15 @@ int main(int argc, char **argv)
 
 	sc.playWave(path_to_sounds + "sound.wav");
 	ros::Duration(0.5).sleep();
-	
-	//-- GRACE - VIEDO + SOUND
-	/*
-	sc.playWave(path_to_sounds + "shocked3.wav");
-	
-	VideoCapture cap(path_to_videos + "shocked3.mp4"); 
-    
-  // Check if camera opened successfully
-  if(!cap.isOpened()){
-    cout << "Error opening video stream or file" << endl;
-    return -1;
-  }
-  //sc.playWave(path_to_sounds + "shocked3.wav");
-  while(1){
- 
-    Mat frame;
-    // Capture frame-by-frame
-    cap >> frame;
-  
-    // If the frame is empty, break immediately
-    if (frame.empty())
-      break;
- 
-    // Display the resulting frame
-    imshow( "Frame", frame );
- 
-    // Press  ESC on keyboard to exit
-    char c=(char)waitKey(25);
-    if(c==27)
-      break;
-  }
-  
-  // When everything done, release the video capture object
-  cap.release();
- 
-  // Closes all the frames
-  destroyAllWindows(); */
-  // GRACE -- VIDEO AND SOUND
 
 	//map between states and names
 	std::map<State, std::string> state_emotion;
-	state_emotion.insert(std::pair<State, std::string>(Static, "static"));
-	state_emotion.insert(std::pair<State, std::string>(Discovery, "discovery"));
-	state_emotion.insert(std::pair<State, std::string>(Following, "following"));
-	state_emotion.insert(std::pair<State, std::string>(Obstacle, "obstacle"));
-	state_emotion.insert(std::pair<State, std::string>(Lost, "lost"));
-	state_emotion.insert(std::pair<State, std::string>(Hanging, "hanging"));
+	state_emotion.insert(std::pair<State, std::string>(State::Static, "static"));
+	state_emotion.insert(std::pair<State, std::string>(State::Discovery, "discovery"));
+	state_emotion.insert(std::pair<State, std::string>(State::Following, "following"));
+	state_emotion.insert(std::pair<State, std::string>(State::Obstacle, "obstacle"));
+	state_emotion.insert(std::pair<State, std::string>(State::Lost, "lost"));
+	state_emotion.insert(std::pair<State, std::string>(State::Hanging, "hanging"));
 
 	//create list of transitions
 	std::map<State, State> trans_vec;
@@ -115,42 +106,42 @@ int main(int argc, char **argv)
 	std::map<Event, std::map<State, State> > transition_map;
 
 	trans_vec.clear();
-	trans_vec.insert(std::pair<State,State>(Obstacle, Hanging));
-	trans_vec.insert(std::pair<State,State>(Discovery, Hanging));
-	trans_vec.insert(std::pair<State,State>(Following, Hanging));
-	trans_vec.insert(std::pair<State,State>(Static, Hanging));
-	trans_vec.insert(std::pair<State,State>(Lost, Hanging));
-	transition_map.insert(std::pair<Event, std::map<State, State> >(Cliff, trans_vec));
+	trans_vec.insert(std::pair<State,State>(State::Obstacle, State::Hanging));
+	trans_vec.insert(std::pair<State,State>(State::Discovery, State::Hanging));
+	trans_vec.insert(std::pair<State,State>(State::Following, State::Hanging));
+	trans_vec.insert(std::pair<State,State>(State::Static, State::Hanging));
+	trans_vec.insert(std::pair<State,State>(State::Lost, State::Hanging));
+	transition_map.insert(std::pair<Event, std::map<State, State> >(Event::Cliff, trans_vec));
 
 	trans_vec.clear();
-	trans_vec.insert(std::pair<State,State>(Static, Discovery));
-	transition_map.insert(std::pair<Event, std::map<State, State> >(FollowerPositive, trans_vec));
+	trans_vec.insert(std::pair<State,State>(State::Static, State::Discovery));
+	transition_map.insert(std::pair<Event, std::map<State, State> >(Event::FollowerPositive, trans_vec));
 
 	trans_vec.clear();
-	trans_vec.insert(std::pair<State,State>(Following, Lost));
-	transition_map.insert(std::pair<Event, std::map<State, State> >(FollowerNegative, trans_vec));
+	trans_vec.insert(std::pair<State,State>(State::Following, State::Lost));
+	transition_map.insert(std::pair<Event, std::map<State, State> >(Event::FollowerNegative, trans_vec));
 
 	trans_vec.clear();
-	trans_vec.insert(std::pair<State,State>(Obstacle, Static));
-	trans_vec.insert(std::pair<State,State>(Lost, Static));
-	trans_vec.insert(std::pair<State,State>(Discovery, Following));
-	transition_map.insert(std::pair<Event, std::map<State, State> >(Timeout, trans_vec));
+	trans_vec.insert(std::pair<State,State>(State::Obstacle, State::Static));
+	trans_vec.insert(std::pair<State,State>(State::Lost, State::Static));
+	trans_vec.insert(std::pair<State,State>(State::Discovery, State::Following));
+	transition_map.insert(std::pair<Event, std::map<State, State> >(Event::Timeout, trans_vec));
 
 	trans_vec.clear();
-	trans_vec.insert(std::pair<State,State>(Following, Obstacle));
-	transition_map.insert(std::pair<Event, std::map<State, State> >(Bumper, trans_vec));
+	trans_vec.insert(std::pair<State,State>(State::Following, State::Obstacle));
+	transition_map.insert(std::pair<Event, std::map<State, State> >(Event::Bumper, trans_vec));
 
 	trans_vec.clear();
-	trans_vec.insert(std::pair<State,State>(Hanging, Static));
-	transition_map.insert(std::pair<Event, std::map<State, State> >(Grounded, trans_vec));
+	trans_vec.insert(std::pair<State,State>(State::Hanging, State::Static));
+	transition_map.insert(std::pair<Event, std::map<State, State> >(Event::Grounded, trans_vec));
 
-	FSM fsm(Static, transition_map, state_emotion);
+	fsm.init(State::Static, transition_map, state_emotion);
 
 	//map between states and timeouts
 	std::map<State, ros::Duration> state_timeout;
-	state_timeout.insert(std::pair<State, ros::Duration>(Discovery, ros::Duration(1)));
-	state_timeout.insert(std::pair<State, ros::Duration>(Obstacle, ros::Duration(4)));
-	state_timeout.insert(std::pair<State, ros::Duration>(Lost, ros::Duration(4)));
+	state_timeout.insert(std::pair<State, ros::Duration>(State::Discovery, ros::Duration(1)));
+	state_timeout.insert(std::pair<State, ros::Duration>(State::Obstacle, ros::Duration(4)));
+	state_timeout.insert(std::pair<State, ros::Duration>(State::Lost, ros::Duration(4)));
 
 	while(ros::ok()){
 		ros::spinOnce();
@@ -172,12 +163,24 @@ int main(int argc, char **argv)
 
 		//manage motions from here
 		switch (fsm.getCurrentState()){
-			case (Discovery):{
+			case State::Static: {
+				break;
+			}
+			case State::Discovery: {
 				vel_pub.publish(follow_cmd);
 				break;
 			}
-			case (Following):{
+			case State::Following: {
 				vel_pub.publish(follow_cmd);
+				break;
+			}
+			case State::Obstacle: {
+				break;
+			}
+			case State::Lost: {
+				break;
+			}
+			case State::Hanging: {
 				break;
 			}
 			default: {
@@ -187,7 +190,7 @@ int main(int argc, char **argv)
 		auto loc = state_timeout.find(fsm.getCurrentState());
 		if (loc != state_timeout.end()){
 			if (ros::Time::now() - fsm.getLastTransitionTime() > (*loc).second){
-				fsm.transition(Timeout);
+				fsm.transition(Event::Timeout);
 			}
 		}
 

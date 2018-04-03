@@ -7,7 +7,7 @@
 
 #include "fsm.h"
 
-FSM::FSM(State state, std::map<Event, std::map<State, State> > eventMap, std::map<State, std::string> stateEmotion) {
+void FSM::init(State state, std::map<Event, std::map<State, State> > eventMap, std::map<State, std::string> stateEmotion) {
 	this->currentState = currentState;
 	this->eventMap = eventMap;
 	this->stateEmotion = stateEmotion;

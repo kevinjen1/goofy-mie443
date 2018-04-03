@@ -12,7 +12,7 @@
 #include <string>
 #include "ros/ros.h"
 
-enum State {
+enum class State {
 	Static,
 	Discovery,
 	Following,
@@ -21,7 +21,7 @@ enum State {
 	Hanging
 };
 
-enum Event {
+enum class Event {
 	Bumper,
 	Cliff,
 	Grounded,
@@ -38,7 +38,7 @@ private:
 	std::map<State, std::string> stateEmotion;
 
 public:
-	FSM(State state, std::map<Event, std::map<State,State> > eventMap, std::map<State, std::string> stateEmotion);
+	void init(State state, std::map<Event, std::map<State,State> > eventMap, std::map<State, std::string> stateEmotion);
 	bool transition(enum Event);
 	State getCurrentState();
 	void jumpToState(enum State);
