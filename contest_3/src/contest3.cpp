@@ -93,11 +93,11 @@ int main(int argc, char **argv)
 	//map between states and names
 	std::map<State, std::string> state_emotion;
 	state_emotion.insert(std::pair<State, std::string>(State::Static, "static"));
-	state_emotion.insert(std::pair<State, std::string>(State::Discovery, "discovery"));
+	state_emotion.insert(std::pair<State, std::string>(State::Discovery, "discovery1"));
 	state_emotion.insert(std::pair<State, std::string>(State::Following, "following"));
-	state_emotion.insert(std::pair<State, std::string>(State::Obstacle, "obstacle"));
-	state_emotion.insert(std::pair<State, std::string>(State::Lost, "lost"));
-	state_emotion.insert(std::pair<State, std::string>(State::Hanging, "hanging"));
+	state_emotion.insert(std::pair<State, std::string>(State::Obstacle, "obstacle1"));
+	state_emotion.insert(std::pair<State, std::string>(State::Lost, "lost1"));
+	state_emotion.insert(std::pair<State, std::string>(State::Hanging, "disgust1"));
 
 	//create list of transitions
 	std::map<State, State> trans_vec;
