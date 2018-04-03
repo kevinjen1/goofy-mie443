@@ -135,7 +135,7 @@ int main(int argc, char **argv)
 	trans_vec.insert(std::pair<State,State>(State::Hanging, State::Static));
 	transition_map.insert(std::pair<Event, std::map<State, State> >(Event::Grounded, trans_vec));
 
-	fsm.init(State::Static, transition_map, state_emotion);
+	fsm.init(State::Static, transition_map, state_emotion, path_to_videos);
 
 	//map between states and timeouts
 	std::map<State, ros::Duration> state_timeout;

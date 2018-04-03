@@ -1,4 +1,4 @@
-/*
+/*c
  * fsm.h
  *
  *  Created on: Mar 15, 2018
@@ -11,6 +11,7 @@
 #include <map>
 #include <string>
 #include "ros/ros.h"
+#include"PlayVideo.hpp"
 
 enum class State {
 	Static,
@@ -37,8 +38,13 @@ private:
 	std::map<Event, std::map<State, State> > eventMap;
 	std::map<State, std::string> stateEmotion;
 
+	std::string _path_to_video;
+	VideoPlayer _player;
+
 public:
-	void init(State state, std::map<Event, std::map<State,State> > eventMap, std::map<State, std::string> stateEmotion);
+	void init(State state, std::map<Event, std::map<State,State> > eventMap,
+			std::map<State, std::string> stateEmotion,
+			std::string path_to_video);
 	bool transition(enum Event);
 	State getCurrentState();
 	void jumpToState(enum State);
