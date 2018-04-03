@@ -10,6 +10,7 @@
 
 #include <map>
 #include <string>
+#include <memory>
 #include "ros/ros.h"
 #include"PlayVideo.hpp"
 
@@ -19,7 +20,9 @@ enum class State {
 	Following,
 	Obstacle,
 	Lost,
-	Hanging
+	Hanging,
+	HangingExtra,
+	LostExtra
 };
 
 enum class Event {
@@ -39,7 +42,7 @@ private:
 	std::map<State, std::string> stateEmotion;
 
 	std::string _path_to_video;
-	VideoPlayer _player;
+	std::shared_ptr<VideoPlayer> _player;
 
 public:
 	void init(State state, std::map<Event, std::map<State,State> > eventMap,

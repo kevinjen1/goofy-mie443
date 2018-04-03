@@ -3,17 +3,18 @@
 using namespace std;
 using namespace cv;
 
+std::string FOLDER_ROOT = ROOT_DIR;
 
 void VideoPlayer::play(string filename){
 	_stop = false;
 	video_player = std::thread(&VideoPlayer::PlayVideo, this, filename);
-	std::cout << "Detached video playing thread" << std::endl;
+	//std::cout << "Detached video playing thread" << std::endl;
 }
 
 void VideoPlayer::stop(){
 	_stop = true;
 	if (video_player.joinable()){
-		std::cout << "Joining thread" << std::endl;
+		//std::cout << "Joining thread" << std::endl;
 		video_player.join();
 	}
 }
@@ -41,8 +42,10 @@ int VideoPlayer::PlayVideo(string filename)
     
     int i = 0;
     // Play Video
+    std::chrono::steady_clock::time_point start_time;
+    Mat frame;
     while(1){
-        Mat frame;
+        start_time = std::chrono::steady_clock::now();
         // Capture frame-by-frame
         cap >> frame;
 
@@ -61,27 +64,31 @@ int VideoPlayer::PlayVideo(string filename)
 
         //std::cout << "Got frame" << std::endl;
 
-        // Press  ESC on keyboard to exit
-        char c=(char)waitKey(25);
-        if(c==27)
-          break;
-
         // INSERT BREAK HERE
         // STOP SOUND 
         // sc.stopWave(filename + ".wav");
 
         if (_stop == true){
-        	std::cout << "Thread terminating before video ends" << std::endl;
+        	//std::cout << "Thread terminating before video ends" << std::endl;
         	break;
         } else {
             //std::cout << "Playing video: " << i << std::endl;
         }
         i += 1;
-        this_thread::sleep_for(std::chrono::milliseconds(42));
+        this_thread::sleep_until(start_time + std::chrono::milliseconds(42));
     }
 
     // When everything done, release the video capture object
     cap.release();
+    
+    //cv::Mat blank = cv::Mat::zeros(frame.size(), frame.type());
+    //sc.playWave(FOLDER_ROOT + "/blank.wav");
+
+    //cv_bridge::CvImage image_message;
+    //image_message.encoding = "bgr8";
+    //image_message.image = blank;
+    //image_message.header.stamp = ros::Time::now();
+    //_image_pub.publish(image_message.toImageMsg());
 
     // Closes all the frames
     destroyAllWindows();

@@ -9,10 +9,12 @@
 
 void FSM::init(State state, std::map<Event, std::map<State, State> > eventMap,
 		std::map<State, std::string> stateEmotion, std::string path_to_video) {
-	this->currentState = state;
 	this->eventMap = eventMap;
 	this->stateEmotion = stateEmotion;
 	this->_path_to_video = path_to_video;
+	this->lastTransition = ros::Time::now();
+	this->_player = std::make_shared<VideoPlayer>();
+	jumpToState(state);
 }
 
 State FSM::getCurrentState(){
@@ -30,7 +32,7 @@ bool FSM::transition(Event event) {
 		std::map<State, State> transition = eventMap.at(event);
 		newState = transition.at(currentState);
 	}catch(const std::exception&e ) {
-		std::cout << "Cannot transition" << std::endl;
+		//std::cout << "Cannot transition" << std::endl;
 		return false;
 	}
 	jumpToState(newState);
@@ -38,13 +40,14 @@ bool FSM::transition(Event event) {
 }
 
 void FSM::jumpToState(State newState) {
-	_player.stop(); //stop the previous video
+	_player->stop(); //stop the previous video
 	std::string emotion = stateEmotion.at(newState);
 	std::stringstream ss;
 	ss << _path_to_video;
 	ss << emotion;
 	std::cout << "Entered emotion: " << emotion << std::endl;
-	_player.play(ss.str().c_str());
+	_player->play(ss.str().c_str());
 	currentState = newState;
+    lastTransition = ros::Time::now();
 	return;
 }

@@ -108,7 +108,7 @@ private:
     private_nh.getParam("x_scale", x_scale_);
     private_nh.getParam("enabled", enabled_);
 
-    status_pub_ = nh.advertise<std_msgs::Bool> ("follower_found_status", 1);
+    status_pub_ = private_nh.advertise<std_msgs::Bool> ("follower_found_status", 1);
     cmdpub_ = private_nh.advertise<geometry_msgs::Twist> ("cmd_vel", 1);
     markerpub_ = private_nh.advertise<visualization_msgs::Marker>("marker",1);
     bboxpub_ = private_nh.advertise<visualization_msgs::Marker>("bbox",1);
