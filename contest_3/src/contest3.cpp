@@ -87,8 +87,8 @@ int main(int argc, char **argv)
 	//state_emotion.insert(std::pair<State, std::string>(State::Following, "following"));
 	state_emotion.insert(std::pair<State, std::string>(State::Following, "discovery4")); //happy
 	state_emotion.insert(std::pair<State, std::string>(State::Obstacle, "lost5")); // angry
-	state_emotion.insert(std::pair<State, std::string>(State::Lost, "obstacle2")); // confused
-	state_emotion.insert(std::pair<State, std::string>(State::LostExtra, "obstacle3")); // extra confused -- NEED SOMETHING ELSE
+	state_emotion.insert(std::pair<State, std::string>(State::Lost, "obstacle3")); // confused //random8
+	state_emotion.insert(std::pair<State, std::string>(State::LostExtra, "obstacle2")); // extra confused //change to obstacle 2
 	state_emotion.insert(std::pair<State, std::string>(State::Hanging, "disgust2")); // scared
 	state_emotion.insert(std::pair<State, std::string>(State::HangingExtra, "fear2")); // extra scared
 
