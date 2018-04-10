@@ -83,14 +83,14 @@ int main(int argc, char **argv)
 	//map between states and names
 	std::map<State, std::string> state_emotion;
 	state_emotion.insert(std::pair<State, std::string>(State::Static, "blank"));
-	//state_emotion.insert(std::pair<State, std::string>(State::Discovery, "discovery4")); // happy
+	state_emotion.insert(std::pair<State, std::string>(State::Discovery, "discovery1")); // happy
 	//state_emotion.insert(std::pair<State, std::string>(State::Following, "following"));
-	state_emotion.insert(std::pair<State, std::string>(State::Following, "discovery4")); //happy
-	state_emotion.insert(std::pair<State, std::string>(State::Obstacle, "lost5")); // angry
-	state_emotion.insert(std::pair<State, std::string>(State::Lost, "obstacle3")); // confused //random8
-	state_emotion.insert(std::pair<State, std::string>(State::LostExtra, "obstacle2")); // extra confused //change to obstacle 2
-	state_emotion.insert(std::pair<State, std::string>(State::Hanging, "disgust2")); // scared
-	state_emotion.insert(std::pair<State, std::string>(State::HangingExtra, "fear2")); // extra scared
+	state_emotion.insert(std::pair<State, std::string>(State::Following, "following1")); // extra happy
+	state_emotion.insert(std::pair<State, std::string>(State::Obstacle, "obstacle1")); // angry
+	state_emotion.insert(std::pair<State, std::string>(State::Lost, "lost1")); // confused //random8
+	state_emotion.insert(std::pair<State, std::string>(State::LostExtra, "lost2")); // extra confused //change to obstacle 2
+	state_emotion.insert(std::pair<State, std::string>(State::Hanging, "picked1")); // scared
+	//state_emotion.insert(std::pair<State, std::string>(State::HangingExtra, "fear2")); // extra scared
 
 	//create list of transitions
 	std::map<State, State> trans_vec;
@@ -100,51 +100,51 @@ int main(int argc, char **argv)
 
 	trans_vec.clear();
 	trans_vec.insert(std::pair<State,State>(State::Obstacle, State::Hanging));
-	//trans_vec.insert(std::pair<State,State>(State::Discovery, State::Hanging));
+	trans_vec.insert(std::pair<State,State>(State::Discovery, State::Hanging));
 	trans_vec.insert(std::pair<State,State>(State::Following, State::Hanging));
 	trans_vec.insert(std::pair<State,State>(State::Static, State::Hanging));
 	trans_vec.insert(std::pair<State,State>(State::Lost, State::Hanging));
 	transition_map.insert(std::pair<Event, std::map<State, State> >(Event::Cliff, trans_vec));
 
 	trans_vec.clear();
-	//trans_vec.insert(std::pair<State,State>(State::Static, State::Discovery));
-	//trans_vec.insert(std::pair<State,State>(State::Lost, State::Discovery));
-	trans_vec.insert(std::pair<State,State>(State::Static, State::Following));
-	trans_vec.insert(std::pair<State,State>(State::Lost, State::Following));
+	trans_vec.insert(std::pair<State,State>(State::Static, State::Discovery));
+	trans_vec.insert(std::pair<State,State>(State::Lost, State::Discovery));
+	//trans_vec.insert(std::pair<State,State>(State::Static, State::Following));
+	//trans_vec.insert(std::pair<State,State>(State::Lost, State::Following));
 	transition_map.insert(std::pair<Event, std::map<State, State> >(Event::FollowerPositive, trans_vec));
 
 	trans_vec.clear();
 	trans_vec.insert(std::pair<State,State>(State::Following, State::Lost));
-	//trans_vec.insert(std::pair<State,State>(State::Discovery, State::Lost));
+	trans_vec.insert(std::pair<State,State>(State::Discovery, State::Lost));
 	transition_map.insert(std::pair<Event, std::map<State, State> >(Event::FollowerNegative, trans_vec));
 
 	trans_vec.clear();
 	trans_vec.insert(std::pair<State,State>(State::Obstacle, State::Static));
 	trans_vec.insert(std::pair<State,State>(State::Lost, State::LostExtra));
 	trans_vec.insert(std::pair<State,State>(State::LostExtra, State::Static));
-	//trans_vec.insert(std::pair<State,State>(State::Discovery, State::Following));
-	trans_vec.insert(std::pair<State,State>(State::Hanging, State::HangingExtra));
+	trans_vec.insert(std::pair<State,State>(State::Discovery, State::Following));
+	//trans_vec.insert(std::pair<State,State>(State::Hanging, State::HangingExtra));
 	transition_map.insert(std::pair<Event, std::map<State, State> >(Event::Timeout, trans_vec));
 
 	trans_vec.clear();
 	trans_vec.insert(std::pair<State,State>(State::Following, State::Obstacle));
-	//trans_vec.insert(std::pair<State,State>(State::Discovery, State::Obstacle));
+	trans_vec.insert(std::pair<State,State>(State::Discovery, State::Obstacle));
 	transition_map.insert(std::pair<Event, std::map<State, State> >(Event::Bumper, trans_vec));
 
 	trans_vec.clear();
 	trans_vec.insert(std::pair<State,State>(State::Hanging, State::Static));
-	trans_vec.insert(std::pair<State,State>(State::HangingExtra, State::Static));
+	//trans_vec.insert(std::pair<State,State>(State::HangingExtra, State::Static));
 	transition_map.insert(std::pair<Event, std::map<State, State> >(Event::Grounded, trans_vec));
 
 	fsm.init(State::Static, transition_map, state_emotion, path_to_videos);
 
 	//map between states and timeouts
 	std::map<State, ros::Duration> state_timeout;
-	//state_timeout.insert(std::pair<State, ros::Duration>(State::Discovery, ros::Duration(4)));
+	state_timeout.insert(std::pair<State, ros::Duration>(State::Discovery, ros::Duration(3)));
 	state_timeout.insert(std::pair<State, ros::Duration>(State::Obstacle, ros::Duration(7)));
 	state_timeout.insert(std::pair<State, ros::Duration>(State::Lost, ros::Duration(3)));
 	state_timeout.insert(std::pair<State, ros::Duration>(State::LostExtra, ros::Duration(3)));
-	state_timeout.insert(std::pair<State, ros::Duration>(State::Hanging, ros::Duration(3)));
+	//state_timeout.insert(std::pair<State, ros::Duration>(State::Hanging, ros::Duration(3)));
     
     std::cout << "Finished initializations" << std::endl;
 	while(ros::ok()){
@@ -178,10 +178,10 @@ int main(int argc, char **argv)
 				vel_pub.publish(motion);
 				break;
 			}
-			//case State::Discovery: {
-			//	vel_pub.publish(follow_cmd);
-			//	break;
-			//}
+			case State::Discovery: {
+				vel_pub.publish(follow_cmd);
+				break;
+			}
 			case State::Following: {
 				vel_pub.publish(follow_cmd);
 				break;
@@ -213,14 +213,14 @@ int main(int argc, char **argv)
 					motion.angular.y = 0;
 					motion.angular.z = 0;
 				} else if (duration < 3.5) {
-					motion.linear.x = -0.5;
+					motion.linear.x = -0.6;
 					motion.linear.y = 0;
 					motion.linear.z = 0;
 					motion.angular.x = 0;
 					motion.angular.y = 0;
 					motion.angular.z = 0;
 				} else if (duration < 4.5) {
-					motion.linear.x = 0.5;
+					motion.linear.x = 0.6;
 					motion.linear.y = 0;
 					motion.linear.z = 0;
 					motion.angular.x = 0;
